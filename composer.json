@@ -1,0 +1,7 @@
+{
+	"minimum-stability": "dev",
+	"name": "crow-protect/crow-protect",
+	"autoload": {
+        "classmap": ["src/include/"]
+    }
+}
