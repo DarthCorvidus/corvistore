@@ -1,6 +1,19 @@
 {
 	"minimum-stability": "dev",
+	"repositories": [
+		{
+			"type": "path",
+			"url": "/home/hm/NetBeansProjects/plibv4/plibv4-epdo",
+			"options": {
+				"symlink": false
+			}
+		}
+	],
+
 	"name": "crow-protect/crow-protect",
+	"require": {
+			"plibv4/epdo": "dev-main"
+	},
 	"autoload": {
         "classmap": ["src/include/"]
     }

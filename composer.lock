@@ -4,12 +4,34 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3d886faf0c0d7d5293780f47a79df6b2",
-    "packages": [],
+    "content-hash": "321a822b0e3aba952e7d015977022690",
+    "packages": [
+        {
+            "name": "plibv4/epdo",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "/home/hm/NetBeansProjects/plibv4/plibv4-epdo",
+                "reference": "cc2570f12a52f558ff1357eecb7b6226f3a35dbe"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "transport-options": {
+                "symlink": false,
+                "relative": false
+            }
+        }
+    ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "plibv4/epdo": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
