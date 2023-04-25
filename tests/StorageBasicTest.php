@@ -29,6 +29,15 @@ class StorageBasicTest extends TestCase {
 		$storage->save();
 	}
 	
+	function testDefine() {
+		$command = new CommandParser("define storage backup-main02 type=basic location=".__DIR__."/storage/backup-main02");
+		StorageBasic::define($this->pdo, $command);
+		$database = TestHelper::dumpTable($this->pdo, "d_storage", "dst_id");
+		$target[0] = array("dst_id" => 1, "dst_name" => "backup-main01", "dst_location"=>__DIR__."/storage/backup-main", "dst_type"=>"basic");
+		$target[1] = array("dst_id" => 2, "dst_name" => "backup-main02", "dst_location"=>__DIR__."/storage/backup-main02", "dst_type"=>"basic");
+		$this->assertEquals($target, $database);
+	}
+	
 	function testLoad() {
 		$storage = Storage::fromName($this->pdo, "backup-main01");
 		$this->assertInstanceOf(StorageBasic::class, $storage);

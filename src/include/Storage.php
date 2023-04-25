@@ -26,6 +26,13 @@ abstract class Storage {
 		$insert["dst_type"] = $this->type;
 		$this->pdo->create("d_storage", $insert);
 	}
+
+	static function define(EPDO $pdo, CommandParser $command) {
+		if($command->getParam("type")=="basic") {
+			$new = new StorageBasic($pdo, $command->getPositional(0), $command->getParam("location"));
+			$new->save();
+		}
+	}
 	
 	function createStoragePool() {
 		
