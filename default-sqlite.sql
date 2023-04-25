@@ -29,9 +29,9 @@ CREATE TABLE `d_partition` (
 
 
 CREATE TABLE `n_fileobject2basic` (
-`nfod_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`nfob_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `dfo_id` INTEGER,
-`dv_id` INTEGER,
-`dsp_id` INTEGER,
-`nfod_serial` INTEGER
+`dst_id` INTEGER,
+`dpt_id` INTEGER,
+`nfob_active` INTEGER
 );
