@@ -12,8 +12,10 @@
  * @author Claus-Christoph Küthe
  */
 class CPAdm {
-	function __construct() {
-		;
+	private $pdo;
+	private $shared;
+	function __construct(EPDO $pdo) {
+		$this->pdo = $pdo;
 	}
 
 	function printWelcome() {
@@ -30,7 +32,17 @@ class CPAdm {
 	}
 	
 	function handleCommand(CommandParser $command) {
-		echo "I don't know to handle anything yet.".PHP_EOL;
+		if($command->getCommand()=="query") {
+			$query = new QueryHandler($this->pdo, $command);
+			$query->run();
+			return;
+		}
+		if($command->getCommand()=="define") {
+			$query = new DefineHandler($this->pdo, $command);
+			$query->run();
+			return;
+		}
+		echo "Invalid command '".$command->getCommand()."'".PHP_EOL;
 	}
 	
 	function run() {
