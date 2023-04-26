@@ -5,11 +5,29 @@
 			"type": "vcs",
 			"url": "https://github.com/DarthCorvidus/plibv4-epdo",
 			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-terminaltable",
+			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-vtc",
+			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-longeststring",
+			"no-api": true
 		}
 	],
 	"name": "crow-protect/crow-protect",
 	"require": {
-			"plibv4/epdo": "dev-main"
+		"plibv4/epdo": "dev-main",
+		"plibv4/terminaltable": "dev-main",
+		"plibv4/vtc": "dev-main",
+		"plibv4/longeststring": "dev-main"
 	},
 	"autoload": {
         "classmap": ["src/include/"]
