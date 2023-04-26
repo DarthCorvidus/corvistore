@@ -2,14 +2,11 @@
 	"minimum-stability": "dev",
 	"repositories": [
 		{
-			"type": "path",
-			"url": "/home/hm/NetBeansProjects/plibv4/plibv4-epdo",
-			"options": {
-				"symlink": false
-			}
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-epdo",
+			"no-api": true
 		}
 	],
-
 	"name": "crow-protect/crow-protect",
 	"require": {
 			"plibv4/epdo": "dev-main"
