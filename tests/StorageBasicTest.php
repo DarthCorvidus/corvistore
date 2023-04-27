@@ -14,7 +14,7 @@ class StorageBasicTest extends TestCase {
 	
 	function testCreate() {
 		$storage = new StorageBasic($this->pdo, "backup-main01", __DIR__."/storage/backup-main");
-		$storage->save();
+		$storage->create();
 		$database = TestHelper::dumpTable($this->pdo, "d_storage", "dst_id");
 		$target[0] = array("dst_id" => 1, "dst_name" => "backup-main01", "dst_location"=>__DIR__."/storage/backup-main", "dst_type"=>"basic");
 		$this->assertEquals($target, $database);
@@ -26,7 +26,7 @@ class StorageBasicTest extends TestCase {
 		$pdo = $shared->getEPDO();
 		$storage = new StorageBasic($pdo, "backup-main01", __DIR__."/storage/backup-main");
 		$this->expectException(Exception::class);
-		$storage->save();
+		$storage->create();
 	}
 	
 	function testDefine() {
@@ -41,6 +41,16 @@ class StorageBasicTest extends TestCase {
 	function testLoad() {
 		$storage = Storage::fromName($this->pdo, "backup-main01");
 		$this->assertInstanceOf(StorageBasic::class, $storage);
+	}
+	
+	function testGetName() {
+		$storage = Storage::fromName($this->pdo, "backup-main01");
+		$this->assertEquals("backup-main01", $storage->getName());
+	}
+	
+	function testGetId() {
+		$storage = Storage::fromName($this->pdo, "backup-main02");
+		$this->assertEquals("2", $storage->getId());
 	}
 	
 	function testGetHexArray() {
