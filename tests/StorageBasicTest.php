@@ -38,10 +38,38 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals($target, $database);
 	}
 	
-	function testLoad() {
+	function testFromArray() {
+		$array = TestHelper::getEPDO()->row("select * from d_storage where dst_id = ?", array(1));
+		$storage = StorageBasic::fromArray(TestHelper::getEPDO(), $array);
+		$this->assertInstanceOf(StorageBasic::class, $storage);
+	}
+	
+	function testFromName() {
 		$storage = Storage::fromName($this->pdo, "backup-main01");
 		$this->assertInstanceOf(StorageBasic::class, $storage);
 	}
+	
+	function testFromNameBogus() {
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage("Storage 'bogus' not available");
+		$storage = Storage::fromName($this->pdo, "bogus");
+		$this->assertInstanceOf(StorageBasic::class, $storage);
+	}
+
+	
+	function testFromId() {
+		$storage = Storage::fromId($this->pdo, 1);
+		$this->assertInstanceOf(StorageBasic::class, $storage);
+		$this->assertEquals("backup-main01", $storage->getName());
+	}
+
+	function testFromIdBogus() {
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage("Storage with id '37' not available");
+		$storage = Storage::fromId($this->pdo, 37);
+	}
+	
+	
 	
 	function testGetName() {
 		$storage = Storage::fromName($this->pdo, "backup-main01");

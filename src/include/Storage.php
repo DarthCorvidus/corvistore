@@ -11,16 +11,28 @@ abstract class Storage {
 	protected $type;
 	protected $location;
 	protected $id;
+	static function fromArray(EPDO $pdo, array $array): Storage {
+		if($array["dst_type"] == "basic") {
+			$storage = new StorageBasic($pdo, $array["dst_name"], $array["dst_location"]);
+			$storage->id = $array["dst_id"];
+			return $storage;
+		}
+	}
+	
 	static function fromName(EPDO $pdo, string $name): Storage {
 		$row = $pdo->row("select * from d_storage where dst_name = ?", array($name));
 		if($row==array()) {
 			throw new Exception("Storage '".$name."' not available");
 		}
-		if($row["dst_type"] == "basic") {
-			$storage = new StorageBasic($pdo, $row["dst_name"], $row["dst_location"]);
-			$storage->id = $row["dst_id"];
-			return $storage;
+		return self::fromArray($pdo, $row);
+	}
+	
+	static function fromId(EPDO $pdo, int $id): Storage {
+		$row = $pdo->row("select * from d_storage where dst_id = ?", array($id));
+		if($row==array()) {
+			throw new Exception("Storage with id '".$id."' not available");
 		}
+		return self::fromArray($pdo, $row);
 	}
 	
 	function create() {
