@@ -27,6 +27,10 @@ class DefineHandler {
 			Storage::define($this->pdo, $this->command);
 			return;
 		}
+		if($this->command->getObject()=="partition") {
+			Partition::define($this->pdo, $this->command);
+			return;
+		}
 		throw new Exception("'define ".$this->command->getObject()."' is not a valid command.");
 	}
 }

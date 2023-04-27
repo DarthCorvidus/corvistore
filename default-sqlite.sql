@@ -23,7 +23,8 @@ CREATE TABLE `d_fileobject` (
 
 CREATE TABLE `d_partition` (
 `dpt_id` INTEGER PRIMARY KEY AUTOINCREMENT,
-`dpt_name` TEXT,
+`dpt_name` TEXT UNIQUE,
+`dpt_type` TEXT,
 `dst_id` INTEGER
 );
 
