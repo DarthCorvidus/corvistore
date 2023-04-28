@@ -56,9 +56,18 @@ abstract class Storage {
 			$new->pdo = $pdo;
 			$new->type = "basic";
 			$new->name = $command->getPositional(0);
-			$new->location = $command->getParam("location");
+			$location = $command->getParam("location");
+			if(!file_exists($location)) {
+				throw new InvalidArgumentException("Location '".$location."' does not exist.");
+			}
+			if(!is_dir($location)) {
+				throw new InvalidArgumentException("Location '".$location."' is not a directory.");
+			}
+			$new->location = $location;
 			$new->create();
+		return;
 		}
+		throw new Exception("Invalid Storage type '".$command->getParam("type")."'");
 	}
 	
 	function getName(): string {

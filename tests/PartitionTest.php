@@ -11,10 +11,10 @@ class PartitionTest extends TestCase {
 	}
 	
 	function testDefine() {
-		$command = new CommandParser("define storage primary type=basic location=".__DIR__."/storage/primary/");
+		$command = new CommandParser("define storage primary type=basic location=".__DIR__."/storage/basic01/");
 		Storage::define(TestHelper::getEPDO(), $command);
 
-		$command = new CommandParser("define storage secondary type=basic location=".__DIR__."/storage/secondary/");
+		$command = new CommandParser("define storage secondary type=basic location=".__DIR__."/storage/basic02/");
 		Storage::define(TestHelper::getEPDO(), $command);
 		
 		//"wrong" order on purpose

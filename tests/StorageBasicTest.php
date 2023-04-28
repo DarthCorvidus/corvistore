@@ -8,18 +8,18 @@ class StorageBasicTest extends TestCase {
 	}
 	
 	function testDefine() {
-		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/backup-main01");
+		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
-		$command = new CommandParser("define storage backup-main02 type=basic location=".__DIR__."/storage/backup-main02");
+		$command = new CommandParser("define storage backup-main02 type=basic location=".__DIR__."/storage/basic02");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_storage", "dst_id");
-		$target[0] = array("dst_id" => 1, "dst_name" => "backup-main01", "dst_location"=>__DIR__."/storage/backup-main01", "dst_type"=>"basic");
-		$target[1] = array("dst_id" => 2, "dst_name" => "backup-main02", "dst_location"=>__DIR__."/storage/backup-main02", "dst_type"=>"basic");
+		$target[0] = array("dst_id" => 1, "dst_name" => "backup-main01", "dst_location"=>__DIR__."/storage/basic01", "dst_type"=>"basic");
+		$target[1] = array("dst_id" => 2, "dst_name" => "backup-main02", "dst_location"=>__DIR__."/storage/basic02", "dst_type"=>"basic");
 		$this->assertEquals($target, $database);
 	}
 
 	function testUnique() {
-		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/backup-main01");
+		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		$this->expectException(Exception::class);
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 	}
@@ -78,7 +78,7 @@ class StorageBasicTest extends TestCase {
 		$shared->useSQLite(__DIR__."/test.sqlite");
 		$pdo = $shared->getEPDO();
 		$storage = StorageBasic::fromName(TestHelper::getEPDO(), "backup-main01");
-		$target = __DIR__."/storage/backup-main01/00/00/21/d0/10/14/16/a8.cp";
+		$target = __DIR__."/storage/basic01/00/00/21/d0/10/14/16/a8.cp";
 		$this->assertEquals($target, $storage->getPathForId(37177506666152));
 	}
 }

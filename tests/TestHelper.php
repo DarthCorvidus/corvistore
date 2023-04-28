@@ -44,7 +44,7 @@ class TestHelper {
 	}
 	
 	static function resetStorage() {
-		$storage = array("basic01", "basic02");
+		$storage = array("basic01", "basic02", "basic03");
 		foreach($storage as $value) {
 			$storagePath = __DIR__."/storage/".$value;
 			if(file_exists($storagePath)) {

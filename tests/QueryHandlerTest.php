@@ -20,11 +20,11 @@ class QueryHandlerTest extends TestCase {
 	}
 	
 	function testQueryStorage() {
-		$command01 = new CommandParser("define storage storage01 type=basic location=".__DIR__."/storage/backup-main/");
+		$command01 = new CommandParser("define storage storage01 type=basic location=".__DIR__."/storage/basic01/");
 		StorageBasic::define(TestHelper::getEPDO(), $command01);
-		$command02 = new CommandParser("define storage storage02 type=basic location=".__DIR__."/storage/backup-copy/");
+		$command02 = new CommandParser("define storage storage02 type=basic location=".__DIR__."/storage/basic02/");
 		StorageBasic::define(TestHelper::getEPDO(), $command02);
-		$command03 = new CommandParser("define storage storage03 type=basic location=".__DIR__."/storage/backup-cloud/");
+		$command03 = new CommandParser("define storage storage03 type=basic location=".__DIR__."/storage/basic03/");
 		StorageBasic::define(TestHelper::getEPDO(), $command03);
 		$queryCommand = new CommandParser("query storage");
 		$query = new QueryHandler(TestHelper::getEPDO(), $queryCommand);

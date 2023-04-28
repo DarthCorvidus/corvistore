@@ -8,6 +8,7 @@ class DefineHandlerTest extends TestCase {
 	}
 	static function setUpBeforeClass() {
 		TestHelper::resetDatabase();
+		TestHelper::resetStorage();
 	}
 	
 	function testInvalidDefine() {
@@ -19,11 +20,11 @@ class DefineHandlerTest extends TestCase {
 	}
 	
 	function testDefineStorage() {
-		$command = new CommandParser("define storage backup-main type=basic location=".__DIR__."/storage/backup-main/");
+		$command = new CommandParser("define storage backup-main type=basic location=".__DIR__."/storage/basic01/");
 		$query = new DefineHandler(TestHelper::getEPDO(), $command);
 		$query->run();
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_storage", "dst_id");
-		$target[0] = array("dst_id" => 1, "dst_name" => "backup-main", "dst_location"=>__DIR__."/storage/backup-main/", "dst_type"=>"basic");
+		$target[0] = array("dst_id" => 1, "dst_name" => "backup-main", "dst_location"=>__DIR__."/storage/basic01/", "dst_type"=>"basic");
 		$this->assertEquals($target, $database);
 	}
 	
