@@ -5,6 +5,7 @@ class StorageBasicTest extends TestCase {
 	private $pdo;
 	static function setUpBeforeClass() {
 		TestHelper::resetDatabase();
+		TestHelper::resetStorage();
 	}
 	function setUp() {
 		$shared = new Shared();

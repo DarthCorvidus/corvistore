@@ -42,4 +42,15 @@ class TestHelper {
 		$shared->useSQLite(__DIR__."/test.sqlite");
 		return $shared->getEPDO();
 	}
+	
+	static function resetStorage() {
+		$storage = array("basic01", "basic02");
+		foreach($storage as $value) {
+			$storagePath = __DIR__."/storage/".$value;
+			if(file_exists($storagePath)) {
+				exec("rm ".escapeshellarg($storagePath)." -r");
+			}
+			mkdir(__DIR__."/storage/".$value);
+		}
+	}
 }
