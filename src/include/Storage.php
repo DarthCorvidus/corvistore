@@ -7,13 +7,21 @@
  * @author Claus-Christoph Küthe
  */
 abstract class Storage {
+	protected $pdo;
 	protected $name;
 	protected $type;
 	protected $location;
 	protected $id;
+	protected function __construct() {
+		;
+	}
 	static function fromArray(EPDO $pdo, array $array): Storage {
 		if($array["dst_type"] == "basic") {
-			$storage = new StorageBasic($pdo, $array["dst_name"], $array["dst_location"]);
+			$storage = new StorageBasic();
+			$storage->pdo = $pdo;
+			$storage->name = $array["dst_name"];
+			$storage->location = $array["dst_location"];
+			$storage->type = $array["dst_type"];
 			$storage->id = $array["dst_id"];
 			return $storage;
 		}
@@ -44,7 +52,11 @@ abstract class Storage {
 
 	static function define(EPDO $pdo, CommandParser $command) {
 		if($command->getParam("type")=="basic") {
-			$new = new StorageBasic($pdo, $command->getPositional(0), $command->getParam("location"));
+			$new = new StorageBasic();
+			$new->pdo = $pdo;
+			$new->type = "basic";
+			$new->name = $command->getPositional(0);
+			$new->location = $command->getParam("location");
 			$new->create();
 		}
 	}

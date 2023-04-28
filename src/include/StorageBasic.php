@@ -9,13 +9,6 @@
  * @author Claus-Christoph Küthe
  */
 class StorageBasic extends Storage {
-	function __construct(EPDO $pdo, string $name, string $location) {
-		$this->name = $name;
-		$this->location = $location;
-		$this->pdo = $pdo;
-		$this->type = "basic";
-	}
-	
 	static function getHexArray(int $id) {
 		$hex = str_pad(dechex($id), 16, 0, STR_PAD_LEFT);
 		$grouped = array();
