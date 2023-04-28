@@ -24,10 +24,25 @@ class QueryHandler {
 		}
 	return $result;
 	}
+
+	function getPartitionList() {
+		$result = "";
+		$model = new PartitionList($this->pdo);
+		$table = new TerminalTable($model);
+		foreach($table->getLines() as $key => $value) {
+			$result .= $value.PHP_EOL;
+		}
+	return $result;
+	}
+	
+	
 	
 	function getResult() {
 		if($this->command->getObject()=="storage") {
 			return $this->getStorageList();
+		}
+		if($this->command->getObject()=="partition") {
+			return $this->getPartitionList();
 		}
 		throw new Exception("query ".$this->command->getObject()." is not a valid query.");
 	}

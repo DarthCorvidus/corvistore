@@ -35,4 +35,20 @@ class QueryHandlerTest extends TestCase {
 		$expect .= "storage03 basic    0 GiB 0 GiB".PHP_EOL;
 		$this->assertEquals($expect, $query->getResult());
 	}
+	
+	function testQueryPartition() {
+		$command01 = new CommandParser("define partition primary storage=storage01 type=common");
+		$command02 = new CommandParser("define partition secondary storage=storage02 type=common");
+		Partition::define(TestHelper::getEPDO(), $command01);
+		Partition::define(TestHelper::getEPDO(), $command02);
+
+		$queryCommand = new CommandParser("query partition");
+		$query = new QueryHandler(TestHelper::getEPDO(), $queryCommand);
+		// Since we haven't implemented capacity, use 0 GiB here.
+		$expect =  "Name      Storage   Type   Capacity Used ".PHP_EOL;
+		$expect .= "primary   storage01 common    0 GiB 0 GiB".PHP_EOL;
+		$expect .= "secondary storage02 common    0 GiB 0 GiB".PHP_EOL;
+		$this->assertEquals($expect, $query->getResult());
+	}
+
 }
