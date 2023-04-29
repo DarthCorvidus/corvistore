@@ -20,6 +20,26 @@
 			"type": "vcs",
 			"url": "https://github.com/DarthCorvidus/plibv4-longeststring",
 			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-uservalue",
+			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-convert",
+			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-validate",
+			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-assert",
+			"no-api": true
 		}
 	],
 	"name": "crow-protect/crow-protect",
@@ -27,7 +47,8 @@
 		"plibv4/epdo": "dev-main",
 		"plibv4/terminaltable": "dev-main",
 		"plibv4/vtc": "dev-main",
-		"plibv4/longeststring": "dev-main"
+		"plibv4/longeststring": "dev-main",
+		"plibv4/uservalue": "dev-main"
 	},
 	"autoload": {
         "classmap": ["src/include/"]

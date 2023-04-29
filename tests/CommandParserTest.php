@@ -63,6 +63,52 @@ class CommandParserTest extends TestCase {
 		$this->assertEquals("main backup device class", $command->getParam("description"));
 		$this->assertEquals("/storage/backup-main/", $command->getParam("location"));
 	}
+	
+	public function testValidate() {
+		$command = new CommandParser('define    storage backup-main type=basic description="main backup device class" location='.__DIR__."/storage/basic01/");
+		$this->assertEquals(NULL, $command->import(new CPModelExample()));
+	}
+	
+	public function testValidateUnexpectedParameter() {
+		$command = new CommandParser('define    storage backup-main color=red type=basic description="main backup device class" location=/storage/backup-main/');
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage("Parameter 'color' not valid for 'define storage'");
+		$command->import(new CPModelExample());
+	}
+	
+	public function testValidateMandatoryMissing() {
+		$command = new CommandParser('define    storage backup-main description="main backup device class" location=/storage/backup-main/');
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage("Mandatory parameter 'type' is missing.");
+		$command->import(new CPModelExample());
+	}
 
+	public function testValidateMandatoryEmpty() {
+		$command = new CommandParser('define    storage backup-main type=basic description="main backup device class" location=');
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage("Error at parameter 'location': value is mandatory");
+		$command->import(new CPModelExample());
+	}
+
+	public function testValidateMandatoryInvalidPath() {
+		$command = new CommandParser('define    storage backup-main type=basic description="main backup device class" location='.__DIR__."/storage/basic25/");
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage("Error at parameter 'location': path does not exist.");
+		$command->import(new CPModelExample());
+	}
+
+	public function testValidateUnexpectedPositional() {
+		$command = new CommandParser('define storage backup-main backup-lost type=basic description="main backup device class" location='.__DIR__."/storage/basic01/");
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage("Unexpected positional value 'backup-lost' for 'define storage'");
+		$command->import(new CPModelExample());
+	}
+	
+	public function testValidateMissingPositional() {
+		$command = new CommandParser('define storage type=basic description="main backup device class" location='.__DIR__."/storage/basic01/");
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage("Missing positional value 1 for 'define storage'");
+		$command->import(new CPModelExample());
+	}
 
 }

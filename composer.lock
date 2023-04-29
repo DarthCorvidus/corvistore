@@ -4,8 +4,57 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6ed3f53fc53e4ee1f1847fd48d8670e4",
+    "content-hash": "a9b8822920576e34d0cf4edb56e86793",
     "packages": [
+        {
+            "name": "plibv4/assert",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DarthCorvidus/plibv4-assert",
+                "reference": "e693903a245aa3a51c49b1695a7e326fe83a9467"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-assert/zipball/e693903a245aa3a51c49b1695a7e326fe83a9467",
+                "reference": "e693903a245aa3a51c49b1695a7e326fe83a9467",
+                "shasum": ""
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "time": "2021-12-21T20:28:33+00:00"
+        },
+        {
+            "name": "plibv4/convert",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DarthCorvidus/plibv4-convert",
+                "reference": "e83a9a17789cb8d75e14dce8f3e9322565881cba"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-convert/zipball/e83a9a17789cb8d75e14dce8f3e9322565881cba",
+                "reference": "e83a9a17789cb8d75e14dce8f3e9322565881cba",
+                "shasum": ""
+            },
+            "require": {
+                "plibv4/assert": "dev-main"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "time": "2021-12-28T16:19:27+00:00"
+        },
         {
             "name": "plibv4/epdo",
             "version": "dev-main",
@@ -80,6 +129,59 @@
             "time": "2021-12-28T16:28:22+00:00"
         },
         {
+            "name": "plibv4/uservalue",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DarthCorvidus/plibv4-uservalue",
+                "reference": "5a34eaf4cbc07c5ee35a2c674ad542b330143247"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-uservalue/zipball/5a34eaf4cbc07c5ee35a2c674ad542b330143247",
+                "reference": "5a34eaf4cbc07c5ee35a2c674ad542b330143247",
+                "shasum": ""
+            },
+            "require": {
+                "plibv4/convert": "dev-main",
+                "plibv4/validate": "dev-main"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "time": "2021-12-28T16:32:05+00:00"
+        },
+        {
+            "name": "plibv4/validate",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DarthCorvidus/plibv4-validate",
+                "reference": "3bcd43e2c9b1585567ebd2a1023ceea72e2bfd16"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-validate/zipball/3bcd43e2c9b1585567ebd2a1023ceea72e2bfd16",
+                "reference": "3bcd43e2c9b1585567ebd2a1023ceea72e2bfd16",
+                "shasum": ""
+            },
+            "require": {
+                "plibv4/assert": "dev-main"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "time": "2023-04-29T11:56:20+00:00"
+        },
+        {
             "name": "plibv4/vtc",
             "version": "dev-main",
             "source": {
@@ -110,7 +212,8 @@
         "plibv4/epdo": 20,
         "plibv4/terminaltable": 20,
         "plibv4/vtc": 20,
-        "plibv4/longeststring": 20
+        "plibv4/longeststring": 20,
+        "plibv4/uservalue": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
