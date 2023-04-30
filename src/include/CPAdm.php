@@ -25,8 +25,10 @@ class CPAdm {
 	
 	function getCommand($input = ""): CommandParser {
 		while($input=="") {
-			echo "cpmad> ";
-			$input = trim(fgets(STDIN));
+			#echo "cpmad> ";
+			$input = readline("cpadm> ");
+			readline_add_history(trim($input));
+			#$input = trim(fgets(STDIN));
 		}
 	return new CommandParser($input);
 	}
@@ -42,7 +44,7 @@ class CPAdm {
 			$query->run();
 			return;
 		}
-		throw new InvalidArgumentException("Invalid command '".$command->getCommand()."'");
+		throw new InvalidArgumentException("Invalid command '".$command->getCommand()."'.");
 	}
 	
 	function run() {

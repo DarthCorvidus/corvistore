@@ -21,7 +21,8 @@ class CPAdmTest extends TestCase {
 	public function testHandleCommandUnknown() {
 		$adm = new CPAdm(TestHelper::getEPDO());
 		$command = $adm->getCommand("yell at me");
-		$this->expectOutputString("Invalid command 'yell'".PHP_EOL);
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage("Invalid command 'yell'.");
 		$result = $adm->handleCommand($command);
 	}
 }
