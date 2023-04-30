@@ -161,12 +161,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-validate",
-                "reference": "3bcd43e2c9b1585567ebd2a1023ceea72e2bfd16"
+                "reference": "3f5429aa3fe346b19d4d226c6582b87f9f80622c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-validate/zipball/3bcd43e2c9b1585567ebd2a1023ceea72e2bfd16",
-                "reference": "3bcd43e2c9b1585567ebd2a1023ceea72e2bfd16",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-validate/zipball/3f5429aa3fe346b19d4d226c6582b87f9f80622c",
+                "reference": "3f5429aa3fe346b19d4d226c6582b87f9f80622c",
                 "shasum": ""
             },
             "require": {
@@ -179,7 +179,7 @@
                     "src/"
                 ]
             },
-            "time": "2023-04-29T11:56:20+00:00"
+            "time": "2023-04-30T09:54:05+00:00"
         },
         {
             "name": "plibv4/vtc",
