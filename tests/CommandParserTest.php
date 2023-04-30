@@ -53,15 +53,17 @@ class CommandParserTest extends TestCase {
 	}
 	
 	public function testGetPositional() {
-		$command = new CommandParser('define    storage backup-main type=directory description="main backup device class" location=/storage/backup-main/');
+		$command = new CommandParser('define    storage backup-main type=basic description="main backup device class" location='.__DIR__.'/storage/basic01');
+		$command->import(new CPModelExample());
 		$this->assertEquals("backup-main", $command->getPositional(0));
 	}
 	
 	public function testGetParameter() {
-		$command = new CommandParser('define    storage backup-main type=directory description="main backup device class" location=/storage/backup-main/');
-		$this->assertEquals("directory", $command->getParam("type"));
+		$command = new CommandParser('define    storage backup-main type=basic description="main backup device class" location='.__DIR__.'/storage/basic01');
+		$command->import(new CPModelExample());
+		$this->assertEquals("basic", $command->getParam("type"));
 		$this->assertEquals("main backup device class", $command->getParam("description"));
-		$this->assertEquals("/storage/backup-main/", $command->getParam("location"));
+		$this->assertEquals(__DIR__."/storage/basic01", $command->getParam("location"));
 	}
 	
 	public function testValidate() {
@@ -117,6 +119,20 @@ class CommandParserTest extends TestCase {
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("Missing positional value 1 for 'define storage'");
 		$command->import(new CPModelExample());
+	}
+
+	public function testAccessParamWithoutImport() {
+		$command = new CommandParser('define storage example type=basic description="main backup device class" location='.__DIR__."/storage/basic01/");
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage("Accessing named parameter 'type' without calling CommandParser::import()");
+		$command->getParam("type");
+	}
+	
+	public function testAccessPositionalWithoutImport() {
+		$command = new CommandParser('define storage example type=basic description="main backup device class" location='.__DIR__."/storage/basic01/");
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage("Accessing positional parameter '0' without calling CommandParser::import()");
+		$command->getPositional(0);
 	}
 
 }

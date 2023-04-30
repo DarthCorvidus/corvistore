@@ -21,6 +21,7 @@ class CommandParser {
 	private $params;
 	private $posSanitized = array();
 	private $paramsSanitized = array();
+	private $imported = FALSE;
 	function __construct($command) {
 		$this->raw = self::split($command);
 		$this->command = $this->raw[0];
@@ -62,7 +63,8 @@ class CommandParser {
 			#	throw new InvalidArgumentException(sprintf("Mandatory parameter '%s' is empty.", $key));
 			#}
 			try {
-				$this->paramsSanitized[$key] = $uservalue->setValue($value);
+				$uservalue->setValue($value);
+				$this->paramsSanitized[$key] = $uservalue;
 			} catch(MandatoryException $e) {
 				throw new InvalidArgumentException("Error at parameter '".$key."': ".$e->getMessage());
 			} catch(ValidateException $e) {
@@ -79,13 +81,18 @@ class CommandParser {
 			throw new InvalidArgumentException(sprintf("Missing positional value %d for '%s %s'", $model->getPositionalCount()-count($this->positional), $this->command, $this->object));
 		}
 		for($i=0;$i<$model->getPositionalCount();$i++) {
-			$this->posSanitized[] = $model->getPositionalUserValue($i)->setValue($this->positional[$i]);
+			$userValue = $model->getPositionalUserValue($i);
+			$userValue->setValue($this->positional[$i]);
+			$this->posSanitized[] = $userValue;
 		}
 	}
 	
 	function import(CPModel $model) {
+		$this->posSanitized = array();
+		$this->paramsSanitized = array();
 		$this->validateParams($model);
 		$this->validatePositional($model);
+		$this->imported = true;
 	}
 	
 	static function split(string $command): array {
@@ -137,10 +144,16 @@ class CommandParser {
 	}
 	
 	function getPositional($id) {
-		return $this->positional[$id];
+		if($this->imported==FALSE) {
+			throw new RuntimeException(sprintf("Accessing positional parameter '%d' without calling CommandParser::import()", $id));
+		}
+		return $this->posSanitized[$id]->getValue();
 	}
 	
 	function getParam($param) {
-		return $this->params[$param];
+		if($this->imported==FALSE) {
+			throw new RuntimeException(sprintf("Accessing named parameter '%s' without calling CommandParser::import()", $param));
+		}
+		return $this->paramsSanitized[$param]->getValue();
 	}
 }

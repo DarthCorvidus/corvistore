@@ -9,13 +9,14 @@ class CPAdmTest extends TestCase {
 	
 	public function testGetCommand() {
 		$adm = new CPAdm(TestHelper::getEPDO());
-		$command = $adm->getCommand("define storage backup-main location=/storage/backup-main/ type=directory description=\"main backup storage\"");
+		$command = $adm->getCommand("define storage backup-main location=".__DIR__."/storage/basic01 type=basic description=\"main backup storage\"");
+		$command->import(new CPModelStorage());
 		$this->assertEquals("define", $command->getCommand());
 		$this->assertEquals("storage", $command->getObject());
 		$this->assertEquals("backup-main", $command->getPositional(0));
-		$this->assertEquals("directory", $command->getParam("type"));
+		$this->assertEquals("basic", $command->getParam("type"));
 		$this->assertEquals("main backup storage", $command->getParam("description"));
-		$this->assertEquals("/storage/backup-main/", $command->getParam("location"));
+		$this->assertEquals(__DIR__."/storage/basic01", $command->getParam("location"));
 	}
 	
 	public function testHandleCommandUnknown() {

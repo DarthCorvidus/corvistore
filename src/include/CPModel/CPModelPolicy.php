@@ -1,14 +1,15 @@
 <?php
 /**
- * Import values from 'define storage' command.
+ * Import values from 'define policy' command.
  *
  * @author Claus-Christoph Küthe
  */
-class CPModelStorage extends CPModelGeneric  {
+class CPModelPolicy extends CPModelGeneric  {
 	function __construct() {
-		$type = UserValue::asMandatory();
-		$type->setValidate(new ValidateEnum(array("basic")));
-		$this->addParamUserValue("type", $type);
+		
+		$verexists = UserValue::asMandatory();
+		$type->setValidate(new ValidateInteger());
+		$this->addParamUserValue("verexists", $type);
 		
 		$path = UserValue::asMandatory();
 		$path->setValidate(new ValidatePath(ValidatePath::DIR));
