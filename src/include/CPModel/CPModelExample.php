@@ -6,39 +6,18 @@
  *
  * @author Claus-Christoph Küthe
  */
-class CPModelExample implements CPModel {
-	private $parameters = array();
-	private $positional = array();
+class CPModelExample extends CPModelGeneric {
 	function __construct() {
 		$type = UserValue::asMandatory();
 		$type->setValidate(new ValidateEnum(array("basic")));
-		$this->parameters["type"] = $type;
-
+		$this->addParamUserValue("type", $type);
+		
 		$location = UserValue::asMandatory();
 		$location->setValidate(new ValidatePath(ValidatePath::DIR));
-		$this->parameters["location"] = $location;
+		$this->addParamUserValue("location", $location);
 		
 		$description = UserValue::asOptional();
-		
-		$this->parameters["description"] = $description;
-		
-		
-		$this->positional[0] = UserValue::asMandatory();
+		$this->addParamUserValue("description", $description);
+		$this->addPositionalUserValue(UserValue::asMandatory());
 	}
-	public function getParameters(): array {
-		return array_keys($this->parameters);
-	}
-
-	public function getParamUserValue($param): \UserValue {
-		return $this->parameters[$param];
-	}
-
-	public function getPositionalCount(): int {
-		return count($this->positional);
-	}
-
-	public function getPositionalUserValue(int $pos): \UserValue {
-		return $this->positional[$pos];
-	}
-
 }
