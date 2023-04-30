@@ -42,7 +42,7 @@ class CPAdm {
 			$query->run();
 			return;
 		}
-		echo "Invalid command '".$command->getCommand()."'".PHP_EOL;
+		throw new InvalidArgumentException("Invalid command '".$command->getCommand()."'");
 	}
 	
 	function run() {
@@ -52,7 +52,15 @@ class CPAdm {
 			if($command->getCommand()=="quit") {
 				return;
 			}
-			$this->handleCommand($command);
+			try {
+				$this->handleCommand($command);
+			} catch(InvalidArgumentException $e) {
+				echo $e->getMessage().PHP_EOL;
+			} catch (Exception $e) {
+				echo "CrowProtect encountered an error. Please open a ticket with CrowProtect Support according to your support plan, describing the circumstances and providing the following message:".PHP_EOL;
+				echo $e->getMessage().PHP_EOL;
+				echo $e->getTraceAsString().PHP_EOL;
+			}
 		}
 	}
 }
