@@ -69,12 +69,20 @@ class CommandParserTest extends TestCase {
 		$this->assertEquals(NULL, $command->import(new CPModelExample()));
 	}
 	
-	public function testValidateUnexpectedParameter() {
+	public function testValidateUnexpectedParameterFirst() {
 		$command = new CommandParser('define    storage backup-main color=red type=basic description="main backup device class" location=/storage/backup-main/');
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("Parameter 'color' not valid for 'define storage'");
 		$command->import(new CPModelExample());
 	}
+
+	public function testValidateUnexpectedParameterSecond() {
+		$command = new CommandParser('define    storage backup-main type=basic color=red description="main backup device class" location=/storage/backup-main/');
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage("Parameter 'color' not valid for 'define storage'");
+		$command->import(new CPModelExample());
+	}
+
 	
 	public function testValidateMandatoryMissing() {
 		$command = new CommandParser('define    storage backup-main description="main backup device class" location=/storage/backup-main/');

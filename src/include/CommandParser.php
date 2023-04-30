@@ -42,7 +42,8 @@ class CommandParser {
 	private function validateParams(CPModel $model) {
 		$user = array_keys($this->params);
 		$allowed = $model->getParameters();
-		$diff_theirs = array_diff($user, $allowed);
+		// array_diff keeps the indexes, but I need new indexes.
+		$diff_theirs = array_values(array_diff($user, $allowed));
 		/*
 		 * In both checks, the first invalid parameter fails.
 		 */
