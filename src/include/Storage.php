@@ -51,6 +51,7 @@ abstract class Storage {
 	}
 
 	static function define(EPDO $pdo, CommandParser $command) {
+		$command->import(new CPModelStorage);
 		if($command->getParam("type")=="basic") {
 			$new = new StorageBasic();
 			$new->pdo = $pdo;

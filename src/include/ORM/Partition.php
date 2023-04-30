@@ -1,11 +1,4 @@
 <?php
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  * Partition
  * 
@@ -22,6 +15,7 @@ class Partition {
 	}
 	
 	static function define(EPDO $pdo, CommandParser $command) {
+		$command->import(new CPModelPartition());
 		$name = $command->getPositional(0);
 		$storage = $command->getParam("storage");
 		$type = $command->getParam("type");
