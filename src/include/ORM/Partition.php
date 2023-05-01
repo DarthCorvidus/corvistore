@@ -11,6 +11,7 @@ class Partition {
 	private $name;
 	private $storage;
 	private $type;
+	private $id;
 	private function __construct() {
 	}
 	
@@ -30,6 +31,7 @@ class Partition {
 	static function fromArray(EPDO $pdo, array $array): Partition {
 		$part = new Partition();
 		$part->pdo = $pdo;
+		$part->id = $array["dpt_id"];
 		$part->name = $array["dpt_name"];
 		$part->storage = Storage::fromId($pdo, $array["dst_id"]);
 		$part->type = $array["dpt_type"];
@@ -44,6 +46,14 @@ class Partition {
 	return self::fromArray($pdo, $row);
 	}
 	
+	static function fromId(EPDO $pdo, $id): Partition {
+		$row = $pdo->row("select * from d_partition where dpt_id = ?", array($id));
+		if(empty($row)) {
+			throw new Exception("Partition with id '".$id.' does not exist.');
+		}
+	return self::fromArray($pdo, $row);
+	}
+	
 	public function create() {
 		$this->pdo->beginTransaction();
 		$this->storage = Storage::fromName($this->pdo, $this->storage->getName());
@@ -52,5 +62,21 @@ class Partition {
 		$new["dst_id"] = $this->storage->getId();
 		$this->pdo->create("d_partition", $new);
 		$this->pdo->commit();
+	}
+	
+	public function getId(): int {
+		return $this->id;
+	}
+	
+	public function getName(): string {
+		return $this->name;
+	}
+	
+	public function getStorageId(): int {
+		return $this->storage->getId();
+	}
+	
+	public function getType(): string {
+		return $this->type;
 	}
 }

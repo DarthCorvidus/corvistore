@@ -44,14 +44,22 @@ class PartitionTest extends TestCase {
 	function testFromName() {
 		$partition = Partition::fromName(TestHelper::getEPDO(), "backup-primary");
 		$this->assertInstanceOf(Partition::class, $partition);
-		#$this->assertEquals("backup-primary", $partition->getName());
-		#$this->assertEquals(2, $partition->getStorageId());
-		#$this->assertEquals("type", "common");
+		$this->assertEquals("backup-primary", $partition->getName());
+		$this->assertEquals(1, $partition->getStorageId());
+		$this->assertEquals("common", $partition->getType());
 	}
 	
 	function testFromNameBogus() {
 		$this->expectException(Exception::class);
 		$partition = Partition::fromName(TestHelper::getEPDO(), "squid");
+	}
+	
+	function testFromId() {
+		$partition = Partition::fromId(TestHelper::getEPDO(), 2);
+		$this->assertInstanceOf(Partition::class, $partition);
+		$this->assertEquals("backup-primary", $partition->getName());
+		$this->assertEquals(1, $partition->getStorageId());
+		$this->assertEquals("common", $partition->getType());
 	}
 	
 }
