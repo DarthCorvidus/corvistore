@@ -52,23 +52,31 @@ class CommandParser {
 			throw new InvalidArgumentException(sprintf("Parameter '%s' not valid for '%s %s'", $diff_theirs[0], $this->command, $this->object));
 		}
 		$diff_ours = array_diff($allowed, $user);
-		foreach($diff_ours as $value) {
-			if($model->getParamUserValue($value)->isMandatory()) {
+		foreach($model->getParameters() as $value) {
+			$uservalue = $model->getParamUserValue($value);
+			
+			/*
+			 * This is a little bit ugly, but we want to have a different message
+			 * when the parameter was not set by the user as opposed to an empty
+			 * parameter (ie parameter=).
+			 */
+			try {
+				if(!isset($this->params[$value])) {
+					$this->paramsSanitized[$value] = $uservalue->getValue();
+					continue;
+				}
+			} catch(MandatoryException $e) {
+				//T
 				throw new InvalidArgumentException(sprintf("Mandatory parameter '%s' is missing.", $value));
 			}
-		}
-		foreach($this->params as $key => $value) {
-			$uservalue = $model->getParamUserValue($key);
-			#if($uservalue->isMandatory() && $value=="") {
-			#	throw new InvalidArgumentException(sprintf("Mandatory parameter '%s' is empty.", $key));
-			#}
+			
 			try {
-				$uservalue->setValue($value);
-				$this->paramsSanitized[$key] = $uservalue;
+				$uservalue->setValue($this->params[$value]);
+				$this->paramsSanitized[$value] = $uservalue->getValue();
 			} catch(MandatoryException $e) {
-				throw new InvalidArgumentException("Error at parameter '".$key."': ".$e->getMessage());
+				throw new InvalidArgumentException("Error at parameter '".$value."': ".$e->getMessage());
 			} catch(ValidateException $e) {
-				throw new InvalidArgumentException("Error at parameter '".$key."': ".$e->getMessage());
+				throw new InvalidArgumentException("Error at parameter '".$value."': ".$e->getMessage());
 			}
 		}
 	}
@@ -154,6 +162,6 @@ class CommandParser {
 		if($this->imported==FALSE) {
 			throw new RuntimeException(sprintf("Accessing named parameter '%s' without calling CommandParser::import()", $param));
 		}
-		return $this->paramsSanitized[$param]->getValue();
+		return $this->paramsSanitized[$param];
 	}
 }
