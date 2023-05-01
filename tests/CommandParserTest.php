@@ -264,5 +264,20 @@ class CommandParserTest extends TestCase {
 		$command->import($cpmodel);
 		$this->assertEquals("", $command->getParam("description"));
 	}
-
+	
+	function testConvert() {
+		$cpmodel = new CPModelTesting();
+		$cpmodel->addParamUserValue("description", UserValue::asOptional());
+		$location = UserValue::asMandatory();
+		$location->setValidate(new ValidatePath(ValidatePath::DIR));
+		$location->setConvert(new ConvertTrailingSlash());
+		
+		$cpmodel->addParamUserValue("location", $location);
+		$cpmodel->addParamUserValue("type", UserValue::asMandatory());
+		$cpmodel->addPositionalUserValue(UserValue::asMandatory());
+	
+		$command = new CommandParser('define storage example type=basic description="main backup device class" location='.__DIR__."/storage/basic01/");
+		$command->import($cpmodel);
+		$this->assertEquals(__DIR__."/storage/basic01", $command->getParam("location"));
+	}
 }
