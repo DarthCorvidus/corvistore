@@ -41,7 +41,7 @@ class Partition {
 	static function fromName(EPDO $pdo, $name): Partition {
 		$row = $pdo->row("select * from d_partition where dpt_name = ?", array($name));
 		if(empty($row)) {
-			throw new Exception("Partition '".$name.' does not exist.');
+			throw new Exception("Partition '".$name."' does not exist.");
 		}
 	return self::fromArray($pdo, $row);
 	}
@@ -49,7 +49,7 @@ class Partition {
 	static function fromId(EPDO $pdo, $id): Partition {
 		$row = $pdo->row("select * from d_partition where dpt_id = ?", array($id));
 		if(empty($row)) {
-			throw new Exception("Partition with id '".$id.' does not exist.');
+			throw new Exception("Partition with id '".$id."' does not exist.");
 		}
 	return self::fromArray($pdo, $row);
 	}

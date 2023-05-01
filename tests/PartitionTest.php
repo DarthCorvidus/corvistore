@@ -51,6 +51,7 @@ class PartitionTest extends TestCase {
 	
 	function testFromNameBogus() {
 		$this->expectException(Exception::class);
+		$this->expectExceptionMessage("Partition 'squid' does not exist.");
 		$partition = Partition::fromName(TestHelper::getEPDO(), "squid");
 	}
 	
@@ -60,6 +61,12 @@ class PartitionTest extends TestCase {
 		$this->assertEquals("backup-primary", $partition->getName());
 		$this->assertEquals(1, $partition->getStorageId());
 		$this->assertEquals("common", $partition->getType());
+	}
+	
+	function testFromIdBogus() {
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage("Partition with id '25' does not exist.");
+		$partition = Partition::fromId(TestHelper::getEPDO(), 25);
 	}
 	
 }
