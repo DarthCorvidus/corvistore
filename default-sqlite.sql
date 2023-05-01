@@ -28,6 +28,15 @@ CREATE TABLE `d_partition` (
 `dst_id` INTEGER
 );
 
+CREATE TABLE `d_policy` (
+`dpo_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`dpo_name` TEXT UNIQUE,
+`dpt_id` INTEGER,
+`dpo_version_exists` INTEGER,
+`dpo_version_deleted` INTEGER,
+`dpo_retention_exists` INTEGER,
+`dpo_retention_deleted` INTEGER
+);
 
 CREATE TABLE `n_fileobject2basic` (
 `nfob_id` INTEGER PRIMARY KEY AUTOINCREMENT,

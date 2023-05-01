@@ -7,17 +7,27 @@
 class CPModelPolicy extends CPModelGeneric  {
 	function __construct() {
 		
-		$verexists = UserValue::asMandatory();
-		$type->setValidate(new ValidateInteger());
-		$this->addParamUserValue("verexists", $type);
+		$verexists = UserValue::asOptional();
+		$verexists->setValidate(new ValidateInteger());
+		$verexists->setDefault(0);
+		$this->addParamUserValue("verexists", $verexists);
+
+		$verdelete = UserValue::asOptional();
+		$verdelete->setDefault(0);
+		$verdelete->setValidate(new ValidateInteger());
+		$this->addParamUserValue("verdeleted", $verdelete);
+
+		$retexists = UserValue::asOptional();
+		$retexists->setDefault(0);
+		$retexists->setValidate(new ValidateInteger());
+		$this->addParamUserValue("retexists", $retexists);
+
+		$retdelete = UserValue::asOptional();
+		$retdelete->setDefault(0);
+		$retdelete->setValidate(new ValidateInteger());
+		$this->addParamUserValue("retdeleted", $retdelete);
 		
-		$path = UserValue::asMandatory();
-		$path->setValidate(new ValidatePath(ValidatePath::DIR));
-		$this->addParamUserValue("location", $path);
-		
-		$description = UserValue::asOptional();
-		$this->addParamUserValue("description", $description);
-		
+		$this->addParamUserValue("partition", UserValue::asMandatory());
 		$name = UserValue::asMandatory();
 		$name->setValidate(new ValidateMinMaxString(4, 15));
 		$this->addPositionalUserValue($name);
