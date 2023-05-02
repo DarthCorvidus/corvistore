@@ -36,4 +36,12 @@ class DefineHandlerTest extends TestCase {
 		$target[0] = array("dpt_id" => 1, "dst_id" => 1, "dpt_name" => "primary", "dpt_type" => "common", "dst_id" => 1);
 		$this->assertEquals($target, $database);
 	}
+	
+	function testDefinePolicy() {
+		$define = new DefineHandler(TestHelper::getEPDO(), new CommandParser("define policy keepv10d5month partition=primary verexists=10 verdeleted=5 retexists=31 retdeleted=15"));
+		$define->run();
+		$target[0] = array("dpo_id" => "1", "dpo_name"=>"keepv10d5month", "dpo_version_exists" => "10", "dpo_version_deleted"=>"5", "dpo_retention_exists" => "31", "dpo_retention_deleted"=>"15", "dpt_id"=>"1");
+		$this->assertEquals($target, TestHelper::dumpTable(TestHelper::getEPDO(), "d_policy", "dpo_id"));
+
+	}
 }
