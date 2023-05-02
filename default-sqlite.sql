@@ -38,6 +38,12 @@ CREATE TABLE `d_policy` (
 `dpo_retention_deleted` INTEGER
 );
 
+CREATE TABLE `d_node` (
+`dnd_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`dnd_name` TEXT UNIQUE,
+`dpo_id` INTEGER
+);
+
 CREATE TABLE `n_fileobject2basic` (
 `nfob_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `dfo_id` INTEGER,
