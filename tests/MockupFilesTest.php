@@ -50,6 +50,13 @@ class MockupFilesTest extends TestCase {
 		$mockup->createText("/Documents/test.txt", "Hello World!");
 		$this->assertFileExists("/tmp/crow-protect/Documents/test.txt");
 	}
+
+	function testDeepCreateTextReturnPath() {
+		$mockup = new MockupFiles("/tmp/crow-protect");
+		$dir = $mockup->createText("/Documents/test.txt", "Hello World!");
+		$this->assertFileExists("/tmp/crow-protect/Documents/test.txt");
+		$this->assertEquals($dir, "/tmp/crow-protect/Documents/test.txt");
+	}
 	
 	function testCreateRandom() {
 		$mockup = new MockupFiles("/tmp/crow-protect");
@@ -65,6 +72,13 @@ class MockupFilesTest extends TestCase {
 		$this->assertEquals(15, filesize("/tmp/crow-protect/random.bin"));
 	}
 	
+	function testDeepCreatePath() {
+		$mockup = new MockupFiles("/tmp/crow-protect");
+		$dir = $mockup->createRandom("/images/vacation/random.bin", 1024*10);
+		$this->assertFileExists("/tmp/crow-protect/images/vacation/random.bin");
+		$this->assertEquals($dir, "/tmp/crow-protect/images/vacation/random.bin");
+	}
+
 	function testDeepCreateRandom() {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createRandom("/images/vacation/random.bin", 1024*10);

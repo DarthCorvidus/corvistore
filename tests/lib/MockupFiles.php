@@ -25,19 +25,21 @@ class MockupFiles {
 		mkdir($this->path, 0700);
 	}
 	
-	function createText($path, $text) {
+	function createText($path, $text): string {
 		$dirname = dirname($path);
 		if(!file_exists($dirname)) {
 			mkdir($this->path."/".$dirname, 0700, true);
 		}
-		file_put_contents($this->path."/".$path, $text);
+		file_put_contents($this->path.$path, $text);
+	return $this->path.$path;
 	}
 	
-	function createRandom($path, int $size, int $blocksize=1024) {
+	function createRandom($path, int $size, int $blocksize=1024): string {
 		$dirname = dirname($path);
 		if(!file_exists($dirname)) {
 			mkdir($this->path."/".$dirname, 0700, true);
 		}
 		exec("dd if=/dev/urandom of=".escapeshellarg($this->path."/".$path)." bs=".$blocksize." count=".$size." 2> /dev/zero");
+	return $this->path.$path;
 	}
 }
