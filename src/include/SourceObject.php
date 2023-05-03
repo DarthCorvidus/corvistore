@@ -21,7 +21,7 @@ class SourceObject {
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
 	const TYPE_OTHER = 3;
-	function __construct($node, $path) {
+	function __construct(Node $node, string $path) {
 		$this->node = $node;
 		$this->path = realpath($path);
 		$stat = stat($this->path);
@@ -86,5 +86,9 @@ class SourceObject {
 	
 	function getType(): int {
 		return $this->type;
+	}
+	
+	function getNode(): Node {
+		return $this->node;
 	}
 }

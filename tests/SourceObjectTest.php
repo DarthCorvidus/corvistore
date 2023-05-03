@@ -7,8 +7,14 @@ class SourceObjectTest extends TestCase {
 		parent::__construct();
 		$this->now = mktime();
 	}
+	
 	static function setUpBeforeClass() {
 		file_put_contents(self::getExamplePath(), "Crow Protect - Data Storage Solution");
+		TestHelper::initServer();
+	}
+	
+	function setUp() {
+		$this->node = Node::fromName(TestHelper::getEPDO(), "test01");
 	}
 	
 	static function getExamplePath() {
@@ -17,77 +23,82 @@ class SourceObjectTest extends TestCase {
 	
 	function testInitLocal() {
 		$path = $this->getExamplePath();
-		$object = new SourceObject("example", $path);
+		$object = new SourceObject($this->node, $path);
 		$this->assertInstanceOf(SourceObject::class, $object);
 	}
 	
 	function testGetPath() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$this->assertEquals(self::getExamplePath(), $object->getPath());
 	}
 	
 	function testGetBasenameFile() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$this->assertEquals("readme.txt", $object->getBasename());
 	}
 
 	function testGetDirnameFile() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$this->assertEquals(__DIR__."/source", $object->getDirname());
 	}
 
 	
 	function testGetATime() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$this->assertEquals($object->getATime(), fileatime($this->getExamplePath()));
 	}
 
 	function testGetMTime() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$this->assertEquals($object->getMTime(), filemtime($this->getExamplePath()));
 	}
 
 	function testGetCTime() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$this->assertEquals($object->getCTime(), filectime($this->getExamplePath()));
 	}
 	
 	function testGetPerms() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$this->assertEquals($object->getPerms(), substr(sprintf('%o', fileperms($this->getExamplePath())), -4));
 	}
 	
 	function testGetOwner() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$owner = posix_getpwuid(fileowner($this->getExamplePath()));
 		$this->assertEquals($object->getOwner(), $owner["name"]);
 	}
 	
 	function testGetGroup() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$group = posix_getgrgid(fileowner($this->getExamplePath()));
 		$this->assertEquals($object->getGroup(), $group["name"]);
 	}
 	
 	function testGetSize() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$this->assertEquals($object->getSize(), filesize($this->getExamplePath()));
 	}
 	
 	function testGetType() {
-		$object = new SourceObject("example", $this->getExamplePath());
+		$object = new SourceObject($this->node, $this->getExamplePath());
 		$this->assertEquals(SourceObject::TYPE_FILE, $object->getType());
-		$object = new SourceObject("example", __DIR__."/storage/");
+		$object = new SourceObject($this->node, __DIR__."/storage/");
 		$this->assertEquals(SourceObject::TYPE_DIR, $object->getType());
 	}
 	
 	function testGetBasenameDir() {
-		$object = new SourceObject("example", __DIR__."/storage/");
+		$object = new SourceObject($this->node, __DIR__."/storage/");
 		$this->assertEquals("storage", $object->getBasename());
 	}
 	
 	function testGetDirnameDir() {
-		$object = new SourceObject("example", __DIR__."/storage/");
+		$object = new SourceObject($this->node, __DIR__."/storage/");
 		$this->assertEquals(__DIR__, $object->getDirname());
+	}
+	
+	function testGetNode() {
+		$object = new SourceObject($this->node, __DIR__."/storage/");
+		$this->assertEquals("test01", $object->getNode()->getName());
 	}
 }
