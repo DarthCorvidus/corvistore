@@ -53,4 +53,12 @@ class TestHelper {
 			mkdir(__DIR__."/storage/".$value);
 		}
 	}
+	
+	static function initServer() {
+		$cpadm = new CPAdm(TestHelper::getEPDO());
+		$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/storage/basic01/"));
+		$cpadm->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
+		$cpadm->handleCommand(new CommandParser("define policy forever partition=backup-main"));
+		$cpadm->handleCommand(new CommandParser("define node test01 policy=forever"));
+	}
 }
