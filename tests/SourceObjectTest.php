@@ -25,7 +25,18 @@ class SourceObjectTest extends TestCase {
 		$object = new SourceObject("example", $this->getExamplePath());
 		$this->assertEquals(self::getExamplePath(), $object->getPath());
 	}
+	
+	function testGetBasenameFile() {
+		$object = new SourceObject("example", $this->getExamplePath());
+		$this->assertEquals("readme.txt", $object->getBasename());
+	}
 
+	function testGetDirnameFile() {
+		$object = new SourceObject("example", $this->getExamplePath());
+		$this->assertEquals(__DIR__."/source", $object->getDirname());
+	}
+
+	
 	function testGetATime() {
 		$object = new SourceObject("example", $this->getExamplePath());
 		$this->assertEquals($object->getATime(), fileatime($this->getExamplePath()));
@@ -69,5 +80,14 @@ class SourceObjectTest extends TestCase {
 		$object = new SourceObject("example", __DIR__."/storage/");
 		$this->assertEquals(SourceObject::TYPE_DIR, $object->getType());
 	}
-
+	
+	function testGetBasenameDir() {
+		$object = new SourceObject("example", __DIR__."/storage/");
+		$this->assertEquals("storage", $object->getBasename());
+	}
+	
+	function testGetDirnameDir() {
+		$object = new SourceObject("example", __DIR__."/storage/");
+		$this->assertEquals(__DIR__, $object->getDirname());
+	}
 }

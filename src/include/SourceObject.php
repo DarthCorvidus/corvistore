@@ -48,6 +48,14 @@ class SourceObject {
 		return $this->path;
 	}
 	
+	function getBasename(): string {
+		return basename($this->path);
+	}
+	
+	function getDirname() {
+		return dirname($this->path);
+	}
+	
 	function getATime(): int {
 		return $this->atime;
 	}
