@@ -44,6 +44,14 @@ CREATE TABLE `d_node` (
 `dpo_id` INTEGER
 );
 
+CREATE TABLE `d_catalog` (
+`dc_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`dc_name` TEXT,
+`dc_type` INTEGER,
+`dnd_id` INTEGER,
+`dc_parent` INTEGER
+);
+
 CREATE TABLE `n_fileobject2basic` (
 `nfob_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `dfo_id` INTEGER,
