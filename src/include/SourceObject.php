@@ -52,6 +52,13 @@ class SourceObject {
 		return basename($this->path);
 	}
 	
+	function parentIsRoot() {
+		if($this->getDirname()=="/") {
+			return TRUE;
+		}
+	return FALSE;
+	}
+	
 	function getDirname() {
 		return dirname($this->path);
 	}

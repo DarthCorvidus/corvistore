@@ -101,4 +101,16 @@ class SourceObjectTest extends TestCase {
 		$object = new SourceObject($this->node, __DIR__."/storage/");
 		$this->assertEquals("test01", $object->getNode()->getName());
 	}
+	
+	function testGetNodeParentNotRoot() {
+		$object = new SourceObject($this->node, __DIR__."/storage/");
+		$this->assertEquals(FALSE, $object->parentIsRoot());
+	}
+	
+	function testGetNodeParentIsRoot() {
+		$object = new SourceObject($this->node, "/tmp/");
+		$this->assertEquals(TRUE, $object->parentIsRoot());
+	}
+
+
 }
