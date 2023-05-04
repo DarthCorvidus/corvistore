@@ -17,7 +17,21 @@ class MockupFiles {
 	}
 	
 	function delete() {
-		exec("rm ".escapeshellarg($this->path)." -rf");
+		if(file_exists($this->path)) {
+			$this->deleteRecurse($this->path);
+		}
+	}
+	
+	private function deleteRecurse($path) {
+		foreach(glob($path."/*") as $key => $value) {
+			if(is_dir($value)) {
+				$this->deleteRecurse($value);
+			}
+			if(is_file($value)) {
+				unlink($value);
+			}
+		}
+		rmdir($path);
 	}
 	
 	function clear() {
@@ -26,7 +40,7 @@ class MockupFiles {
 	}
 
 	function createDir($path) {
-		if(!file_exists($path)) {
+		if(!file_exists($this->path."/".$path)) {
 			mkdir($this->path."/".$path, 0700, true);
 		}
 	}

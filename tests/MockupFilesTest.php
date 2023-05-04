@@ -94,7 +94,9 @@ class MockupFilesTest extends TestCase {
 	
 	function testClear() {
 		$mockup = new MockupFiles("/tmp/crow-protect");
-		$mockup->createRandom("/images/vacation/random.bin", 1024*10);
+		$mockup->createRandom("/images/vacation/random01.bin", 1024*10);
+		$mockup->createRandom("/images/vacation/random02.bin", 1024*10);
+		$mockup->createRandom("/images/vacation/random03.bin", 1024*10);
 		$mockup->clear();
 		$this->assertFileExists("/tmp/crow-protect");
 		$this->assertEquals(FALSE, file_exists("/tmp/crow-protect/images/vacation/random.bin"));
