@@ -102,14 +102,28 @@ class SourceObjectTest extends TestCase {
 		$this->assertEquals("test01", $object->getNode()->getName());
 	}
 	
-	function testGetNodeParentNotRoot() {
+	function testHasParent() {
 		$object = new SourceObject($this->node, __DIR__."/storage/");
-		$this->assertEquals(FALSE, $object->parentIsRoot());
+		$this->assertEquals(TRUE, $object->hasParent());
 	}
 	
-	function testGetNodeParentIsRoot() {
+	function testHasNoParent() {
 		$object = new SourceObject($this->node, "/tmp/");
-		$this->assertEquals(TRUE, $object->parentIsRoot());
+		$this->assertEquals(FALSE, $object->hasParent());
+	}
+	
+	function testGetParent() {
+		$object = new SourceObject($this->node, __DIR__."/storage/basic01");
+		$parent = $object->getParent();
+		$this->assertEquals("storage", $parent->getBasename());
+		$this->assertEquals(__DIR__, $parent->getDirname());
+	}
+	
+	function testGetNoParent() {
+		$object = new SourceObject($this->node, "/tmp/");
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage("SourceObject /tmp has no parent");
+		$object->getParent();
 	}
 
 
