@@ -18,9 +18,6 @@ class SourceObject {
 	private $group;
 	private $node;
 	private $type;
-	const TYPE_DIR = 1;
-	const TYPE_FILE = 2;
-	const TYPE_OTHER = 3;
 	function __construct(Node $node, string $path) {
 		$this->node = $node;
 		$this->path = realpath($path);
@@ -35,12 +32,12 @@ class SourceObject {
 		$this->owner = $owner["name"];
 		$this->group = $group["name"];
 		$this->size = filesize($path);
-		$this->type = self::TYPE_OTHER;
+		$this->type = Catalog::TYPE_OTHER;
 		if(is_dir($this->path)) {
-			$this->type = self::TYPE_DIR;
+			$this->type = Catalog::TYPE_DIR;
 		}
 		if(is_file($this->path)) {
-			$this->type = self::TYPE_FILE;
+			$this->type = Catalog::TYPE_FILE;
 		}
 	}
 

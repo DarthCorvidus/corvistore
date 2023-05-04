@@ -82,9 +82,9 @@ class SourceObjectTest extends TestCase {
 	
 	function testGetType() {
 		$object = new SourceObject($this->node, $this->getExamplePath());
-		$this->assertEquals(SourceObject::TYPE_FILE, $object->getType());
+		$this->assertEquals(Catalog::TYPE_FILE, $object->getType());
 		$object = new SourceObject($this->node, __DIR__."/storage/");
-		$this->assertEquals(SourceObject::TYPE_DIR, $object->getType());
+		$this->assertEquals(Catalog::TYPE_DIR, $object->getType());
 	}
 	
 	function testGetBasenameDir() {
