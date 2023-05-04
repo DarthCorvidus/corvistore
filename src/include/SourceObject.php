@@ -49,11 +49,19 @@ class SourceObject {
 		return basename($this->path);
 	}
 	
-	function parentIsRoot() {
+	function hasParent(): bool {
 		if($this->getDirname()=="/") {
-			return TRUE;
+			return FALSE;
 		}
-	return FALSE;
+	return TRUE;
+	}
+	
+	function getParent(): SourceObject {
+		if(!$this->hasParent()) {
+			throw new RuntimeException("SourceObject ".$this->getPath()." has no parent.");
+			
+		}
+	return new SourceObject($this->node, $this->getDirname());
 	}
 	
 	function getDirname() {
