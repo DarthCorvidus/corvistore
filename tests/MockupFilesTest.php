@@ -38,6 +38,12 @@ class MockupFilesTest extends TestCase {
 		$mockup->delete();
 		$this->assertEquals(FALSE, file_exists("/tmp/crow-protect"));
 	}
+
+	function testCreateDir() {
+		$mockup = new MockupFiles("/tmp/crow-protect");
+		$mockup->createDir("/Pictures/2023/vacation-thailand/");
+		$this->assertFileExists("/tmp/crow-protect/Pictures/2023/vacation-thailand");
+	}
 	
 	function testCreateText() {
 		$mockup = new MockupFiles("/tmp/crow-protect");
