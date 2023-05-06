@@ -52,6 +52,19 @@ CREATE TABLE `d_catalog` (
 `dc_parent` INTEGER
 );
 
+CREATE TABLE `d_version` (
+`dvs_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`dvs_atime` INTEGER,
+`dvs_mtime` INTEGER,
+`dvs_ctime` INTEGER,
+`dvs_permissions` INTEGER,
+`dvs_owner` TEXT,
+`dvs_group` TEXT,
+`dvs_size` INTEGER,
+`dvs_created` INTEGER,
+`dc_id` INTEGER
+);
+
 CREATE TABLE `n_fileobject2basic` (
 `nfob_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `dfo_id` INTEGER,
