@@ -25,7 +25,7 @@ class SourceObject {
 		$this->ctime = $stat["ctime"];
 		$this->atime = $stat["atime"];
 		$this->mtime = $stat["mtime"];
-		$this->permissions = substr(sprintf('%o', fileperms($path)), -4);
+		$this->permissions = fileperms($path);
 		
 		$owner = posix_getpwuid($stat["uid"]);
 		$group = posix_getgrgid($stat["uid"]);
@@ -80,7 +80,7 @@ class SourceObject {
 		return $this->mtime;
 	}
 	
-	function getPerms(): string {
+	function getPerms(): int {
 		return $this->permissions;
 	}
 	

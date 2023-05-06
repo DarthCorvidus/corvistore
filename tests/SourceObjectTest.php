@@ -60,7 +60,7 @@ class SourceObjectTest extends TestCase {
 	
 	function testGetPerms() {
 		$object = new SourceObject($this->node, $this->getExamplePath());
-		$this->assertEquals($object->getPerms(), substr(sprintf('%o', fileperms($this->getExamplePath())), -4));
+		$this->assertEquals($object->getPerms(), fileperms($this->getExamplePath()));
 	}
 	
 	function testGetOwner() {
