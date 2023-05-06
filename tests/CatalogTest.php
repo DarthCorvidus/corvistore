@@ -174,11 +174,8 @@ class CatalogTest extends TestCase {
 		$catalog = new Catalog(TestHelper::getEPDO());
 		$source = new SourceObject($node, "/tmp/");
 		
-		$reflector = new ReflectionClass("Catalog");
-		$method = $reflector->getMethod("create");
-		$method->setAccessible(true);
-		$method->invokeArgs($catalog, array($source));
-
+		TestHelper::invoke($catalog, "create", array($source));
+		
 		$target[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => NULL);
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
 		$this->assertEquals($target, $database);
