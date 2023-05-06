@@ -45,14 +45,11 @@ class Catalog {
 		if(!empty($row)) {
 			return CatalogEntry::fromArray($row);
 		}
-		$new["dc_name"] = $obj->getBasename();
-		$new["dnd_id"] = $obj->getNode()->getId();
-		$new["dc_type"] = $obj->getType();
 		if($obj->hasParent()) {
-			$new["dc_parent"] = $parentCatalogEntry->getId();
+			return $this->create($obj, $parentCatalogEntry);
+		} else {
+			return $this->create($obj);
 		}
-		$id = $this->pdo->create("d_catalog", $new);
-	return CatalogEntry::fromId($this->pdo, $id);
 	}
 	/**
 	 * loadcreateParented trusts the calling process to have the proper parent.
@@ -77,11 +74,19 @@ class Catalog {
 		if(!empty($row)) {
 			return CatalogEntry::fromArray($row);
 		}
+	return $this->create($obj, $parent);
+	}
+	
+	private function create(SourceObject $obj, CatalogEntry $parent = NULL): CatalogEntry {
 		$new["dc_name"] = $obj->getBasename();
 		$new["dnd_id"] = $obj->getNode()->getId();
 		$new["dc_type"] = $obj->getType();
-		$new["dc_parent"] = $parent->getId();
-		$id = $this->pdo->create("d_catalog", $new);
-	return CatalogEntry::fromId($this->pdo, $id);
+		if($parent!=NULL) {
+			$new["dc_parent"] = $parent->getId();
+		} else {
+			$new["dc_parent"] = NULL;
+		}
+		$new["dc_id"] = $this->pdo->create("d_catalog", $new);
+	return CatalogEntry::fromArray($new);
 	}
 }
