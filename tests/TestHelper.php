@@ -61,4 +61,22 @@ class TestHelper {
 		$cpadm->handleCommand(new CommandParser("define policy forever partition=backup-main"));
 		$cpadm->handleCommand(new CommandParser("define node test01 policy=forever"));
 	}
+	
+	static function invoke($object, $method, array $args) {
+		$reflector = new ReflectionClass(get_class($object));
+		$method = $reflector->getMethod($method);
+		$method->setAccessible(true);
+	return $method->invokeArgs($object, $args);
+	}
+	
+	static function fileowner($filename) {
+		$owner = posix_getpwuid(fileowner($filename));
+		
+	return $owner["name"];
+	}
+	
+	static function filegroup($filename) {
+		$group = posix_getgrgid(filegroup($filename));
+	return $group["name"];
+	}
 }
