@@ -62,6 +62,8 @@ CREATE TABLE `d_version` (
 `dvs_group` TEXT,
 `dvs_size` INTEGER,
 `dvs_created` INTEGER,
+`dvs_stored` INTEGER,
+`dvs_deleted` INTEGER,
 `dc_id` INTEGER
 );
 
