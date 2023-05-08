@@ -82,4 +82,9 @@ class CatalogEntryTest extends TestCase {
 		$this->assertEquals(3, $ce->getNodeId());
 	}
 	
+	function testGetVersions() {
+		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
+		$this->assertInstanceOf(Versions::class, $ce->getVersions());
+	}
+	
 }

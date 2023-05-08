@@ -19,6 +19,7 @@ class CatalogEntry {
 	static function fromArray(EPDO $pdo, array $array): CatalogEntry {
 		$ce = new CatalogEntry();
 		$ce->pdo = $pdo;
+		$ce->versions = new Versions($pdo, $ce);
 		$ce->id = (int)$array["dc_id"];
 		$ce->name = $array["dc_name"];
 		$ce->nodeId = $array["dnd_id"];
@@ -58,5 +59,9 @@ class CatalogEntry {
 	
 	function getNodeId() {
 		return $this->nodeId;
+	}
+	
+	function getVersions(): Versions {
+		return $this->versions;
 	}
 }
