@@ -24,7 +24,7 @@ class CatalogEntryTest extends TestCase {
 		$array["dc_name"] = "root";
 		$array["dc_type"] = CatalogEntry::TYPE_DIR;
 		$array["dc_parent"] = NULL;
-		$ce = CatalogEntry::fromArray($array);
+		$ce = CatalogEntry::fromArray(TestHelper::getEPDO(), $array);
 		$this->assertInstanceOf(CatalogEntry::class, $ce);
 	}
 	

@@ -43,7 +43,7 @@ class Catalog {
 		}
 		$row = $this->pdo->row($queryString, $query);
 		if(!empty($row)) {
-			return CatalogEntry::fromArray($row);
+			return CatalogEntry::fromArray($this->pdo, $row);
 		}
 		if($obj->hasParent()) {
 			return $this->create($obj, $parentCatalogEntry);
@@ -72,7 +72,7 @@ class Catalog {
 		$queryString = "select * from d_catalog where dnd_id = ? and dc_name = ? and dc_parent = ?";
 		$row = $this->pdo->row($queryString, $query);
 		if(!empty($row)) {
-			return CatalogEntry::fromArray($row);
+			return CatalogEntry::fromArray($this->pdo, $row);
 		}
 	return $this->create($obj, $parent);
 	}
@@ -87,6 +87,6 @@ class Catalog {
 			$new["dc_parent"] = NULL;
 		}
 		$new["dc_id"] = $this->pdo->create("d_catalog", $new);
-	return CatalogEntry::fromArray($new);
+	return CatalogEntry::fromArray($this->pdo, $new);
 	}
 }

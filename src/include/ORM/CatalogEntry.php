@@ -10,13 +10,15 @@
 class CatalogEntry {
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
+	private $pdo;
 	private $id;
 	private $name;
 	private $parentId;
 	private $type;
 	private $nodeId;
-	static function fromArray(array $array): CatalogEntry {
+	static function fromArray(EPDO $pdo, array $array): CatalogEntry {
 		$ce = new CatalogEntry();
+		$ce->pdo = $pdo;
 		$ce->id = (int)$array["dc_id"];
 		$ce->name = $array["dc_name"];
 		$ce->nodeId = $array["dnd_id"];
@@ -32,7 +34,7 @@ class CatalogEntry {
 		if(empty($row)) {
 			throw new RuntimeException(sprintf("No catalog entry with id '%d'", $id));
 		}
-	return CatalogEntry::fromArray($row);
+	return CatalogEntry::fromArray($pdo, $row);
 	}
 	
 	function getId(): int {
