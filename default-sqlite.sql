@@ -67,10 +67,10 @@ CREATE TABLE `d_version` (
 `dc_id` INTEGER
 );
 
-CREATE TABLE `n_fileobject2basic` (
-`nfob_id` INTEGER PRIMARY KEY AUTOINCREMENT,
-`dfo_id` INTEGER,
+CREATE TABLE `n_version2basic` (
+`nvb_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`dv_id` INTEGER,
 `dst_id` INTEGER,
 `dpt_id` INTEGER,
-`nfob_active` INTEGER
+`nvb_stored` INTEGER
 );

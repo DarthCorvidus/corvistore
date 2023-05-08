@@ -82,6 +82,6 @@ abstract class Storage {
 	function createStoragePool() {
 		
 	}
-	#abstract function store();
-	#abstract function retrieve();
+	abstract function store(VersionEntry $entry, Partition $partition, SourceObject $obj);
+	abstract function restore(VersionEntry $entry, string $target);
 }

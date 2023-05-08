@@ -73,12 +73,46 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals($target, $hex);
 	}
 	
-	function testGetPathForId() {
+	function testGetPathForIdFile() {
 		$shared = new Shared();
 		$shared->useSQLite(__DIR__."/test.sqlite");
 		$pdo = $shared->getEPDO();
 		$storage = StorageBasic::fromName(TestHelper::getEPDO(), "backup-main01");
 		$target = __DIR__."/storage/basic01/00/00/21/d0/10/14/16/a8.cp";
-		$this->assertEquals($target, $storage->getPathForId(37177506666152));
+		$this->assertEquals($target, $storage->getPathForIdFile(37177506666152));
 	}
+
+	function testGetPathForIdLocation() {
+		$shared = new Shared();
+		$shared->useSQLite(__DIR__."/test.sqlite");
+		$pdo = $shared->getEPDO();
+		$storage = StorageBasic::fromName(TestHelper::getEPDO(), "backup-main01");
+		$target = __DIR__."/storage/basic01/00/00/21/d0/10/14/16/";
+		$this->assertEquals($target, $storage->getPathForIdLocation(37177506666152));
+	}
+	
+	function testStore() {
+		TestHelper::initServer();
+		$node = Node::fromName(TestHelper::getEPDO(), "test01");
+		$partition = $node->getPolicy()->getPartition();
+		$storage = Storage::fromId(TestHelper::getEPDO(), $partition->getStorageId());
+		
+		$files = new MockupFiles("/tmp/crow-protect");
+		$files->createRandom("image01.bin", 12);
+		$source = new SourceObject($node, "/tmp/crow-protect/image01.bin");
+		$catalog = new Catalog(TestHelper::getEPDO());
+		$catalogEntry = $catalog->loadcreate($source);
+		$version = new Version(TestHelper::getEPDO(), $catalogEntry);
+		$versionEntry = $version->addVersion($source);
+		$storage->store($versionEntry, $partition, $source);
+		$this->assertFileExists(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp");
+		$this->assertEquals(md5_file("/tmp/crow-protect/image01.bin"), md5_file(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp"));
+	}
+	
+	#function testRestore() {
+	#	$node = Node::fromName(TestHelper::getEPDO(), "test01");
+	#	$storage = Storage::fromId(TestHelper::getEPDO(), $node->getPolicy()->getPartition()->getStorageId());
+	#	$storage->restore($entry, $target)
+	#	
+	#}
 }
