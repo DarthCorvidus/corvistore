@@ -6,5 +6,10 @@ clear
 #cat test-serial.sql | sqlite3 tests/serial.sqlite
 
 result=$(dirname $0)
-echo $result
-phpunit --bootstrap $result/tests/autoload-composer.php $result/tests
+if [ -n "$1" ]; then
+	phpunit --bootstrap $result/tests/autoload-composer.php $result/tests --filter $1
+else
+	phpunit --bootstrap $result/tests/autoload-composer.php $result/tests
+fi
+
+#phpunit --bootstrap $result/tests/autoload-composer.php $result/tests
