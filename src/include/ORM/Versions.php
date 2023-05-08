@@ -5,7 +5,7 @@
  * @author Claus-Christoph Küthe
  */
 
-class Version {
+class Versions {
 	private $pdo;
 	private $catalogEntry;
 	#private $sourceObject;

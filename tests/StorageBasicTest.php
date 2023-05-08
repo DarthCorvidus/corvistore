@@ -102,8 +102,8 @@ class StorageBasicTest extends TestCase {
 		$source = new SourceObject($node, "/tmp/crow-protect/image01.bin");
 		$catalog = new Catalog(TestHelper::getEPDO());
 		$catalogEntry = $catalog->loadcreate($source);
-		$version = new Version(TestHelper::getEPDO(), $catalogEntry);
-		$versionEntry = $version->addVersion($source);
+		$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
+		$versionEntry = $versions->addVersion($source);
 		$storage->store($versionEntry, $partition, $source);
 		$this->assertFileExists(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp");
 		$this->assertEquals(md5_file("/tmp/crow-protect/image01.bin"), md5_file(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp"));

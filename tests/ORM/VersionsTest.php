@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
-class VersionTest extends TestCase {
+class VersionsTest extends TestCase {
 	private $mockup;
 	function __construct() {
 		parent::__construct();
@@ -20,9 +20,9 @@ class VersionTest extends TestCase {
 		$source = new SourceObject($node, "/tmp/");
 		$catalog = new Catalog(TestHelper::getEPDO());
 		$catalogEntry = TestHelper::invoke($catalog, "create", array($source));
-		$version = new Version(TestHelper::getEPDO(), $catalogEntry, $source);
+		$version = new Versions(TestHelper::getEPDO(), $catalogEntry, $source);
 			
-		$this->assertInstanceOf(Version::class, $version);
+		$this->assertInstanceOf(Versions::class, $version);
 	}
 	/**
 	 * Test to add a version, but not store it (mark it as stored)
@@ -33,8 +33,8 @@ class VersionTest extends TestCase {
 		$catalog = new Catalog(TestHelper::getEPDO());
 		$catalogEntry = TestHelper::invoke($catalog, "create", array($source));
 		
-		$version = new Version(TestHelper::getEPDO(), $catalogEntry);
-		$versionEntry = $version->addVersion($source);
+		$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
+		$versionEntry = $versions->addVersion($source);
 		
 		$target[0] = array("dvs_id" => "1", "dvs_atime" => fileatime("/tmp"), "dvs_mtime" => filemtime("/tmp/"), "dvs_ctime"=> filectime("/tmp/"), "dvs_permissions" => fileperms("/tmp/"), "dvs_owner" => TestHelper::fileowner("/tmp/"), "dvs_group" => TestHelper::filegroup("/tmp/"), "dvs_created" => $versionEntry->getCreated(), "dvs_size"=> filesize("/tmp/"), "dc_id"=>1, "dvs_stored"=>"0", "dvs_deleted"=>"0");
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
@@ -50,9 +50,9 @@ class VersionTest extends TestCase {
 		$catalog = new Catalog(TestHelper::getEPDO());
 		$catalogEntry = TestHelper::invoke($catalog, "create", array($source));
 		
-		$version = new Version(TestHelper::getEPDO(), $catalogEntry);
-		$versionEntry = $version->addVersion($source);
-		$version->setStored($versionEntry);
+		$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
+		$versionEntry = $versions->addVersion($source);
+		$versions->setStored($versionEntry);
 		
 		$target[0] = array("dvs_id" => "1", "dvs_atime" => fileatime("/tmp"), "dvs_mtime" => filemtime("/tmp/"), "dvs_ctime"=> filectime("/tmp/"), "dvs_permissions" => fileperms("/tmp/"), "dvs_owner" => TestHelper::fileowner("/tmp/"), "dvs_group" => TestHelper::filegroup("/tmp/"), "dvs_created" => $versionEntry->getCreated(), "dvs_size"=> filesize("/tmp/"), "dc_id"=>1, "dvs_stored"=>"1", "dvs_deleted"=>"0");
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
@@ -70,11 +70,11 @@ class VersionTest extends TestCase {
 		$catalog = new Catalog(TestHelper::getEPDO());
 		$catalogEntry = TestHelper::invoke($catalog, "create", array($source));
 		
-		$version = new Version(TestHelper::getEPDO(), $catalogEntry);
-		$versionEntry = $version->addVersion($source);
-		$version->setStored($versionEntry);
+		$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
+		$versionEntry = $versions->addVersion($source);
+		$versions->setStored($versionEntry);
 		
-		$versionEntry = $version->addVersion($source);
+		$versionEntry = $versions->addVersion($source);
 		
 		$target[0] = array("dvs_id" => "1", "dvs_atime" => fileatime("/tmp"), "dvs_mtime" => filemtime("/tmp/"), "dvs_ctime"=> filectime("/tmp/"), "dvs_permissions" => fileperms("/tmp/"), "dvs_owner" => TestHelper::fileowner("/tmp/"), "dvs_group" => TestHelper::filegroup("/tmp/"), "dvs_created" => $versionEntry->getCreated(), "dvs_size"=> filesize("/tmp/"), "dc_id"=>1, "dvs_stored"=>"1", "dvs_deleted"=>"0");
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
@@ -91,11 +91,11 @@ class VersionTest extends TestCase {
 		$catalog = new Catalog(TestHelper::getEPDO());
 		$catalogEntry = TestHelper::invoke($catalog, "create", array($source));
 		
-		$version = new Version(TestHelper::getEPDO(), $catalogEntry);
-		$versionEntry = $version->addVersion($source);
+		$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
+		$versionEntry = $versions->addVersion($source);
 		
-		$versionEntry = $version->addVersion($source);
-		$version->setStored($versionEntry);
+		$versionEntry = $versions->addVersion($source);
+		$versions->setStored($versionEntry);
 		
 		$target[0] = array("dvs_id" => "1", "dvs_atime" => fileatime("/tmp"), "dvs_mtime" => filemtime("/tmp/"), "dvs_ctime"=> filectime("/tmp/"), "dvs_permissions" => fileperms("/tmp/"), "dvs_owner" => TestHelper::fileowner("/tmp/"), "dvs_group" => TestHelper::filegroup("/tmp/"), "dvs_created" => $versionEntry->getCreated(), "dvs_size"=> filesize("/tmp/"), "dc_id"=>1, "dvs_stored"=>"0", "dvs_deleted"=>"0");
 		$target[1] = array("dvs_id" => "2", "dvs_atime" => fileatime("/tmp"), "dvs_mtime" => filemtime("/tmp/"), "dvs_ctime"=> filectime("/tmp/"), "dvs_permissions" => fileperms("/tmp/"), "dvs_owner" => TestHelper::fileowner("/tmp/"), "dvs_group" => TestHelper::filegroup("/tmp/"), "dvs_created" => $versionEntry->getCreated(), "dvs_size"=> filesize("/tmp/"), "dc_id"=>1, "dvs_stored"=>"1", "dvs_deleted"=>"0");
@@ -114,11 +114,11 @@ class VersionTest extends TestCase {
 		$sourceOld = new SourceObject($node, "/tmp/crow-protect/random.bin");
 		$catalogEntry = TestHelper::invoke($catalog, "create", array($sourceOld));
 		
-		$version = new Version(TestHelper::getEPDO(), $catalogEntry);
+		$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
 		// Add first entry.
 		
-		$versionEntryFirst = $version->addVersion($sourceOld);
-		$version->setStored($versionEntryFirst);
+		$versionEntryFirst = $versions->addVersion($sourceOld);
+		$versions->setStored($versionEntryFirst);
 		// Replace
 		$target[0] = array("dvs_id" => "1", "dvs_atime" => fileatime("/tmp/crow-protect/random.bin"), "dvs_mtime" => filemtime("/tmp/crow-protect/random.bin"), "dvs_ctime"=> filectime("/tmp/crow-protect/random.bin"), "dvs_permissions" => fileperms("/tmp/crow-protect/random.bin"), "dvs_owner" => TestHelper::fileowner("/tmp/crow-protect/random.bin"), "dvs_group" => TestHelper::filegroup("/tmp/crow-protect/random.bin"), "dvs_created" => $versionEntryFirst->getCreated(), "dvs_size"=> filesize("/tmp/crow-protect/random.bin"), "dc_id"=>1, "dvs_stored"=>"1", "dvs_deleted"=>"0");
 		sleep(2);
@@ -126,8 +126,8 @@ class VersionTest extends TestCase {
 		$this->mockup->createRandom("random.bin", 10);
 		clearstatcache();
 		$sourceNew = new SourceObject($node, "/tmp/crow-protect/random.bin");
-		$versionEntrySecond = $version->addVersion($sourceNew);
-		$version->setStored($versionEntrySecond);
+		$versionEntrySecond = $versions->addVersion($sourceNew);
+		$versions->setStored($versionEntrySecond);
 		$target[1] = array("dvs_id" => "2", "dvs_atime" => fileatime("/tmp/crow-protect/random.bin"), "dvs_mtime" => filemtime("/tmp/crow-protect/random.bin"), "dvs_ctime"=> filectime("/tmp/crow-protect/random.bin"), "dvs_permissions" => fileperms("/tmp/crow-protect/random.bin"), "dvs_owner" => TestHelper::fileowner("/tmp/crow-protect/random.bin"), "dvs_group" => TestHelper::filegroup("/tmp/crow-protect/random.bin"), "dvs_created" => $versionEntrySecond->getCreated(), "dvs_size"=> filesize("/tmp/crow-protect/random.bin"), "dc_id"=>1, "dvs_stored"=>"1", "dvs_deleted"=>"0");
 		
 		#$target[2] = array("dvs_id" => "1", "dvs_atime" => fileatime("/tmp"), "dvs_mtime" => filemtime("/tmp/"), "dvs_ctime"=> filectime("/tmp/"), "dvs_permissions" => fileperms("/tmp/"), "dvs_owner" => TestHelper::fileowner("/tmp/"), "dvs_group" => TestHelper::filegroup("/tmp/"), "dvs_created" => $versionEntry->getCreated(), "dvs_size"=> filesize("/tmp/"), "dc_id"=>1);
@@ -142,10 +142,10 @@ class VersionTest extends TestCase {
 		$sourceOld = new SourceObject($node, "/tmp/crow-protect/random.bin");
 		$catalogEntry = TestHelper::invoke($catalog, "create", array($sourceOld));
 		
-		$version = new Version(TestHelper::getEPDO(), $catalogEntry);
+		$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
 		// Add first entry.
-		$versionEntryFirst = $version->addVersion($sourceOld);
-		$version->setStored($versionEntryFirst);
+		$versionEntryFirst = $versions->addVersion($sourceOld);
+		$versions->setStored($versionEntryFirst);
 		$target[0] = array("dvs_id" => "1", "dvs_atime" => fileatime("/tmp/crow-protect/random.bin"), "dvs_mtime" => filemtime("/tmp/crow-protect/random.bin"), "dvs_ctime"=> filectime("/tmp/crow-protect/random.bin"), "dvs_permissions" => fileperms("/tmp/crow-protect/random.bin"), "dvs_owner" => TestHelper::fileowner("/tmp/crow-protect/random.bin"), "dvs_group" => TestHelper::filegroup("/tmp/crow-protect/random.bin"), "dvs_created" => $versionEntryFirst->getCreated(), "dvs_size"=> filesize("/tmp/crow-protect/random.bin"), "dc_id"=>1, "dvs_stored"=>"1", "dvs_deleted"=>"0");
 		# Move first entry out of the way.
 		rename("/tmp/crow-protect/random.bin", "/tmp/crow-protect/random.backup");
@@ -155,15 +155,15 @@ class VersionTest extends TestCase {
 		$this->mockup->createRandom("random.bin", 10);
 		clearstatcache();
 		$sourceNew = new SourceObject($node, "/tmp/crow-protect/random.bin");
-		$versionEntrySecond = $version->addVersion($sourceNew);
-		$version->setStored($versionEntrySecond);
+		$versionEntrySecond = $versions->addVersion($sourceNew);
+		$versions->setStored($versionEntrySecond);
 		$target[1] = array("dvs_id" => "2", "dvs_atime" => fileatime("/tmp/crow-protect/random.bin"), "dvs_mtime" => filemtime("/tmp/crow-protect/random.bin"), "dvs_ctime"=> filectime("/tmp/crow-protect/random.bin"), "dvs_permissions" => fileperms("/tmp/crow-protect/random.bin"), "dvs_owner" => TestHelper::fileowner("/tmp/crow-protect/random.bin"), "dvs_group" => TestHelper::filegroup("/tmp/crow-protect/random.bin"), "dvs_created" => $versionEntrySecond->getCreated(), "dvs_size"=> filesize("/tmp/crow-protect/random.bin"), "dc_id"=>1, "dvs_stored"=>"1", "dvs_deleted"=>"0");
 		unlink("/tmp/crow-protect/random.bin");
 		rename("/tmp/crow-protect/random.backup", "/tmp/crow-protect/random.bin");
 		clearstatcache();
 		$sourceRestored = new SourceObject($node, "/tmp/crow-protect/random.bin");
-		$versionEntryThird = $version->addVersion($sourceRestored);
-		$version->setStored($versionEntryThird);
+		$versionEntryThird = $versions->addVersion($sourceRestored);
+		$versions->setStored($versionEntryThird);
 		
 		$target[2] = array("dvs_id" => "3", "dvs_atime" => fileatime("/tmp/crow-protect/random.bin"), "dvs_mtime" => filemtime("/tmp/crow-protect/random.bin"), "dvs_ctime"=> filectime("/tmp/crow-protect/random.bin"), "dvs_permissions" => fileperms("/tmp/crow-protect/random.bin"), "dvs_owner" => TestHelper::fileowner("/tmp/crow-protect/random.bin"), "dvs_group" => TestHelper::filegroup("/tmp/crow-protect/random.bin"), "dvs_created" => $versionEntryThird->getCreated(), "dvs_size"=> filesize("/tmp/crow-protect/random.bin"), "dc_id"=>1, "dvs_stored"=>"1", "dvs_deleted"=>"0");
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
