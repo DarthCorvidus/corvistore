@@ -34,11 +34,15 @@ class StorageBasic extends Storage {
 		$new["dpt_id"] = $partition->getId();
 		$new["nvb_stored"] = 0;
 		$id = $this->pdo->create("n_version2basic", $new);
-		mkdir($this->getPathForIdLocation($id), 0700, true);
+		$location = $this->getPathForIdLocation($id);
+		if(!file_exists($location)) {
+			mkdir($location, 0700, true);
+		}
 		if(!copy($obj->getPath(), $this->getPathForIdFile($id))) {
 			throw new Exception("file could not be copied");
 		}
 		$this->pdo->update("n_version2basic", array("nvb_stored"=>1), array("nvb_id"=>$id));
+		$entry->setStored($this->pdo);
 	}
 	
 	public function restore(VersionEntry $entry, string $target) {

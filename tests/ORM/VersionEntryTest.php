@@ -31,6 +31,7 @@ class VersionEntryTest extends TestCase {
 		$example["dvs_size"] = "2186";
 		$example["dvs_created"] = "11237";
 		$example["dc_id"] = "12";
+		$example["dvs_stored"] = "0";
 		$entry = VersionEntry::fromArray($example);
 		$this->assertInstanceOf(VersionEntry::class, $entry);
 		$this->assertEquals(25, $entry->getId());

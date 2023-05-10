@@ -11,6 +11,7 @@ class VersionEntry {
 	private $size;
 	private $created;
 	private $catalogId;
+	private $stored;
 	static function fromArray(array $array): VersionEntry {
 		$version = new VersionEntry();
 		$version->id = (int)$array["dvs_id"];
@@ -23,6 +24,7 @@ class VersionEntry {
 		$version->size = (int)$array["dvs_size"];
 		$version->created = (int)$array["dvs_created"];
 		$version->catalogId = (int)$array["dc_id"];
+		$version->stored = (int)$array["dvs_stored"];
 	return $version;
 	}
 	
@@ -72,5 +74,14 @@ class VersionEntry {
 	
 	function getCatalogId(): int {
 		return $this->catalogId;
+	}
+	
+	function setStored(EPDO $pdo) {
+		$pdo->update("d_version", array("dvs_stored"=>"1"), array("dvs_id"=>$this->id));
+		$this->stored = 1;
+	}
+	
+	function isStored() {
+		return $this->stored === 1;
 	}
 }
