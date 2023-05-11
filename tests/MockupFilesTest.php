@@ -33,6 +33,12 @@ class MockupFilesTest extends TestCase {
 		$this->assertFileExists("/tmp/crow-protect");
 	}
 	
+	function testGetInternalPath() {
+		$mockup = new MockupFiles("/tmp/crow-protect");
+		$path = TestHelper::invoke($mockup, "getInternalPath", array("/vacation/2023_thailand/beach.jpg"));
+		$this->assertEquals("/tmp/crow-protect/vacation/2023_thailand/beach.jpg", $path);
+	}
+	
 	function testDelete() {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->delete();
@@ -101,4 +107,24 @@ class MockupFilesTest extends TestCase {
 		$this->assertFileExists("/tmp/crow-protect");
 		$this->assertEquals(FALSE, file_exists("/tmp/crow-protect/images/vacation/random.bin"));
 	}
+	
+	function testDeleteFile() {
+		$mockup = new MockupFiles("/tmp/crow-protect");
+		$mockup->createRandom("/images/vacation/random01.bin", 1024*10);
+		$mockup->deleteFile("/images/vacation/random01.bin");
+		$this->assertEquals(FALSE, file_exists("/tmp/crow-protect/images/vacation/random01.bin"));
+	}
+	
+	function testDeleteRecreate() {
+		$mockup = new MockupFiles("/tmp/crow-protect");
+		$mockup->createRandom("/images/vacation/random01.bin", 1024*10);
+		$oldStat = stat("/tmp/crow-protect/images/vacation/random01.bin");
+		sleep(2);
+		$mockup->deleteFile("/images/vacation/random01.bin");
+		$mockup->createDir("/images/vacation/random01.bin");
+		$newStat = stat("/tmp/crow-protect/images/vacation/random01.bin");
+		$this->assertEquals(TRUE, is_dir("/tmp/crow-protect/images/vacation/random01.bin"));
+		$this->assertNotEquals($oldStat, $newStat);
+	}
+
 }

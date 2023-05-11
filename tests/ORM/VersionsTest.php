@@ -109,7 +109,7 @@ class VersionsTest extends TestCase {
 	 */
 	function testAddVersionChanged() {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
-		$this->mockup->createRandom("random.bin", 10);
+		$this->mockup->createRandom("/random.bin", 10);
 		$catalog = new Catalog(TestHelper::getEPDO());
 		$sourceOld = new SourceObject($node, "/tmp/crow-protect/random.bin");
 		$catalogEntry = TestHelper::invoke($catalog, "create", array($sourceOld));
@@ -123,7 +123,7 @@ class VersionsTest extends TestCase {
 		$target[0] = array("dvs_id" => "1", "dvs_atime" => fileatime("/tmp/crow-protect/random.bin"), "dvs_mtime" => filemtime("/tmp/crow-protect/random.bin"), "dvs_ctime"=> filectime("/tmp/crow-protect/random.bin"), "dvs_permissions" => fileperms("/tmp/crow-protect/random.bin"), "dvs_owner" => TestHelper::fileowner("/tmp/crow-protect/random.bin"), "dvs_group" => TestHelper::filegroup("/tmp/crow-protect/random.bin"), "dvs_created" => $versionEntryFirst->getCreated(), "dvs_size"=> filesize("/tmp/crow-protect/random.bin"), "dc_id"=>1, "dvs_stored"=>"1", "dvs_deleted"=>"0");
 		sleep(2);
 		
-		$this->mockup->createRandom("random.bin", 10);
+		$this->mockup->createRandom("/random.bin", 10);
 		clearstatcache();
 		$sourceNew = new SourceObject($node, "/tmp/crow-protect/random.bin");
 		$versionEntrySecond = $versions->addVersion($sourceNew);
@@ -137,7 +137,7 @@ class VersionsTest extends TestCase {
 
 	function testAddVersionRestored() {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
-		$this->mockup->createRandom("random.bin", 10);
+		$this->mockup->createRandom("/random.bin", 10);
 		$catalog = new Catalog(TestHelper::getEPDO());
 		$sourceOld = new SourceObject($node, "/tmp/crow-protect/random.bin");
 		$catalogEntry = TestHelper::invoke($catalog, "create", array($sourceOld));

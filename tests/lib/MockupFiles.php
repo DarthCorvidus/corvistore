@@ -13,7 +13,15 @@ class MockupFiles {
 		if(!file_exists($path)) {
 			mkdir($path, 0700);
 		}
-		$this->path = $path;
+		$convert = new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE);
+		$this->path = $convert->convert($path);
+	}
+	
+	function getInternalPath($path) {
+		if($path[0]!="/") {
+			$path = "/".$path;
+		}
+		return $this->path.$path;
 	}
 	
 	function delete() {
@@ -40,8 +48,15 @@ class MockupFiles {
 	}
 
 	function createDir($path) {
-		if(!file_exists($this->path."/".$path)) {
-			mkdir($this->path."/".$path, 0700, true);
+		if($path=="/" || $path==".") {
+			return;
+		}
+		if(!file_exists($this->getInternalPath($path))) {
+			mkdir($this->getInternalPath($path), 0700, true);
+			clearstatcache();
+		}
+		if(!is_dir($this->getInternalPath($path))) {
+			throw new Exception($this->getInternalPath($path)." already exists, but is not a directory");
 		}
 	}
 	
@@ -51,13 +66,28 @@ class MockupFiles {
 		#if(!file_exists($dirname)) {
 		#	mkdir($this->path."/".$dirname, 0700, true);
 		#}
-		file_put_contents($this->path.$path, $text);
-	return $this->path.$path;
+		file_put_contents($this->getInternalPath($path), $text);
+		clearstatcache();
+	return $this->getInternalPath($path);
 	}
 	
 	function createRandom($path, int $size, int $blocksize=1024): string {
 		$this->createDir(dirname($path));
-		exec("dd if=/dev/urandom of=".escapeshellarg($this->path."/".$path)." bs=".$blocksize." count=".$size." 2> /dev/zero");
-	return $this->path.$path;
+		exec("dd if=/dev/urandom of=".escapeshellarg($this->getInternalPath($path))." bs=".$blocksize." count=".$size." 2> /dev/zero");
+		clearstatcache();
+	return $this->getInternalPath($path);
+	}
+	
+	function deleteFile($path) {
+		if(!file_exists($this->getInternalPath($path))) {
+			return;
+		}
+		if(is_dir($this->getInternalPath($path))) {
+			$this->deleteRecurse($this->getInternalPath($path));
+			clearstatcache();
+			return;
+		}
+		unlink($this->getInternalPath($path));
+		clearstatcache();
 	}
 }
