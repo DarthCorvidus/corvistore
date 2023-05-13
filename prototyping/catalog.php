@@ -39,21 +39,53 @@ class Recurse {
 		$this->exclude[] = "/usr";
 		$this->exclude[] = "/virtual";
 		$this->exclude[] = "/lost+found";
-		$this->exclude[] = "/tmp";
+		#$this->exclude[] = "/tmp";
 		#$this->exclude[] = "/var";
 	}
 	
 	private function addVersion($path, $id) {
 		if(is_dir($path)) {
-			$version["dvs_type"] = self::TYPE_DIR;
+			$this->addVersionDir($path, $id);
 		}
 		if(is_file($path)) {
-			$version["dvs_type"] = self::TYPE_FILE;
+			$this->addVersionFile($path, $id);
 		}
+	}
+	/*
+	 * Time stamps and sizes for directories change constantly, and there is
+	 * no need to keep track of them in distinct versions, at least as long
+	 * permissions and ownership - which are ignored in the prototype by now -
+	 * don't change.
+	 */
+	private function addVersionDir($path, $id) {
+		$param[] = $id;
+		$row = $this->pdo->row("select * from d_version where dc_id = ? order by dvs_created desc limit 1", $param);
+		$size = filesize($path);
+		$mtime = filemtime($path);
+		if(empty($row) or $row["dvs_type"]!=self::TYPE_DIR) {
+			echo "Creating version for directory ".$path.PHP_EOL;
+			$create["dc_id"] = $id;
+			#$create["dvs_size"] = $size;
+			#$create["dvs_mtime"] = $mtime;
+			$create["dvs_created"] = gmdate("Y-m-d H:i:s");
+			$create["dvs_type"] = self::TYPE_DIR;
+			$this->pdo->create("d_version", $create);
+			return;
+		}
+		#if($row["dvs_size"]!=$size or $row["dvs_mtime"]!=$mtime) {
+		#	echo "Updating version of directory ".$path.PHP_EOL;
+		#	$update["dvs_size"] = $size;
+		#	$update["dvs_mtime"] = $mtime;
+		#	$this->pdo->update("d_version", $update, array("dvs_id"=>$row["dvs_id"]));
+		#}
+	}
+	
+	private function addVersionFile($path, $id) {
 		$version["dc_id"] = $id;
 		$version["dvs_size"] = filesize($path);
 		$version["dvs_mtime"] = filemtime($path);
 		$version["dvs_created"] = gmdate("Y-m-d H:i:s");
+		$version["dvs_type"] = self::TYPE_FILE;
 		$param[] = $version["dc_id"];
 		$param[] = $version["dvs_size"];
 		$param[] = $version["dvs_mtime"];
@@ -62,10 +94,17 @@ class Recurse {
 		if(!empty($row)) {
 			return;
 		}
-		echo "Creating version for ".$path.PHP_EOL;
+		echo "Creating version for file ".$path.PHP_EOL;
 		$this->pdo->create("d_version", $version);
 	}
 	
+	/*
+	 * We need some kind of deleted entry; consider you ran a backup on
+	 * 2023-01-01, then deleted a file on 2023-01-02, made another backup on
+	 * 2023-01-03 and then finally do a restore of yesterday on 2023-01-04, the
+	 * restore needs to know that it should not restore the file you deleted on
+	 * 2023-01-02.
+	 */
 	private function addDeleted($id) {
 		$version["dvs_type"] = 0;
 		$version["dc_id"] = $id;
