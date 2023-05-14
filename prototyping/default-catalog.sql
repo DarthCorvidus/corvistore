@@ -8,7 +8,8 @@ CREATE TABLE `d_version` (
 `dvs_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `dvs_mtime` INTEGER,
 `dvs_size` INTEGER,
-`dvs_created` TEXT,
+`dvs_created_local` TEXT,
+`dvs_created_epoch` INTEGER,
 `dvs_type` INTEGER,
 `dc_id` INTEGER
 );

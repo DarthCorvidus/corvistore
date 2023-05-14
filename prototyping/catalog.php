@@ -28,10 +28,10 @@ class CatalogEntry {
 		$param[] = $name;
 		$query = "";
 		if($parent==NULL) {
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent IS NULL ORDER BY dc_id, dvs_created DESC";
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent IS NULL ORDER BY dc_id, dvs_created_epoch DESC";
 		} else {
 			$param[] = $parent->id;
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent = ? ORDER BY dc_id, dvs_created DESC";
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent = ? ORDER BY dc_id, dvs_created_epoch DESC";
 		}
 		$stmt = $pdo->prepare($query);
 		$stmt->execute($param);
@@ -132,7 +132,7 @@ class Recurse {
 		 * Gets the first result - as we want to get the latest, we have to use
 		 * descending order here.
 		 */
-		$row = $this->pdo->row("select * from d_version where dc_id = ? order by dvs_created desc limit 1", $param);
+		$row = $this->pdo->row("select * from d_version where dc_id = ? order by dvs_created_epoch desc limit 1", $param);
 		$size = filesize($path);
 		$mtime = filemtime($path);
 		if(empty($row) or $row["dvs_type"]!=self::TYPE_DIR) {
@@ -140,7 +140,12 @@ class Recurse {
 			$create["dc_id"] = $id;
 			#$create["dvs_size"] = $size;
 			#$create["dvs_mtime"] = $mtime;
-			$create["dvs_created"] = gmdate("Y-m-d H:i:s");
+			/*
+			 * The race condition here - mktime could be 1 s ahead of date - is
+			 * negligible ;-).
+			 */
+			$create["dvs_created_local"] = date("Y-m-d H:i:sP");
+			$create["dvs_created_epoch"] = mktime();
 			$create["dvs_type"] = self::TYPE_DIR;
 			$this->pdo->create("d_version", $create);
 			return;
@@ -157,13 +162,14 @@ class Recurse {
 		$version["dc_id"] = $id;
 		$version["dvs_size"] = filesize($path);
 		$version["dvs_mtime"] = filemtime($path);
-		$version["dvs_created"] = gmdate("Y-m-d H:i:s");
+		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
+		$version["dvs_created_epoch"] = mktime();
 		$version["dvs_type"] = self::TYPE_FILE;
 		$param[] = $version["dc_id"];
 		$param[] = $version["dvs_size"];
 		$param[] = $version["dvs_mtime"];
 		$param[] = $version["dvs_type"];
-		$row = $this->pdo->row("select * from d_version where dc_id = ? and dvs_size = ? and dvs_mtime = ? and dvs_type = ? order by dvs_created desc limit 1", $param);
+		$row = $this->pdo->row("select * from d_version where dc_id = ? and dvs_size = ? and dvs_mtime = ? and dvs_type = ? order by dvs_created_epoch desc limit 1", $param);
 		if(!empty($row)) {
 			return;
 		}
