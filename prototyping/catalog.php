@@ -1,9 +1,54 @@
 #!/usr/bin/php
 <?php
 require_once __DIR__."/../vendor/autoload.php";
-#if(!file_exists($argv[1])) {
-#	echo "No valid path.".PHP_EOL;
-#}
+if(!isset($argv[1])) {
+	echo "No mode, please use backup or restore.".PHP_EOL;
+	exit();
+}
+
+if(!in_array($argv[1], array("backup", "restore"))) {
+	echo "Invalid mode, please use backup or restore.".PHP_EOL;
+	exit();
+}
+
+class CatalogEntry {
+	public $id;
+	public $name;
+	public $parent;
+	private $versions;
+	function __construct(array $array) {
+		$this->id = $array["dc_id"];
+		$this->name = $array["dc_name"];
+		$this->parent = $array["dc_parent"];
+		$this->addVersion($array);
+	}
+	
+	function addVersion(array $array) {
+		$this->versions[] = new VersionEntry($array);
+	}
+	
+	function getLatest(): VersionEntry {
+		return $this->versions[count($this->versions)-1];
+	}
+
+}
+
+class VersionEntry {
+	public $id;
+	public $catalogId;
+	public $size;
+	public $mtime;
+	public $createdAt;
+	public $type;
+	function __construct(array $array) {
+		$this->id = $array["dvs_id"];
+		$this->catalogId = $array["dc_id"];
+		$this->size = $array["dvs_size"];
+		$this->mtime = $array["dvs_mtime"];
+		$this->createdAt = $array["dvs_created"];
+		$this->type = $array["dvs_type"];
+	}
+}
 
 class Recurse {
 	private $exclude;
@@ -11,7 +56,9 @@ class Recurse {
 	const TYPE_MISS = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
-	function __construct() {
+	private $argv;
+	function __construct(array $argv) {
+		$this->argv = $argv;
 		$shared = new Shared();
 		if(!file_exists(__DIR__."/catalog.sqlite")) {
 			throw new Exception("Please create catalog.sqlite first, using default-catalog.sql");
@@ -145,7 +192,7 @@ class Recurse {
 	return $id;
 	}
 	
-	private function recurse($path, $depth, $parentid = NULL) {
+	private function recurseFiles($path, $depth, $parentid = NULL) {
 		$files = array();
 		$directories = array();
 		$all = array();
@@ -173,7 +220,7 @@ class Recurse {
 		foreach($directories as $key => $value) {
 			$id = $this->getFileId($value, $parentid);
 			#echo str_repeat(" ", $depth)."+ [".$id."] ".basename($value).PHP_EOL;
-			$this->recurse($value, $depth+1, $id);
+			$this->recurseFiles($value, $depth+1, $id);
 		}
 		foreach($files as $key => $value) {
 			$fileId = $this->getFileId($value, $parentid);
@@ -190,10 +237,73 @@ class Recurse {
 		#print_r($files);
 	}
 	
+	function recurseCatalog($parent = NULL, $depth, $path) {
+		$query = "";
+		$param = array();
+		$entries = array();
+		if($parent==NULL) {
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent IS NULL ORDER BY dc_id, dvs_created DESC";
+		} else {
+			$param[] = $parent;
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent = ? ORDER BY dc_id, dvs_created DESC";
+		}
+		$stmt = $this->pdo->prepare($query);
+		$stmt->execute($param);
+		foreach($stmt as $value) {
+			if(!isset($entries[$value["dc_id"]])) {
+				$entries[$value["dc_id"]] = new CatalogEntry($value);
+			} else {
+				$entries[$value["dc_id"]]->addVersion($value);
+			}
+		}
+		foreach($entries as $key => $value) {
+			$version = $value->getLatest();
+			if($version->type==self::TYPE_DIR) {
+				#echo $path.$value->name."/".PHP_EOL;
+				$this->recurseCatalog($value->id, $depth+1, $path.$value->name."/");
+			}
+			if($version->type==self::TYPE_FILE) {
+				$this->restoreFile($path, $value);
+			}
+
+		}
+	}
+	
+	private function restoreFile($path, CatalogEntry $entry) {
+		$version = $entry->getLatest();
+		$filepath = $path.$entry->name;
+		if(!file_exists($path.$entry->name)) {
+			echo $filepath." missing, would be restored".PHP_EOL;
+			return;
+		}
+		if(filemtime($filepath)>$version->mtime) {
+			echo $filepath." is newer, would ignore".PHP_EOL;
+		}
+
+		if(filemtime($filepath)<$version->mtime) {
+			echo $filepath." is older, would prompt".PHP_EOL;
+		}
+
+	}
+	
 	function run() {
-		$this->recurse("/", 0);
+		if($this->argv[1]=="restore") {
+			$this->runRestore();
+		}
+
+		if($this->argv[1]=="backup") {
+			$this->runBackup();
+		}
+	}
+	
+	function runBackup() {
+		$this->recurseFiles("/", 0);
+	}
+	
+	function runRestore() {
+		$this->recurseCatalog(NULL, 0, "/");
 	}
 }
 
-$recurse = new Recurse();
+$recurse = new Recurse($argv);
 $recurse->run();
