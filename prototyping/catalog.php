@@ -23,6 +23,28 @@ class CatalogEntry {
 		$this->addVersion($array);
 	}
 	
+	static function fromName(EPDO $pdo, string $name, CatalogEntry $parent = NULL): CatalogEntry {
+		$param = array();
+		$param[] = $name;
+		$query = "";
+		if($parent==NULL) {
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent IS NULL ORDER BY dc_id, dvs_created DESC";
+		} else {
+			$param[] = $parent->id;
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent = ? ORDER BY dc_id, dvs_created DESC";
+		}
+		$stmt = $pdo->prepare($query);
+		$stmt->execute($param);
+		foreach($stmt as $key => $value) {
+			if($key == 0) {
+				$entry = new CatalogEntry($value);
+				continue;
+			}
+			$entry->addVersion($value);
+		}
+	return $entry;
+	}
+	
 	function addVersion(array $array) {
 		$this->versions[] = new VersionEntry($array);
 	}
@@ -106,6 +128,10 @@ class Recurse {
 	 */
 	private function addVersionDir($path, $id) {
 		$param[] = $id;
+		/*
+		 * Gets the first result - as we want to get the latest, we have to use
+		 * descending order here.
+		 */
 		$row = $this->pdo->row("select * from d_version where dc_id = ? order by dvs_created desc limit 1", $param);
 		$size = filesize($path);
 		$mtime = filemtime($path);
@@ -241,11 +267,17 @@ class Recurse {
 		$query = "";
 		$param = array();
 		$entries = array();
+		/*
+		 * The task to get the last version of a catalog entry will be done by
+		 * PHP, using CatalogEntry::getLatest(). This is not done „by the book“,
+		 * which would be to do it in SQL.
+		 */
+		
 		if($parent==NULL) {
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent IS NULL ORDER BY dc_id, dvs_created DESC";
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent IS NULL ORDER BY dc_id, dvs_created ASC";
 		} else {
 			$param[] = $parent;
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent = ? ORDER BY dc_id, dvs_created DESC";
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent = ? ORDER BY dc_id, dvs_created ASC";
 		}
 		$stmt = $this->pdo->prepare($query);
 		$stmt->execute($param);
@@ -276,12 +308,13 @@ class Recurse {
 			echo $filepath." missing, would be restored".PHP_EOL;
 			return;
 		}
-		if(filemtime($filepath)>$version->mtime) {
-			echo $filepath." is newer, would ignore".PHP_EOL;
+		$mtime = filemtime($filepath);
+		if($mtime>$version->mtime) {
+			echo $filepath." is newer, would ignore.".PHP_EOL;
 		}
 
 		if(filemtime($filepath)<$version->mtime) {
-			echo $filepath." is older, would prompt".PHP_EOL;
+			echo $filepath." is older, would prompt.".PHP_EOL;
 		}
 
 	}
@@ -300,7 +333,35 @@ class Recurse {
 		$this->recurseFiles("/", 0);
 	}
 	
+	function getEntryByPath($path): CatalogEntry {
+		$exp = array_slice(explode("/", $path), 1);
+		$entry = NULL;
+		foreach($exp as $value) {
+			if($entry==NULL) {
+				$entry = CatalogEntry::fromName($this->pdo, $value, $entry);
+			} else {
+				$entry = CatalogEntry::fromName($this->pdo, $value, $entry);
+			}
+		}
+	return $entry;
+	}
+	
 	function runRestore() {
+		/*
+		 * $argv[2] is interpreted as an entry point from which to restore, ie
+		 * if the user only wants to restore a part of the backup.
+		 */
+		if(isset($this->argv[2])) {
+			$convert = new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE);
+			$path = $convert->convert($this->argv[2]);
+			$entry = $this->getEntryByPath($path);
+			if($entry->getLatest()->type==self::TYPE_DIR) {
+				$this->recurseCatalog($entry->id, 0, $path."/");
+			} else {
+				$this->restoreFile(dirname($path)."/", $entry);
+			}
+		return;
+		}
 		$this->recurseCatalog(NULL, 0, "/");
 	}
 }
