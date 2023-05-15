@@ -75,10 +75,13 @@ class VersionEntry {
 class Recurse {
 	private $exclude;
 	private $pdo;
+	private $inex;
 	const TYPE_MISS = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
 	private $argv;
+	private $directories = 0;
+	private $files = 0;
 	function __construct(array $argv) {
 		$this->argv = $argv;
 		$shared = new Shared();
@@ -87,29 +90,15 @@ class Recurse {
 		}
 		$shared->useSQLite(__DIR__."/catalog.sqlite");
 		$this->pdo = $shared->getEPDO();
-
-		$this->exclude[] = "/bin";
-		$this->exclude[] = "/boot";
-		$this->exclude[] = "/dev";
-		$this->exclude[] = "/home";
-		$this->exclude[] = "/lib";
-		$this->exclude[] = "/etc";
-		$this->exclude[] = "/lib64";
-		$this->exclude[] = "/media";
-		$this->exclude[] = "/mnt";
-		$this->exclude[] = "/opt";
-		$this->exclude[] = "/proc";
-		#$this->exclude[] = "/root";
-		$this->exclude[] = "/srv";
-		$this->exclude[] = "/run";
-		$this->exclude[] = "/sbin";
-		$this->exclude[] = "/storage";
-		$this->exclude[] = "/sys";
-		$this->exclude[] = "/usr";
-		$this->exclude[] = "/virtual";
-		$this->exclude[] = "/lost+found";
-		#$this->exclude[] = "/tmp";
-		#$this->exclude[] = "/var";
+		$this->inex = new InEx();
+		#$this->inex->addExclude("/home/");
+		#$this->inex->addExclude("/proc/");
+		#$this->inex->addExclude("/virtual/");
+		$this->inex->addInclude("/var/");
+		$this->inex->addInclude("/tmp/");
+		$this->inex->addInclude("/root/");
+		$this->inex->addInclude("/usr/sbin/");
+		$this->inex->addInclude("/home/hm/Downloads/");
 	}
 	
 	private function addVersion($path, $id) {
@@ -189,12 +178,13 @@ class Recurse {
 		$version["dc_id"] = $id;
 		$version["dvs_size"] = 0;
 		$version["dvs_mtime"] = 0;
-		$version["dvs_created"] = gmdate("Y-m-d H:i:s");
+		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
+		$version["dvs_created_epoch"] = mktime();
 		$param[] = $version["dc_id"];
 		$param[] = $version["dvs_size"];
 		$param[] = $version["dvs_mtime"];
 		$param[] = $version["dvs_type"];
-		$row = $this->pdo->row("select * from d_version where dc_id = ? and dvs_size = ? and dvs_mtime = ? and dvs_type = ? order by dvs_created desc limit 1", $param);
+		$row = $this->pdo->row("select * from d_version where dc_id = ? and dvs_size = ? and dvs_mtime = ? and dvs_type = ? order by dvs_created_epoch desc limit 1", $param);
 		if(!empty($row)) {
 			return;
 		}
@@ -235,29 +225,44 @@ class Recurse {
 			if(is_link($value)) {
 				continue;
 			}
-			if(in_array($value, $this->exclude)) {
-				continue;
-			}
+			#if(in_array($value, $this->exclude)) {
+			#	continue;
+			#}
 			$all[] = basename($value);
-			if(is_dir($value)) {
+			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
 				$directories[] = $value;
 				continue;
 			}
-			if(is_file($value)) {
+			if(is_file($value) and $this->inex->isValid($path)) {
 				$files[] = $value;
 				continue;
 			}
 			
 		}
+		$directoriesCreated = array();
+		$this->pdo->beginTransaction();
 		foreach($directories as $key => $value) {
+			$this->directories++;
 			$id = $this->getFileId($value, $parentid);
+			$directoriesCreated[$id] = $value;
 			#echo str_repeat(" ", $depth)."+ [".$id."] ".basename($value).PHP_EOL;
-			$this->recurseFiles($value, $depth+1, $id);
+			
 		}
+		$this->pdo->commit();
+		
+		foreach($directoriesCreated as $key => $value) {
+			$this->recurseFiles($value, $depth+1, $key);
+		}
+		
+		
+		$this->pdo->beginTransaction();
 		foreach($files as $key => $value) {
+			$this->files++;
 			$fileId = $this->getFileId($value, $parentid);
 			#echo str_repeat(" ", $depth)." [".$fileId."] ".basename($value).PHP_EOL;
 		}
+		$this->pdo->commit();
+		
 		$stmt = $this->pdo->prepare("select dc_id, dc_name from d_catalog where dc_parent = ?");
 		$stmt->execute(array($parentid));
 		foreach($stmt as $key => $value) {
@@ -337,6 +342,8 @@ class Recurse {
 	
 	function runBackup() {
 		$this->recurseFiles("/", 0);
+		echo "Directories: ".$this->directories.PHP_EOL;
+		echo "Files:       ".$this->files.PHP_EOL;
 	}
 	
 	function getEntryByPath($path): CatalogEntry {
