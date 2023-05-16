@@ -8,6 +8,18 @@ class ConfigClientTest extends TestCase {
 		$this->assertInstanceOf(Config::class, $config);
 	}
 	
+	function testConstructBogus() {
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage("Client configuration at ".__DIR__."/squid.yml not available.");
+		new Config(__DIR__."/squid.yml");
+	}
+	
+	function testConstructDir() {
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage("Client configuration at ".__DIR__." not a file.");
+		new Config(__DIR__);
+	}
+	
 	function testGetNode() {
 		$config = new Config(__DIR__."/include.yml");
 		$this->assertEquals("test01", $config->getNode());

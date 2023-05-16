@@ -9,11 +9,17 @@ class Config implements \ImportModel {
 	private $import;
 	private $values;
 	function __construct($path) {
+		if(!file_exists($path)) {
+			throw new \RuntimeException("Client configuration at ".$path." not available.");
+		}
+		if(!is_file($path)) {
+			throw new \RuntimeException("Client configuration at ".$path." not a file.");
+		}
 		$yaml = yaml_parse_file($path);
 		$this->import = new \Import($yaml, $this);
 		$this->values = $this->import->getArray();
 	}
-	
+
 	function getNode(): string {
 		return $this->values["node"];
 	}
