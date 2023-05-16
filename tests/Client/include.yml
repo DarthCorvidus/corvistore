@@ -1,0 +1,5 @@
+## YAML Template.
+---
+node: test01
+include:
+       - /home/user/

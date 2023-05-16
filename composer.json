@@ -40,6 +40,11 @@
 			"type": "vcs",
 			"url": "https://github.com/DarthCorvidus/plibv4-assert",
 			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-import",
+			"no-api": true
 		}
 	],
 	"name": "crow-protect/crow-protect",
@@ -48,7 +53,8 @@
 		"plibv4/terminaltable": "dev-main",
 		"plibv4/vtc": "dev-main",
 		"plibv4/longeststring": "dev-main",
-		"plibv4/uservalue": "dev-main"
+		"plibv4/uservalue": "dev-main",
+		"plibv4/import": "dev-main"
 	},
 	"autoload": {
         "classmap": ["src/include/"]

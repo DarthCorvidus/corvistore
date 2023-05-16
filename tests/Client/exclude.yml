@@ -1,0 +1,7 @@
+## YAML Template.
+---
+node: test01
+exclude:
+    - /virtual/
+    - /storage/
+    - /var/lib/crow-protect/
