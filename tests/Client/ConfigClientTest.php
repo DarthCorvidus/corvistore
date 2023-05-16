@@ -26,4 +26,17 @@ class ConfigClientTest extends TestCase {
 		$config = new Config(__DIR__."/include.yml");
 		$this->assertEquals($expected, $config->getInclude());
 	}
+	
+	function testGetInExExclude() {
+		$config = new Config(__DIR__."/exclude.yml");
+		$this->assertEquals(TRUE, $config->getInEx()->isValid("/home"));
+		$this->assertEquals(FALSE, $config->getInEx()->isValid("/storage"));
+	}
+	
+	function testGetInExInclude() {
+		$config = new Config(__DIR__."/include.yml");
+		$this->assertEquals(TRUE, $config->getInEx()->isValid("/home/user"));
+		$this->assertEquals(FALSE, $config->getInEx()->isValid("/storage"));
+	}
+
 }

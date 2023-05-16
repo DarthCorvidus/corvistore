@@ -14,16 +14,33 @@ class Config implements \ImportModel {
 		$this->values = $this->import->getArray();
 	}
 	
-	function getNode() {
+	function getNode(): string {
 		return $this->values["node"];
 	}
 	
-	function getExclude() {
+	function getExclude(): array {
+		if(!isset($this->values["exclude"])) {
+			return array();
+		}
 		return $this->values["exclude"];
 	}
 	
-	function getInclude() {
+	function getInclude(): array {
+		if(!isset($this->values["include"])) {
+			return array();
+		}
 		return $this->values["include"];
+	}
+	
+	function getInEx(): \InEx {
+		$inex = new \InEx();
+		foreach($this->getInclude() as $value) {
+			$inex->addInclude($value);
+		}
+		foreach($this->getExclude() as $value) {
+			$inex->addExclude($value);
+		}
+	return $inex;
 	}
 
 	public function getImportListModel($name): \ImportModel {
