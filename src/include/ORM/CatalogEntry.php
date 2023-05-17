@@ -38,6 +38,29 @@ class CatalogEntry {
 	return CatalogEntry::fromArray($pdo, $row);
 	}
 	
+	static function create(EPDO $pdo, SourceObject $obj, $parentid = NULL) {
+		$name = $obj->getBasename();
+		$param[] = $name;
+		$param[] = $obj->getNode()->getId();
+		$create["dc_name"] = $name;
+		$create["dnd_id"] = $obj->getNode()->getId();
+		if($parentid == NULL) {
+			$sql = "select * from d_catalog where dc_name = ? and dnd_id = ? and dc_parent IS NULL";
+		} else {
+			$param[] = $parentid;
+			$create["dc_parent"] = $parentid;
+			$sql = "select * from d_catalog where dc_name = ? and dnd_id = ? and dc_parent = ?";
+		}
+		#echo $sql.PHP_EOL;
+		$row = $pdo->row($sql, $param);
+		if(empty($row)) {
+			$id = $pdo->create("d_catalog", $create);
+		} else {
+			$id = $row["dc_id"];
+		}
+	return $id;
+	}
+	
 	function getId(): int {
 		return $this->id;
 	}

@@ -7,6 +7,8 @@ class Backup {
 	private $directories;
 	private $files;
 	private $node;
+	private $partition;
+	private $storage;
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
@@ -16,6 +18,8 @@ class Backup {
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
 		$this->node = Node::fromName($this->pdo, $this->config->getNode());
+		$this->partition = $this->node->getPolicy()->getPartition();
+		$this->storage = Storage::fromId($this->pdo, $this->partition->getStorageId());
 	}
 	
 		private function fileowner($filename) {
@@ -134,27 +138,9 @@ class Backup {
 		$this->pdo->create("d_version", $version);
 	}
 	
-	private function getFileId($path, $parentid = NULL)  {
-		$name = basename($path);
-		$param[] = $name;
-		$param[] = $this->node->getId();
-		$create["dc_name"] = $name;
-		$create["dnd_id"] = $this->node->getId();
-		if($parentid == NULL) {
-			$sql = "select * from d_catalog where dc_name = ? and dnd_id = ? and dc_parent IS NULL";
-		} else {
-			$param[] = $parentid;
-			$create["dc_parent"] = $parentid;
-			$sql = "select * from d_catalog where dc_name = ? and dnd_id = ? and dc_parent = ?";
-		}
-		#echo $sql.PHP_EOL;
-		$row = $this->pdo->row($sql, $param);
-		if(empty($row)) {
-			$id = $this->pdo->create("d_catalog", $create);
-		} else {
-			$id = $row["dc_id"];
-		}
-		$this->addVersion($path, $id);
+	private function getFileId(SourceObject $obj, $parentid = NULL)  {
+		$id = CatalogEntry::create($this->pdo, $obj, $parentid);
+		$this->addVersion($obj->getPath(), $id, $parentid);
 	return $id;
 	}
 	
@@ -187,7 +173,8 @@ class Backup {
 		$this->pdo->beginTransaction();
 		foreach($directories as $key => $value) {
 			$this->directories++;
-			$id = $this->getFileId($value, $parentid);
+			$source = new SourceObject($this->node, $value);
+			$id = $this->getFileId($source, $parentid);
 			$directoriesCreated[$id] = $value;
 			#echo str_repeat(" ", $depth)."+ [".$id."] ".basename($value).PHP_EOL;
 			
@@ -202,7 +189,8 @@ class Backup {
 		$this->pdo->beginTransaction();
 		foreach($files as $key => $value) {
 			$this->files++;
-			$fileId = $this->getFileId($value, $parentid);
+			$obj = new SourceObject($this->node, $value);
+			$fileId = $this->getFileId($obj, $parentid);
 			#echo str_repeat(" ", $depth)." [".$fileId."] ".basename($value).PHP_EOL;
 		}
 		$this->pdo->commit();
