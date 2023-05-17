@@ -14,7 +14,6 @@ class CatalogEntry {
 	private $id;
 	private $name;
 	private $parentId;
-	private $type;
 	private $nodeId;
 	static function fromArray(EPDO $pdo, array $array): CatalogEntry {
 		$ce = new CatalogEntry();
@@ -26,7 +25,6 @@ class CatalogEntry {
 		if($array["dc_parent"]!==NULL and $array["dc_parent"]!=="") {
 			$ce->parentId = (int)$array["dc_parent"];
 		}
-		$ce->type = $array["dc_type"];
 	return $ce;
 	}
 	
@@ -38,7 +36,7 @@ class CatalogEntry {
 	return CatalogEntry::fromArray($pdo, $row);
 	}
 	
-	static function create(EPDO $pdo, SourceObject $obj, $parentid = NULL) {
+	static function create(EPDO $pdo, SourceObject $obj, $parentid = NULL): CatalogEntry {
 		$name = $obj->getBasename();
 		$param[] = $name;
 		$param[] = $obj->getNode()->getId();
@@ -51,14 +49,15 @@ class CatalogEntry {
 			$create["dc_parent"] = $parentid;
 			$sql = "select * from d_catalog where dc_name = ? and dnd_id = ? and dc_parent = ?";
 		}
-		#echo $sql.PHP_EOL;
 		$row = $pdo->row($sql, $param);
 		if(empty($row)) {
-			$id = $pdo->create("d_catalog", $create);
+			$create["dc_id"] = $pdo->create("d_catalog", $create);
+			$create["dc_parent"] = $parentid;
+			$entry = CatalogEntry::fromArray($pdo, $create);
 		} else {
-			$id = $row["dc_id"];
+			$entry = CatalogEntry::fromArray($pdo, $row);
 		}
-	return $id;
+	return $entry;
 	}
 	
 	function getId(): int {

@@ -32,12 +32,12 @@ class Backup {
 	return $group["name"];
 	}
 	
-	private function addVersion($path, $id) {
-		if(is_dir($path)) {
-			$this->addVersionDir($path, $id);
+	private function addVersion(SourceObject $obj, CatalogEntry $entry) {
+		if($obj->getType()== Catalog::TYPE_DIR) {
+			$this->addVersionDir($obj, $entry);
 		}
-		if(is_file($path)) {
-			$this->addVersionFile($path, $id);
+		if($obj->getType()== Catalog::TYPE_FILE) {
+			$this->addVersionFile($obj, $entry);
 		}
 	}
 	/*
@@ -46,18 +46,18 @@ class Backup {
 	 * permissions and ownership - which are ignored in the prototype by now -
 	 * don't change.
 	 */
-	private function addVersionDir($path, $id) {
-		$param[] = $id;
+	private function addVersionDir(SourceObject $obj, CatalogEntry $entry) {
+		$param[] = $entry->getId();
 		/*
 		 * Gets the first result - as we want to get the latest, we have to use
 		 * descending order here.
 		 */
 		$row = $this->pdo->row("select * from d_version where dc_id = ? order by dvs_created_epoch desc limit 1", $param);
-		$size = filesize($path);
-		$mtime = filemtime($path);
+		$size = $obj->getSize();
+		$mtime = $obj->getMTime();
 		if(empty($row) or $row["dvs_type"]!=self::TYPE_DIR) {
 			echo "Creating version for directory ".$path.PHP_EOL;
-			$create["dc_id"] = $id;
+			$create["dc_id"] = $entry->getId();
 			#$create["dvs_size"] = $size;
 			#$create["dvs_mtime"] = $mtime;
 			/*
@@ -67,9 +67,9 @@ class Backup {
 			$create["dvs_created_local"] = date("Y-m-d H:i:sP");
 			$create["dvs_created_epoch"] = mktime();
 			$create["dvs_type"] = self::TYPE_DIR;
-			$create["dvs_permissions"] = fileperms($path);
-			$create["dvs_owner"] = $this->fileowner($path);
-			$create["dvs_group"] = $this->filegroup($path);
+			$create["dvs_permissions"] = $obj->getPerms();
+			$create["dvs_owner"] = $obj->getOwner();
+			$create["dvs_group"] = $obj->getGroup();
 			$this->pdo->create("d_version", $create);
 			return;
 		}
@@ -81,16 +81,16 @@ class Backup {
 		#}
 	}
 	
-	private function addVersionFile($path, $id) {
-		$version["dc_id"] = $id;
-		$version["dvs_size"] = filesize($path);
-		$version["dvs_mtime"] = filemtime($path);
+	private function addVersionFile(SourceObject $object, CatalogEntry $entry) {
+		$version["dc_id"] = $entry->getId();
+		$version["dvs_size"] = $object->getSize();
+		$version["dvs_mtime"] = $object->getMTime();
 		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
 		$version["dvs_created_epoch"] = mktime();
 		$version["dvs_type"] = self::TYPE_FILE;
-		$version["dvs_permissions"] = fileperms($path);
-		$version["dvs_owner"] = $this->fileowner($path);
-		$version["dvs_group"] = $this->filegroup($path);
+		$version["dvs_permissions"] = $object->getPerms();
+		$version["dvs_owner"] = $object->getOwner();
+		$version["dvs_group"] = $object->getGroup();
 		
 		$param[] = $version["dc_id"];
 		$param[] = $version["dvs_size"];
@@ -98,17 +98,17 @@ class Backup {
 		$param[] = $version["dvs_type"];
 		$row = $this->pdo->row("select * from d_version where dc_id = ? and dvs_size = ? and dvs_mtime = ? and dvs_type = ? order by dvs_created_epoch desc limit 1", $param);
 		if(empty($row)) {
-			echo "Creating version for file ".$path.PHP_EOL;
+			echo "Creating version for file ".$object->getPath().PHP_EOL;
 			$this->pdo->create("d_version", $version);
 		return;
 		}
 		
 		if($version["dvs_permissions"]!=$row["dvs_permissions"] or $version["dvs_owner"]!=$row["dvs_owner"] or $version["dvs_group"]!=$row["dvs_group"]) {
-			echo "Updating metadata for file ".$path.PHP_EOL;
+			echo "Updating metadata for file ".$object->getPath().PHP_EOL;
 			$update["dvs_permissions"] = $version["dvs_permissions"];
 			$update["dvs_owner"] = $version["dvs_owner"];
 			$update["dvs_group"] = $version["dvs_group"];
-			$this->pdo->update("d_version", $update, array("dvs_id"=>$id));
+			$this->pdo->update("d_version", $update, array("dvs_id"=>$row["dvs_id"]));
 		}
 	}
 	
@@ -138,10 +138,10 @@ class Backup {
 		$this->pdo->create("d_version", $version);
 	}
 	
-	private function getFileId(SourceObject $obj, $parentid = NULL)  {
-		$id = CatalogEntry::create($this->pdo, $obj, $parentid);
-		$this->addVersion($obj->getPath(), $id, $parentid);
-	return $id;
+	private function getFileId(SourceObject $obj, $parentid = NULL): CatalogEntry  {
+		$entry = CatalogEntry::create($this->pdo, $obj, $parentid);
+		$this->addVersion($obj, $entry, $parentid);
+	return $entry;
 	}
 	
 	private function recurseFiles($path, $depth, $parentid = NULL) {
@@ -174,8 +174,8 @@ class Backup {
 		foreach($directories as $key => $value) {
 			$this->directories++;
 			$source = new SourceObject($this->node, $value);
-			$id = $this->getFileId($source, $parentid);
-			$directoriesCreated[$id] = $value;
+			$entry = $this->getFileId($source, $parentid);
+			$directoriesCreated[$entry->getId()] = $value;
 			#echo str_repeat(" ", $depth)."+ [".$id."] ".basename($value).PHP_EOL;
 			
 		}
