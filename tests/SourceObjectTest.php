@@ -10,6 +10,7 @@ class SourceObjectTest extends TestCase {
 	
 	static function setUpBeforeClass() {
 		file_put_contents(self::getExamplePath(), "Crow Protect - Data Storage Solution");
+		TestHelper::resetDatabase();
 		TestHelper::initServer();
 	}
 	
@@ -20,7 +21,7 @@ class SourceObjectTest extends TestCase {
 	static function getExamplePath() {
 		return __DIR__."/source/readme.txt";
 	}
-	
+
 	function testInitLocal() {
 		$path = $this->getExamplePath();
 		$object = new SourceObject($this->node, $path);
@@ -125,6 +126,4 @@ class SourceObjectTest extends TestCase {
 		$this->expectExceptionMessage("SourceObject /tmp has no parent");
 		$object->getParent();
 	}
-
-
 }
