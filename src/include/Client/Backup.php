@@ -56,7 +56,7 @@ class Backup {
 		$size = $obj->getSize();
 		$mtime = $obj->getMTime();
 		if(empty($row) or $row["dvs_type"]!=self::TYPE_DIR) {
-			echo "Creating version for directory ".$path.PHP_EOL;
+			echo "Creating version for directory ".$obj->getPath().PHP_EOL;
 			$create["dc_id"] = $entry->getId();
 			#$create["dvs_size"] = $size;
 			#$create["dvs_mtime"] = $mtime;
@@ -138,13 +138,13 @@ class Backup {
 		$this->pdo->create("d_version", $version);
 	}
 	
-	private function getFileId(SourceObject $obj, $parentid = NULL): CatalogEntry  {
-		$entry = CatalogEntry::create($this->pdo, $obj, $parentid);
-		$this->addVersion($obj, $entry, $parentid);
+	private function getCatalogEntry(SourceObject $obj, CatalogEntry $parent = NULL): CatalogEntry  {
+		$entry = CatalogEntry::create($this->pdo, $obj, $parent);
+		$this->addVersion($obj, $entry, $parent);
 	return $entry;
 	}
 	
-	private function recurseFiles($path, $depth, $parentid = NULL) {
+	private function recurseFiles(string $path, $depth, CatalogEntry $parent = NULL) {
 		$files = array();
 		$directories = array();
 		$all = array();
@@ -174,15 +174,15 @@ class Backup {
 		foreach($directories as $key => $value) {
 			$this->directories++;
 			$source = new SourceObject($this->node, $value);
-			$entry = $this->getFileId($source, $parentid);
-			$directoriesCreated[$entry->getId()] = $value;
+			$entry = $this->getCatalogEntry($source, $parent);
+			$directoriesCreated[$value] = $entry;
 			#echo str_repeat(" ", $depth)."+ [".$id."] ".basename($value).PHP_EOL;
 			
 		}
 		$this->pdo->commit();
 		
 		foreach($directoriesCreated as $key => $value) {
-			$this->recurseFiles($value, $depth+1, $key);
+			$this->recurseFiles($key, $depth+1, $value);
 		}
 		
 		
@@ -190,13 +190,18 @@ class Backup {
 		foreach($files as $key => $value) {
 			$this->files++;
 			$obj = new SourceObject($this->node, $value);
-			$fileId = $this->getFileId($obj, $parentid);
+			$catalogEntry = $this->getCatalogEntry($obj, $parent);
 			#echo str_repeat(" ", $depth)." [".$fileId."] ".basename($value).PHP_EOL;
 		}
 		$this->pdo->commit();
 		
-		$stmt = $this->pdo->prepare("select dc_id, dc_name from d_catalog where dc_parent = ?");
-		$stmt->execute(array($parentid));
+		if($parent==NULL) {
+			$stmt = $this->pdo->prepare("select dc_id, dc_name from d_catalog where dc_parent IS NULL");
+			$stmt->execute();
+		} else {
+			$stmt = $this->pdo->prepare("select dc_id, dc_name from d_catalog where dc_parent = ?");
+			$stmt->execute(array($parent->getId()));
+		}
 		foreach($stmt as $key => $value) {
 			if(!in_array($value["dc_name"], $all)) {
 				$this->addDeleted($value["dc_id"]);

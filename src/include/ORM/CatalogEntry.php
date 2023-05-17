@@ -36,23 +36,23 @@ class CatalogEntry {
 	return CatalogEntry::fromArray($pdo, $row);
 	}
 	
-	static function create(EPDO $pdo, SourceObject $obj, $parentid = NULL): CatalogEntry {
+	static function create(EPDO $pdo, SourceObject $obj, CatalogEntry $parent = NULL): CatalogEntry {
 		$name = $obj->getBasename();
 		$param[] = $name;
 		$param[] = $obj->getNode()->getId();
 		$create["dc_name"] = $name;
 		$create["dnd_id"] = $obj->getNode()->getId();
-		if($parentid == NULL) {
+		if($parent == NULL) {
 			$sql = "select * from d_catalog where dc_name = ? and dnd_id = ? and dc_parent IS NULL";
 		} else {
-			$param[] = $parentid;
-			$create["dc_parent"] = $parentid;
+			$param[] = $parent->getId();
+			$create["dc_parent"] = $parent->getId();
 			$sql = "select * from d_catalog where dc_name = ? and dnd_id = ? and dc_parent = ?";
 		}
 		$row = $pdo->row($sql, $param);
 		if(empty($row)) {
 			$create["dc_id"] = $pdo->create("d_catalog", $create);
-			$create["dc_parent"] = $parentid;
+			$create["dc_parent"] = $parent->getId();
 			$entry = CatalogEntry::fromArray($pdo, $create);
 		} else {
 			$entry = CatalogEntry::fromArray($pdo, $row);
