@@ -72,7 +72,7 @@ class SourceObjectTest extends TestCase {
 	
 	function testGetGroup() {
 		$object = new SourceObject($this->node, $this->getExamplePath());
-		$group = posix_getgrgid(fileowner($this->getExamplePath()));
+		$group = posix_getgrgid(filegroup($this->getExamplePath()));
 		$this->assertEquals($object->getGroup(), $group["name"]);
 	}
 	

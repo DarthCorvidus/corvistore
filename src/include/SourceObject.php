@@ -28,7 +28,7 @@ class SourceObject {
 		$this->permissions = fileperms($path);
 		
 		$owner = posix_getpwuid($stat["uid"]);
-		$group = posix_getgrgid($stat["uid"]);
+		$group = posix_getgrgid($stat["gid"]);
 		$this->owner = $owner["name"];
 		$this->group = $group["name"];
 		$this->size = filesize($path);
