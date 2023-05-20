@@ -75,5 +75,5 @@ CREATE TABLE `n_version2basic` (
 `nvb_stored` INTEGER
 );
 
-CREATE INDEX d_version_index ON d_version(dvs_created_epoch, dvs_stored, dvs_type, dc_id);
-CREATE INDEX d_catalog_index ON d_catalog(dc_name, dc_parent);
+CREATE INDEX d_version_index ON d_version(dvs_mtime, dvs_stored, dvs_type, dvs_size, dvs_mtime, dc_id);
+CREATE INDEX d_catalog_index ON d_catalog(dc_name, dnd_id, dc_parent);
