@@ -46,9 +46,8 @@ class ReportGeneral implements \TerminalTableModel {
 		$files = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ?", array($this->node->getId()));
 		$this->values[0] = array("Files:", number_format($files, 0));
 		$this->values[1] = array("Occupancy:", number_format($this->gatherOccupancy(), 0));
-		$this->values[2] = array("Oldest:", $this->pdo->result("select min(dvs_created_local) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ?", array($this->node->getId())));
 		$epochOldest = $this->pdo->result("select min(dvs_created_epoch) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ?", array($this->node->getId()));
-		$this->values[3] = array("Oldest:", date("Y-m-d H:i:s", $epochOldest));
+		$this->values[2] = array("Oldest:", date("Y-m-d H:i:s", $epochOldest));
 		$epochNewest = $this->pdo->result("select max(dvs_created_epoch) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ?", array($this->node->getId()));
 		$this->values[3] = array("Newest:", date("Y-m-d H:i:s", $epochNewest));
 	}
