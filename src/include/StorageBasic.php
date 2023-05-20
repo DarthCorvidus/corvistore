@@ -29,7 +29,7 @@ class StorageBasic extends Storage {
 	}
 
 	public function store(VersionEntry $entry, Partition $partition, SourceObject $obj) {
-		$new["dv_id"] = $entry->getId();
+		$new["dvs_id"] = $entry->getId();
 		$new["dst_id"] = $this->getId();
 		$new["dpt_id"] = $partition->getId();
 		$new["nvb_stored"] = 0;

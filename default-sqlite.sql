@@ -69,7 +69,7 @@ CREATE TABLE `d_version` (
 
 CREATE TABLE `n_version2basic` (
 `nvb_id` INTEGER PRIMARY KEY AUTOINCREMENT,
-`dv_id` INTEGER,
+`dvs_id` INTEGER,
 `dst_id` INTEGER,
 `dpt_id` INTEGER,
 `nvb_stored` INTEGER
