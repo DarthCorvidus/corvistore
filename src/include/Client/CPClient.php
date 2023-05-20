@@ -1,8 +1,8 @@
 <?php
 /**
- * Description of Client
+ * Core class for cpclient.php, which does backup, restore and report.
  *
- * @author hm
+ * @author Claus-Christoph Küthe
  */
 class CPClient {
 	private $pdo;
@@ -13,8 +13,8 @@ class CPClient {
 		$this->pdo = $shared->getEPDO();
 		$this->config = new \Client\Config("/etc/crow-protect/client.yml");
 		$this->argv = $argv;
-		if(!isset($this->argv[1]) or !in_array($this->argv[1], array("restore", "backup"))) {
-			throw new Exception("Please select operation mode: restore or backup.");
+		if(!isset($this->argv[1]) or !in_array($this->argv[1], array("restore", "backup", "report"))) {
+			throw new Exception("Please select operation mode: restore, backup, report");
 		}
 		
 	}
@@ -26,6 +26,11 @@ class CPClient {
 		}
 		if($this->argv[1]=="restore") {
 			
+		}
+		
+		if($this->argv[1]=="report") {
+			$backup = new Report($this->pdo, $this->config, $this->argv);
+			$backup->run();
 		}
 	}
 }
