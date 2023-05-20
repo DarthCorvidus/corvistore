@@ -9,6 +9,7 @@ class Backup {
 	private $node;
 	private $partition;
 	private $storage;
+	private $transferred = 0;
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
@@ -32,12 +33,12 @@ class Backup {
 	return $group["name"];
 	}
 	
-	private function addVersion(SourceObject $obj, CatalogEntry $entry) {
+	private function addVersion(SourceObject $obj, CatalogEntry $entry): VersionEntry {
 		if($obj->getType()== Catalog::TYPE_DIR) {
-			$this->addVersionDir($obj, $entry);
+			return $this->addVersionDir($obj, $entry);
 		}
 		if($obj->getType()== Catalog::TYPE_FILE) {
-			$this->addVersionFile($obj, $entry);
+			return $this->addVersionFile($obj, $entry);
 		}
 	}
 	/*
@@ -46,7 +47,7 @@ class Backup {
 	 * permissions and ownership - which are ignored in the prototype by now -
 	 * don't change.
 	 */
-	private function addVersionDir(SourceObject $obj, CatalogEntry $entry) {
+	private function addVersionDir(SourceObject $obj, CatalogEntry $entry): VersionEntry {
 		$param[] = $entry->getId();
 		/*
 		 * Gets the first result - as we want to get the latest, we have to use
@@ -70,9 +71,11 @@ class Backup {
 			$create["dvs_permissions"] = $obj->getPerms();
 			$create["dvs_owner"] = $obj->getOwner();
 			$create["dvs_group"] = $obj->getGroup();
-			$this->pdo->create("d_version", $create);
-			return;
+			$create["dvs_id"] = $this->pdo->create("d_version", $create);
+			$create["dvs_stored"] = 1;
+			return VersionEntry::fromArray($create);
 		}
+		return VersionEntry::fromArray($row);
 		#if($row["dvs_size"]!=$size or $row["dvs_mtime"]!=$mtime) {
 		#	echo "Updating version of directory ".$path.PHP_EOL;
 		#	$update["dvs_size"] = $size;
@@ -81,7 +84,7 @@ class Backup {
 		#}
 	}
 	
-	private function addVersionFile(SourceObject $object, CatalogEntry $entry) {
+	private function addVersionFile(SourceObject $object, CatalogEntry $entry): VersionEntry {
 		$version["dc_id"] = $entry->getId();
 		$version["dvs_size"] = $object->getSize();
 		$version["dvs_mtime"] = $object->getMTime();
@@ -91,16 +94,18 @@ class Backup {
 		$version["dvs_permissions"] = $object->getPerms();
 		$version["dvs_owner"] = $object->getOwner();
 		$version["dvs_group"] = $object->getGroup();
+		$version["dvs_stored"] = 0;
 		
 		$param[] = $version["dc_id"];
 		$param[] = $version["dvs_size"];
 		$param[] = $version["dvs_mtime"];
 		$param[] = $version["dvs_type"];
-		$row = $this->pdo->row("select * from d_version where dc_id = ? and dvs_size = ? and dvs_mtime = ? and dvs_type = ? order by dvs_created_epoch desc limit 1", $param);
+		$param[] = 1;
+		$row = $this->pdo->row("select * from d_version where dc_id = ? and dvs_size = ? and dvs_mtime = ? and dvs_type = ? and dvs_stored = ? order by dvs_created_epoch desc limit 1", $param);
 		if(empty($row)) {
 			echo "Creating version for file ".$object->getPath().PHP_EOL;
-			$this->pdo->create("d_version", $version);
-		return;
+			$version["dvs_id"] = $this->pdo->create("d_version", $version);
+		return VersionEntry::fromArray($version);
 		}
 		
 		if($version["dvs_permissions"]!=$row["dvs_permissions"] or $version["dvs_owner"]!=$row["dvs_owner"] or $version["dvs_group"]!=$row["dvs_group"]) {
@@ -110,6 +115,7 @@ class Backup {
 			$update["dvs_group"] = $version["dvs_group"];
 			$this->pdo->update("d_version", $update, array("dvs_id"=>$row["dvs_id"]));
 		}
+	return VersionEntry::fromArray($row);
 	}
 	
 	/*
@@ -138,11 +144,11 @@ class Backup {
 		$this->pdo->create("d_version", $version);
 	}
 	
-	private function getCatalogEntry(SourceObject $obj, CatalogEntry $parent = NULL): CatalogEntry  {
-		$entry = CatalogEntry::create($this->pdo, $obj, $parent);
-		$this->addVersion($obj, $entry, $parent);
-	return $entry;
-	}
+	#private function getCatalogEntry(SourceObject $obj, CatalogEntry $parent = NULL): CatalogEntry  {
+	#	$entry = CatalogEntry::create($this->pdo, $obj, $parent);
+	#	$this->addVersion($obj, $entry, $parent);
+	#return $entry;
+	#}
 	
 	private function recurseFiles(string $path, $depth, CatalogEntry $parent = NULL) {
 		$files = array();
@@ -174,7 +180,8 @@ class Backup {
 		foreach($directories as $key => $value) {
 			$this->directories++;
 			$source = new SourceObject($this->node, $value);
-			$entry = $this->getCatalogEntry($source, $parent);
+			$entry = CatalogEntry::create($this->pdo, $source, $parent);
+			$version = $this->addVersion($source, $entry, $parent);
 			$directoriesCreated[$value] = $entry;
 			#echo str_repeat(" ", $depth)."+ [".$id."] ".basename($value).PHP_EOL;
 			
@@ -189,8 +196,19 @@ class Backup {
 		$this->pdo->beginTransaction();
 		foreach($files as $key => $value) {
 			$this->files++;
+			if($this->files % 1000==0) {
+				echo "------------".$this->files." processed------------".PHP_EOL;
+			}
 			$obj = new SourceObject($this->node, $value);
-			$catalogEntry = $this->getCatalogEntry($obj, $parent);
+			$entry = CatalogEntry::create($this->pdo, $obj, $parent);
+			$version = $this->addVersion($obj, $entry, $parent);
+			if(!$version->isStored()) {
+				$this->storage->store($version, $this->partition, $obj);
+				$this->transferred += $obj->getSize();
+				$this->pdo->commit();
+				$this->pdo->beginTransaction();
+				$version->setStored($this->pdo);
+			}
 			#echo str_repeat(" ", $depth)." [".$fileId."] ".basename($value).PHP_EOL;
 		}
 		$this->pdo->commit();
@@ -213,9 +231,16 @@ class Backup {
 
 	
 	function run() {
+		$start = hrtime();
 		$this->recurseFiles("/", 0);
-		echo "Directories: ".$this->directories.PHP_EOL;
-		echo "Files:       ".$this->files.PHP_EOL;
-
+		$end = hrtime();
+		$elapsed = $end[0]-$start[0];
+		echo "Directories:  ".$this->directories.PHP_EOL;
+		echo "Files:        ".$this->files.PHP_EOL;
+		echo "Transferred:  ".number_format($this->transferred, 0).PHP_EOL;
+		$stored = $this->pdo->result("select sum(dvs_size) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ? AND dvs_stored = ?", array($this->node->getId(), 1));
+		echo "Occupancy:    ".number_format($stored, 0).PHP_EOL;
+		$timeconvert = new ConvertTime(ConvertTime::SECONDS, ConvertTime::HMS);
+		echo "Elapsed time: ".$timeconvert->convert($elapsed).PHP_EOL;
 	}
 }
