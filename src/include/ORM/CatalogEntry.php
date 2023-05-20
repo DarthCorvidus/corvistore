@@ -44,6 +44,7 @@ class CatalogEntry {
 		$create["dnd_id"] = $obj->getNode()->getId();
 		if($parent == NULL) {
 			$sql = "select * from d_catalog where dc_name = ? and dnd_id = ? and dc_parent IS NULL";
+			$create["dc_parent"] = NULL;
 		} else {
 			$param[] = $parent->getId();
 			$create["dc_parent"] = $parent->getId();
@@ -52,7 +53,6 @@ class CatalogEntry {
 		$row = $pdo->row($sql, $param);
 		if(empty($row)) {
 			$create["dc_id"] = $pdo->create("d_catalog", $create);
-			$create["dc_parent"] = $parent->getId();
 			$entry = CatalogEntry::fromArray($pdo, $create);
 		} else {
 			$entry = CatalogEntry::fromArray($pdo, $row);
