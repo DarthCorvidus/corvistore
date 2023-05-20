@@ -43,7 +43,7 @@ class ReportGeneral implements \TerminalTableModel {
 	
 	public function load() {
 		$this->values = array();
-		$files = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ?", array($this->node->getId()));
+		$files = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ? and dc_id in (select dc_id from d_version where dvs_type = ?)", array($this->node->getId(), Catalog::TYPE_FILE));
 		$this->values[0] = array("Files:", number_format($files, 0));
 		$this->values[1] = array("Occupancy:", number_format($this->gatherOccupancy(), 0));
 		$epochOldest = $this->pdo->result("select min(dvs_created_epoch) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ?", array($this->node->getId()));
