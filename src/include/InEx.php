@@ -5,8 +5,8 @@
  */
 
 class InEx {
-	private $exclude;
-	private $include;
+	private $exclude = array();
+	private $include = array();
 	function __construct() {
 		;
 	}
