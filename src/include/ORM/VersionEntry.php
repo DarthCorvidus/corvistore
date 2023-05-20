@@ -12,19 +12,25 @@ class VersionEntry {
 	private $created;
 	private $catalogId;
 	private $stored;
+	private $type;
 	static function fromArray(array $array): VersionEntry {
 		$version = new VersionEntry();
 		$version->id = (int)$array["dvs_id"];
-		$version->atime = (int)$array["dvs_atime"];
-		$version->mtime = (int)$array["dvs_mtime"];
-		$version->ctime = (int)$array["dvs_ctime"];
+		#$version->atime = (int)$array["dvs_atime"];
+		
+		#$version->ctime = (int)$array["dvs_ctime"];
 		$version->permissions = (int)$array["dvs_permissions"];
 		$version->owner = $array["dvs_owner"];
 		$version->group = $array["dvs_group"];
-		$version->size = (int)$array["dvs_size"];
-		$version->created = (int)$array["dvs_created"];
+		
+		$version->created = (int)$array["dvs_created_epoch"];
 		$version->catalogId = (int)$array["dc_id"];
 		$version->stored = (int)$array["dvs_stored"];
+		$version->type = (int)$array["dvs_type"];
+		if($version->type==Catalog::TYPE_FILE) {
+			$version->size = (int)$array["dvs_size"];
+			$version->mtime = (int)$array["dvs_mtime"];	
+		}
 	return $version;
 	}
 	
