@@ -32,4 +32,17 @@ class Versions {
 	function getLatest(): VersionEntry {
 		return $this->version[$this->getCount()-1];
 	}
+	
+	function filterToTimestamp(int $timestamp): Versions {
+		echo date("Y-m-d H:i:s", $timestamp).PHP_EOL;
+		$new = new Versions();
+		for($i=0; $i<$this->getCount();$i++) {
+			$version = $this->getVersion($i);
+			if($version->getCreated()>$timestamp) {
+				return $new;
+			}
+			$new->addVersion($version);
+		}
+	return $new;
+	}
 }
