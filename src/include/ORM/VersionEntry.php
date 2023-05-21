@@ -8,7 +8,7 @@ class VersionEntry {
 	private $permissions;
 	private $owner;
 	private $group;
-	private $size;
+	private $size = 0;
 	private $created;
 	private $catalogId;
 	private $stored;
@@ -61,6 +61,10 @@ class VersionEntry {
 	function getPermissions(): int {
 		return $this->permissions;
 	}
+
+	function getPermissionsNice(): string {
+		return substr(sprintf("%o", $this->permissions), -4);
+	}
 	
 	function getOwner(): string {
 		return $this->owner;
@@ -76,6 +80,10 @@ class VersionEntry {
 	
 	function getCreated(): int {
 		return $this->created;
+	}
+	
+	function getType(): int {
+		return $this->type;
 	}
 	
 	function getCatalogId(): int {
