@@ -89,4 +89,17 @@ class Catalog {
 		$new["dc_id"] = $this->pdo->create("d_catalog", $new);
 	return CatalogEntry::fromArray($this->pdo, $new);
 	}
+	
+	function getEntryByPath(string $path) {
+		$exp = array_slice(explode("/", $path), 1);
+		$entry = NULL;
+		foreach($exp as $value) {
+			if($entry==NULL) {
+				$entry = CatalogEntry::fromName($this->pdo, $value, $entry);
+			} else {
+				$entry = CatalogEntry::fromName($this->pdo, $value, $entry);
+			}
+		}
+	return $entry;
+	}
 }

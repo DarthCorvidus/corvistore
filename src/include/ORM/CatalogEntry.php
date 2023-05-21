@@ -15,10 +15,12 @@ class CatalogEntry {
 	private $name;
 	private $parentId;
 	private $nodeId;
+	private $versions;
 	static function fromArray(EPDO $pdo, array $array): CatalogEntry {
 		$ce = new CatalogEntry();
+		$ce->versions = new Versions();
 		$ce->pdo = $pdo;
-		$ce->versions = new Versions($pdo, $ce);
+		#$ce->versions = new Versions($pdo, $ce);
 		$ce->id = (int)$array["dc_id"];
 		$ce->name = $array["dc_name"];
 		$ce->nodeId = $array["dnd_id"];
@@ -36,6 +38,37 @@ class CatalogEntry {
 	return CatalogEntry::fromArray($pdo, $row);
 	}
 	
+	static function fromName(EPDO $pdo, string $name, CatalogEntry $parent = NULL): CatalogEntry {
+		$param = array();
+		$param[] = $name;
+		$query = "";
+		if($parent==NULL) {
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent IS NULL ORDER BY dc_id, dvs_created_epoch DESC";
+		} else {
+			$param[] = $parent->id;
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent = ? ORDER BY dc_id, dvs_created_epoch DESC";
+		}
+		$stmt = $pdo->prepare($query);
+		$stmt->execute($param);
+		foreach($stmt as $key => $value) {
+			if($key == 0) {
+				$entry = CatalogEntry::fromArray($pdo, $value);
+				$entry->addVersion($value);
+				continue;
+			}
+			$entry->addVersion($value);
+		}
+	return $entry;
+	}
+
+	function addVersion(array $array) {
+		$this->versions->addVersion(VersionEntry::fromArray($array));
+	}
+	
+	function getVersions(): Versions {
+		return $this->versions;
+	}
+
 	static function create(EPDO $pdo, SourceObject $obj, CatalogEntry $parent = NULL): CatalogEntry {
 		$name = $obj->getBasename();
 		$param[] = $name;
@@ -81,9 +114,5 @@ class CatalogEntry {
 	
 	function getNodeId() {
 		return $this->nodeId;
-	}
-	
-	function getVersions(): Versions {
-		return $this->versions;
 	}
 }
