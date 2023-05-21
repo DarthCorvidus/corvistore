@@ -43,10 +43,10 @@ class CatalogEntry {
 		$param[] = $name;
 		$query = "";
 		if($parent==NULL) {
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent IS NULL ORDER BY dc_id, dvs_created_epoch DESC";
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent IS NULL ORDER BY dc_id, dvs_created_epoch";
 		} else {
 			$param[] = $parent->id;
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent = ? ORDER BY dc_id, dvs_created_epoch DESC";
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent = ? ORDER BY dc_id, dvs_created_epoch";
 		}
 		$stmt = $pdo->prepare($query);
 		$stmt->execute($param);
