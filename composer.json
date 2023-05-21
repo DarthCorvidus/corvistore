@@ -45,6 +45,11 @@
 			"type": "vcs",
 			"url": "https://github.com/DarthCorvidus/plibv4-import",
 			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-argv",
+			"no-api": true
 		}
 	],
 	"name": "crow-protect/crow-protect",
@@ -54,7 +59,8 @@
 		"plibv4/vtc": "dev-main",
 		"plibv4/longeststring": "dev-main",
 		"plibv4/uservalue": "dev-main",
-		"plibv4/import": "dev-main"
+		"plibv4/import": "dev-main",
+		"plibv4/argv": "dev-main"
 	},
 	"autoload": {
         "classmap": ["src/include/"]

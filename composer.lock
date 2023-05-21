@@ -4,8 +4,37 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e340d5025cd837f34e3680aa2bb74d16",
+    "content-hash": "021370531055c045d99596d53fbd4701",
     "packages": [
+        {
+            "name": "plibv4/argv",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DarthCorvidus/plibv4-argv",
+                "reference": "0404d57c416ce68ade03f3b6829a3d1ff59fe7ef"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-argv/zipball/0404d57c416ce68ade03f3b6829a3d1ff59fe7ef",
+                "reference": "0404d57c416ce68ade03f3b6829a3d1ff59fe7ef",
+                "shasum": ""
+            },
+            "require": {
+                "plibv4/convert": "dev-main",
+                "plibv4/longeststring": "dev-main",
+                "plibv4/uservalue": "dev-main",
+                "plibv4/validate": "dev-main"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "time": "2021-12-28T16:14:32+00:00"
+        },
         {
             "name": "plibv4/assert",
             "version": "dev-main",
@@ -243,7 +272,8 @@
         "plibv4/vtc": 20,
         "plibv4/longeststring": 20,
         "plibv4/uservalue": 20,
-        "plibv4/import": 20
+        "plibv4/import": 20,
+        "plibv4/argv": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
