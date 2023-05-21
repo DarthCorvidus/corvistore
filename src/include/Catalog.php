@@ -90,14 +90,14 @@ class Catalog {
 	return CatalogEntry::fromArray($this->pdo, $new);
 	}
 	
-	function getEntryByPath(string $path) {
+	function getEntryByPath(Node $node, string $path) {
 		$exp = array_slice(explode("/", $path), 1);
 		$entry = NULL;
 		foreach($exp as $value) {
 			if($entry==NULL) {
-				$entry = CatalogEntry::fromName($this->pdo, $value, $entry);
+				$entry = CatalogEntry::fromName($this->pdo, $node, $value, $entry);
 			} else {
-				$entry = CatalogEntry::fromName($this->pdo, $value, $entry);
+				$entry = CatalogEntry::fromName($this->pdo, $node, $value, $entry);
 			}
 		}
 	return $entry;

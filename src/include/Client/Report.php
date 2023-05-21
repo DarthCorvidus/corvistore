@@ -23,9 +23,8 @@ class Report {
 	}
 	
 	private function runPath() {
-
 		$catalog = new Catalog($this->pdo, $this->node);
-		$entry = $catalog->getEntryByPath($this->argv[2]);
+		$entry = $catalog->getEntryByPath($this->node, $this->argv[2]);
 		$model = new ReportFile($entry);
 		$table = new TerminalTable($model);
 		echo "Report for ".$this->argv[2].":".PHP_EOL;
