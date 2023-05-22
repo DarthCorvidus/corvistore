@@ -13,6 +13,9 @@ class VersionEntry {
 	private $catalogId;
 	private $stored;
 	private $type;
+	private function __construct() {
+		
+	}
 	static function fromArray(array $array): VersionEntry {
 		$version = new VersionEntry();
 		$version->id = (int)$array["dvs_id"];
