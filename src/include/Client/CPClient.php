@@ -25,7 +25,8 @@ class CPClient {
 			$backup->run();
 		}
 		if($this->argv[1]=="restore") {
-			
+			$backup = new Restore($this->pdo, $this->config, $this->argv);
+			$backup->run();
 		}
 		
 		if($this->argv[1]=="report") {
