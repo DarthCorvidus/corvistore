@@ -1,24 +1,21 @@
 <?php
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
- * Description of ArgvReport
+ * The model to import parameters from $argv to ArgvRestore
  *
- * @author hm
+ * @author Claus-Christoph Küthe
  */
-class ArgvReport implements ArgvModel {
+class ArgvRestoreModel implements ArgvModel {
 	private $posNames = array();
 	private $positional = array();
 	private $named = array();
 	public function __construct() {
-		$this->positional[] = UserValue::asMandatory();
-		$this->positional[] = UserValue::asOptional();
-		$this->posNames = array("mode", "path");
+		$this->positional[0] = UserValue::asMandatory();
+		$this->positional[1] = UserValue::asOptional();
+		$this->positional[1]->setDefault("/");
+		$this->positional[2] = UserValue::asOptional();
+		$this->positional[2]->setConvert(new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE));
+		
+		$this->posNames = array("mode", "path", "target");
 
 		$this->named["date"] = UserValue::asOptional();
 		$this->named["date"]->setValidate(new ValidateDate(ValidateDate::ISO));
