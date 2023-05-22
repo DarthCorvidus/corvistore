@@ -48,10 +48,10 @@ class StorageBasic extends Storage {
 	public function restore(VersionEntry $entry, string $target) {
 		$param[] = $entry->getId();
 		$param[] = $this->getId();
-		$param[] = $this->getPartitionId();
+		#$param[] = $this->getPartitionId();
 		$param[] = 1;
-		$result = $this->pdo->row("select nvb_id from n_version2basic where dv_id = ? and dst_id = ? and dpt_id = ? and nvb_stored = ? limit 1");
-		$path = $this->getPathForIdFile($result["dvb_id"]);
+		$result = $this->pdo->row("select nvb_id from n_version2basic where dvs_id = ? and dst_id = ? and nvb_stored = ? limit 1", $param);
+		$path = $this->getPathForIdFile($result["nvb_id"]);
 		if(!copy($path, $target)) {
 			throw new Exception("file could not be copied");
 		}
