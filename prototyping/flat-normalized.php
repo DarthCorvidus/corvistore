@@ -87,7 +87,8 @@ class Recurse {
 	private $argv;
 	private $directories = 0;
 	private $files = 0;
-	private $total = 0;
+	private $processed = 0;
+	private $created = 0;
 	private $process = array();
 	private $origSize = 0;
 	function __construct(array $argv) {
@@ -159,6 +160,7 @@ class Recurse {
 			$create["dfl_owner"] = $this->fileowner($path);
 			$create["dfl_group"] = $this->filegroup($path);
 			$this->pdo->create("d_flat", $create);
+			$this->created++;
 			return;
 		}
 		#if($row["dvs_size"]!=$size or $row["dvs_mtime"]!=$mtime) {
@@ -188,6 +190,7 @@ class Recurse {
 		if(empty($row)) {
 			#echo "Creating version for file ".$path.PHP_EOL;
 			$this->pdo->create("d_flat", $version);
+			$this->created++;
 		return;
 		}
 		
@@ -293,7 +296,7 @@ class Recurse {
 			$all[] = basename($value);
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
 				$this->directories++;
-				$this->total++;
+				$this->processed++;
 				$directories[] = $value;
 				$this->process($value);
 				$this->recurseFiles($value);
@@ -301,7 +304,7 @@ class Recurse {
 			}
 			if(is_file($value) and $this->inex->isValid($path)) {
 				$this->files++;
-				$this->total++;
+				$this->processed++;
 				
 				$this->process($value);
 				
@@ -445,11 +448,15 @@ class Recurse {
 		#$this->checkDeleted();
 		$time = (hrtime(true)-$start)/1000000000;
 		$tc = new ConvertTime(ConvertTime::SECONDS, ConvertTime::HMS);
-		echo "Directories:  ".$this->directories.PHP_EOL;
-		echo "Files:        ".$this->files.PHP_EOL;
+		$tc = new ConvertTime(ConvertTime::SECONDS, ConvertTime::HMS);
+		echo "Directories:  ".number_format($this->directories).PHP_EOL;
+		echo "Files:        ".number_format($this->files).PHP_EOL;
+		echo "Processed:    ".number_format($this->processed).PHP_EOL;
+		echo "Created:      ".number_format($this->created).PHP_EOL;
 		echo "DB Size:      ".number_format(filesize(__DIR__."/flat-normalized.sqlite")).PHP_EOL;
 		echo "Add. DB Size: ".number_format(filesize(__DIR__."/flat-normalized.sqlite")-$this->origSize).PHP_EOL;
-		echo "Elapsed:      ".$tc->convert($time).PHP_EOL; 
+		echo "Elapsed:      ".$tc->convert($time).PHP_EOL;
+		echo "Versions:     ".number_format($this->pdo->result("select count(*) from d_flat", array())).PHP_EOL;
 	}
 	
 	function getEntryByPath($path): CatalogEntry {

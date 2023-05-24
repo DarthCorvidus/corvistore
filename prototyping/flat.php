@@ -87,7 +87,10 @@ class Recurse {
 	private $argv;
 	private $directories = 0;
 	private $files = 0;
+	private $processed = 0;
+	private $created = 0;
 	private $process = array();
+	private $origSize = 0;
 	function __construct(array $argv) {
 		$this->argv = $argv;
 		$shared = new Shared();
@@ -95,15 +98,16 @@ class Recurse {
 			throw new Exception("Please create catalog.sqlite first, using default-catalog.sql");
 		}
 		$shared->useSQLite(__DIR__."/flat.sqlite");
+		$this->origSize = filesize(__DIR__."/flat.sqlite");
 		$this->pdo = $shared->getEPDO();
 		$this->inex = new InEx();
-		$this->inex->addExclude("/home/");
+		#$this->inex->addExclude("/home/");
 		$this->inex->addExclude("/proc/");
 		$this->inex->addExclude("/run/");
 		$this->inex->addExclude("/dev/");
 		$this->inex->addExclude("/sys/");
 		$this->inex->addExclude("/virtual/");
-		#$this->inex->addExclude("/home/hm/backup");
+		$this->inex->addExclude("/home/hm/backup");
 	}
 	
 	private function fileowner($filename) {
@@ -140,7 +144,7 @@ class Recurse {
 		$size = filesize($path);
 		$mtime = filemtime($path);
 		if(empty($row) or $row["dfl_type"]!=self::TYPE_DIR) {
-			echo "Creating version for directory ".$path.PHP_EOL;
+			#echo "Creating version for directory ".$path.PHP_EOL;
 			#$create["dvs_size"] = $size;
 			#$create["dvs_mtime"] = $mtime;
 			/*
@@ -155,6 +159,7 @@ class Recurse {
 			$create["dfl_owner"] = $this->fileowner($path);
 			$create["dfl_group"] = $this->filegroup($path);
 			$this->pdo->create("d_flat", $create);
+			$this->created++;
 			return;
 		}
 		#if($row["dvs_size"]!=$size or $row["dvs_mtime"]!=$mtime) {
@@ -182,8 +187,9 @@ class Recurse {
 		$param[] = $version["dfl_type"];
 		$row = $this->pdo->row("select * from d_flat where dfl_path = ? and dfl_size = ? and dfl_mtime = ? and dfl_type = ? order by dfl_created_epoch desc limit 1", $param);
 		if(empty($row)) {
-			echo "Creating version for file ".$path.PHP_EOL;
+			#echo "Creating version for file ".$path.PHP_EOL;
 			$this->pdo->create("d_flat", $version);
+			$this->created++;
 		return;
 		}
 		
@@ -269,6 +275,7 @@ class Recurse {
 			$all[] = basename($value);
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
 				$this->directories++;
+				$this->processed++;
 				$directories[] = $value;
 				$this->process($value);
 				$this->recurseFiles($value);
@@ -276,6 +283,7 @@ class Recurse {
 			}
 			if(is_file($value) and $this->inex->isValid($path)) {
 				$this->files++;
+				$this->processed++;
 				$this->process($value);
 				
 				$files[] = $value;
@@ -409,13 +417,21 @@ class Recurse {
 	}
 	
 	function runBackup() {
+		$start = hrtime(true);
 		$this->recurseFiles("/", 0);
 		$this->processArray($this->process);
-		echo "Checking for deleted files".PHP_EOL;
-		$this->checkDeleted();
-		
-		echo "Directories: ".$this->directories.PHP_EOL;
-		echo "Files:       ".$this->files.PHP_EOL;
+		#echo "Checking for deleted files".PHP_EOL;
+		#$this->checkDeleted();
+		$time = (hrtime(true)-$start)/1000000000;
+		$tc = new ConvertTime(ConvertTime::SECONDS, ConvertTime::HMS);
+		echo "Directories:  ".number_format($this->directories).PHP_EOL;
+		echo "Files:        ".number_format($this->files).PHP_EOL;
+		echo "Processed:    ".number_format($this->processed).PHP_EOL;
+		echo "Created:      ".number_format($this->created).PHP_EOL;
+		echo "DB Size:      ".number_format(filesize(__DIR__."/flat.sqlite")).PHP_EOL;
+		echo "Add. DB Size: ".number_format(filesize(__DIR__."/flat.sqlite")-$this->origSize).PHP_EOL;
+		echo "Elapsed:      ".$tc->convert($time).PHP_EOL;
+		echo "Versions:     ".number_format($this->pdo->result("select count(*) from d_flat", array())).PHP_EOL;
 	}
 	
 	function getEntryByPath($path): CatalogEntry {
