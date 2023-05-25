@@ -11,69 +11,30 @@ if(!in_array($argv[1], array("backup", "restore"))) {
 	exit();
 }
 
-class CatalogEntry {
+class FlatEntry {
 	public $id;
-	public $name;
+	public $path;
 	public $parent;
-	private $versions;
-	function __construct(array $array) {
-		$this->id = $array["dc_id"];
-		$this->name = $array["dc_name"];
-		$this->parent = $array["dc_parent"];
-		$this->addVersion($array);
-	}
-	
-	static function fromName(EPDO $pdo, string $name, CatalogEntry $parent = NULL): CatalogEntry {
-		$param = array();
-		$param[] = $name;
-		$query = "";
-		if($parent==NULL) {
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent IS NULL ORDER BY dc_id, dvs_created_epoch DESC";
-		} else {
-			$param[] = $parent->id;
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_name = ? and dc_parent = ? ORDER BY dc_id, dvs_created_epoch DESC";
-		}
-		$stmt = $pdo->prepare($query);
-		$stmt->execute($param);
-		foreach($stmt as $key => $value) {
-			if($key == 0) {
-				$entry = new CatalogEntry($value);
-				$entry->addVersion($value);
-				continue;
-			}
-			$entry->addVersion($value);
-		}
-	return $entry;
-	}
-	
-	function addVersion(array $array) {
-		print_r($array);
-		$this->versions[] = VersionEntry::fromArray($array);
-	}
-	
-	function getLatest(): VersionEntry {
-		return $this->versions[count($this->versions)-1];
-	}
-
-}
-
-class VersionEntry {
-	public $id;
-	public $catalogId;
 	public $size;
 	public $mtime;
 	public $createdAt;
 	public $type;
 	function __construct(array $array) {
-		$this->id = $array["dvs_id"];
-		$this->catalogId = $array["dc_id"];
-		$this->size = $array["dvs_size"];
-		$this->mtime = $array["dvs_mtime"];
-		$this->createdAt = $array["dvs_created"];
-		$this->type = $array["dvs_type"];
-		$this->owner = $array["dvs_owner"];
-		$this->group = $array["dvs_group"];
-		$this->permissions = $array["dvs_permissions"];
+		$this->id = $array["dfl_id"];
+		$this->path = $array["dfl_path"];
+		$this->size = $array["dfl_size"];
+		$this->mtime = $array["dfl_mtime"];
+		$this->createdAt = $array["dfl_created_epoch"];
+		$this->type = $array["dfl_type"];
+		$this->owner = $array["dfl_owner"];
+		$this->group = $array["dfl_group"];
+		$this->permissions = $array["dfl_permissions"];
+	}
+}
+
+class VersionEntry {
+	public $catalogId;
+	function __construct(array $array) {
 	}
 }
 
@@ -91,6 +52,11 @@ class Recurse {
 	private $created = 0;
 	private $process = array();
 	private $origSize = 0;
+	private $resExamined = 0;
+	private $resRestored = 0;
+	private $resEqual = 0;
+	private $resOlder = 0;
+	private $resNewer = 0;
 	function __construct(array $argv) {
 		$this->argv = $argv;
 		$shared = new Shared();
@@ -366,20 +332,26 @@ class Recurse {
 		}
 	}
 	
-	private function restoreFile($path, CatalogEntry $entry) {
-		$version = $entry->getLatest();
-		$filepath = $path.$entry->name;
-		if(!file_exists($path.$entry->name)) {
-			echo $filepath." missing, would be restored".PHP_EOL;
+	private function restoreFile(FlatEntry $entry) {
+		if(!file_exists($entry->path)) {
+			$this->resRestored++;
+			echo $entry->path." missing, would be restored".PHP_EOL;
 			return;
 		}
-		$mtime = filemtime($filepath);
-		if($mtime>$version->mtime) {
-			echo $filepath." is newer, would ignore.".PHP_EOL;
+		$mtime = filemtime($entry->path);
+		if($mtime==$entry->mtime) {
+			$this->resEqual++;
+			#echo $entry->path." is equal, would ignore.".PHP_EOL;
 		}
 
-		if(filemtime($filepath)<$version->mtime) {
-			echo $filepath." is older, would prompt.".PHP_EOL;
+		if($mtime>$entry->mtime) {
+			$this->resNewer++;
+			#echo $entry->path." is newer, would ignore.".PHP_EOL;
+		}
+
+		if($mtime<$entry->mtime) {
+			$this->resOlder++;
+			#echo $entry->path." is older, would prompt.".PHP_EOL;
 		}
 
 	}
@@ -448,22 +420,40 @@ class Recurse {
 	}
 	
 	function runRestore() {
-		/*
-		 * $argv[2] is interpreted as an entry point from which to restore, ie
-		 * if the user only wants to restore a part of the backup.
-		 */
+		#$sql[] = "select t.dfl_path, t.dfl_created_local, t.dfl_type from d_flat t";
+		$param = array();
+		$sql[] = "select t.* from d_flat t";
 		if(isset($this->argv[2])) {
-			$convert = new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE);
-			$path = $convert->convert($this->argv[2]);
-			$entry = $this->getEntryByPath($path);
-			if($entry->getLatest()->type==self::TYPE_DIR) {
-				$this->recurseCatalog($entry->id, 0, $path."/");
-			} else {
-				$this->restoreFile(dirname($path)."/", $entry);
-			}
-		return;
+			/*
+			 * $argv[2] is interpreted as an entry point from which to restore, ie
+			 * if the user only wants to restore a part of the backup.
+			 * 
+			 * The current implementation is, however, too primitive and flawed.
+			 * If I'd do 'flat.php restore /home/alex', it would restore
+			 * /home/alexander and /home/alexandra too
+			 */
+			$sql[] = "INNER JOIN (select dfl_path, max(dfl_created_epoch) as maxdate from d_flat where dfl_path LIKE ? group by dfl_path) tm ";
+			$param[] = $this->argv[2]."%";
+		} else {
+			$sql[] = "INNER JOIN (select dfl_path, max(dfl_created_epoch) as maxdate from d_flat group by dfl_path) tm ";
 		}
-		$this->recurseCatalog(NULL, 0, "/");
+		
+		$sql[] = "on t.dfl_path = tm.dfl_path and t.dfl_created_epoch = tm.maxdate ";
+		$sql[] = "order by t.dfl_path";
+		$stmt = $this->pdo->prepare(implode(" ", $sql));
+		$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		$stmt->execute($param);
+		$count = 0;
+		foreach($stmt as $key => $value) {
+			$this->resExamined++;
+			$entry = new FlatEntry($value);
+			$this->restoreFile($entry);
+		}
+		echo "Examined: ".number_format($this->resExamined).PHP_EOL;
+		echo "Older:    ".number_format($this->resOlder).PHP_EOL;
+		echo "Equal:    ".number_format($this->resEqual).PHP_EOL;
+		echo "Newer:    ".number_format($this->resNewer).PHP_EOL;
+		echo "Missing:  ".number_format($this->resRestored).PHP_EOL;
 	}
 }
 
