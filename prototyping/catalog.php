@@ -38,6 +38,7 @@ class CatalogEntry {
 		foreach($stmt as $key => $value) {
 			if($key == 0) {
 				$entry = new CatalogEntry($value);
+				$entry->addVersion($value);
 				continue;
 			}
 			$entry->addVersion($value);
@@ -69,6 +70,9 @@ class VersionEntry {
 		$this->mtime = $array["dvs_mtime"];
 		$this->createdAt = $array["dvs_created"];
 		$this->type = $array["dvs_type"];
+		$this->owner = $array["dvs_owner"];
+		$this->group = $array["dvs_group"];
+		$this->permissions = $array["dvs_permissions"];
 	}
 }
 
@@ -82,6 +86,15 @@ class Recurse {
 	private $argv;
 	private $directories = 0;
 	private $files = 0;
+	private $processed = 0;
+	private $created = 0;
+	private $process = array();
+	private $origSize = 0;
+	private $resExamined = 0;
+	private $resRestored = 0;
+	private $resEqual = 0;
+	private $resOlder = 0;
+	private $resNewer = 0;
 	function __construct(array $argv) {
 		$this->argv = $argv;
 		$shared = new Shared();
@@ -89,16 +102,25 @@ class Recurse {
 			throw new Exception("Please create catalog.sqlite first, using default-catalog.sql");
 		}
 		$shared->useSQLite(__DIR__."/catalog.sqlite");
+		$this->origSize = filesize(__DIR__."/catalog.sqlite");
 		$this->pdo = $shared->getEPDO();
 		$this->inex = new InEx();
-		#$this->inex->addExclude("/home/");
-		#$this->inex->addExclude("/proc/");
-		#$this->inex->addExclude("/virtual/");
-		$this->inex->addInclude("/var/");
-		$this->inex->addInclude("/tmp/");
-		$this->inex->addInclude("/root/");
-		$this->inex->addInclude("/usr/sbin/");
-		$this->inex->addInclude("/home/hm/Downloads/");
+		$this->inex->addExclude("/proc/");
+		$this->inex->addExclude("/run/");
+		$this->inex->addExclude("/dev/");
+		$this->inex->addExclude("/sys/");
+		$this->inex->addExclude("/virtual/");
+		$this->inex->addExclude("/home/hm/backup");
+	}
+	
+	private function fileowner($filename) {
+		$owner = posix_getpwuid(fileowner($filename));
+	return $owner["name"];
+	}
+	
+	private function filegroup($filename) {
+		$group = posix_getgrgid(filegroup($filename));
+	return $group["name"];
 	}
 	
 	private function addVersion($path, $id) {
@@ -136,6 +158,9 @@ class Recurse {
 			$create["dvs_created_local"] = date("Y-m-d H:i:sP");
 			$create["dvs_created_epoch"] = mktime();
 			$create["dvs_type"] = self::TYPE_DIR;
+			$create["dvs_permissions"] = fileperms($path);
+			$create["dvs_owner"] = $this->fileowner($path);
+			$create["dvs_group"] = $this->filegroup($path);
 			$this->pdo->create("d_version", $create);
 			return;
 		}
@@ -154,16 +179,28 @@ class Recurse {
 		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
 		$version["dvs_created_epoch"] = mktime();
 		$version["dvs_type"] = self::TYPE_FILE;
+		$version["dvs_permissions"] = fileperms($path);
+		$version["dvs_owner"] = $this->fileowner($path);
+		$version["dvs_group"] = $this->filegroup($path);
+		
 		$param[] = $version["dc_id"];
 		$param[] = $version["dvs_size"];
 		$param[] = $version["dvs_mtime"];
 		$param[] = $version["dvs_type"];
 		$row = $this->pdo->row("select * from d_version where dc_id = ? and dvs_size = ? and dvs_mtime = ? and dvs_type = ? order by dvs_created_epoch desc limit 1", $param);
-		if(!empty($row)) {
-			return;
+		if(empty($row)) {
+			echo "Creating version for file ".$path.PHP_EOL;
+			$this->pdo->create("d_version", $version);
+		return;
 		}
-		echo "Creating version for file ".$path.PHP_EOL;
-		$this->pdo->create("d_version", $version);
+		
+		#if($version["dvs_permissions"]!=$row["dvs_permissions"] or $version["dvs_owner"]!=$row["dvs_owner"] or $version["dvs_group"]!=$row["dvs_group"]) {
+		#	echo "Updating metadata for file ".$path.PHP_EOL;
+		#	$update["dvs_permissions"] = $version["dvs_permissions"];
+		#	$update["dvs_owner"] = $version["dvs_owner"];
+		#	$update["dvs_group"] = $version["dvs_group"];
+		#	$this->pdo->update("d_version", $update, array("dvs_id"=>$id));
+		#}
 	}
 	
 	/*
@@ -193,6 +230,10 @@ class Recurse {
 	}
 	
 	private function getFileId($path, $parentid = NULL)  {
+		$this->processed++;
+		if($this->processed%5000==0) {
+			echo "Processed ".$this->processed." entries.".PHP_EOL;
+		}
 		$name = basename($path);
 		$param[] = $name;
 		$create["dc_name"] = $name;
@@ -263,6 +304,7 @@ class Recurse {
 		}
 		$this->pdo->commit();
 		
+		$this->pdo->beginTransaction();
 		$stmt = $this->pdo->prepare("select dc_id, dc_name from d_catalog where dc_parent = ?");
 		$stmt->execute(array($parentid));
 		foreach($stmt as $key => $value) {
@@ -270,6 +312,7 @@ class Recurse {
 				$this->addDeleted($value["dc_id"]);
 			}
 		}
+		$this->pdo->commit();
 		#print_r($directories);
 		#print_r($files);
 	}
@@ -303,7 +346,7 @@ class Recurse {
 			$version = $value->getLatest();
 			if($version->type==self::TYPE_DIR) {
 				#echo $path.$value->name."/".PHP_EOL;
-				$this->recurseCatalog($value->id, $depth+1, $path.$value->name."/");
+				#$this->recurseCatalog($value->id, $depth+1, $path.$value->name."/");
 			}
 			if($version->type==self::TYPE_FILE) {
 				$this->restoreFile($path, $value);
@@ -341,9 +384,21 @@ class Recurse {
 	}
 	
 	function runBackup() {
+		$start = hrtime(true);
 		$this->recurseFiles("/", 0);
+		$time = (hrtime(true)-$start)/1000000000;
+		$tc = new ConvertTime(ConvertTime::SECONDS, ConvertTime::HMS);
 		echo "Directories: ".$this->directories.PHP_EOL;
 		echo "Files:       ".$this->files.PHP_EOL;
+		echo "Directories:  ".number_format($this->directories).PHP_EOL;
+		echo "Files:        ".number_format($this->files).PHP_EOL;
+		echo "Processed:    ".number_format($this->processed).PHP_EOL;
+		echo "Created:      ".number_format($this->created).PHP_EOL;
+		echo "DB Size:      ".number_format(filesize(__DIR__."/catalog.sqlite")).PHP_EOL;
+		echo "Add. DB Size: ".number_format(filesize(__DIR__."/catalog.sqlite")-$this->origSize).PHP_EOL;
+		echo "Elapsed:      ".$tc->convert($time).PHP_EOL;
+		echo "Versions:     ".number_format($this->pdo->result("select count(*) from d_version", array())).PHP_EOL;
+
 	}
 	
 	function getEntryByPath($path): CatalogEntry {
