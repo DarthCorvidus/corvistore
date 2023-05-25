@@ -68,7 +68,7 @@ class VersionEntry {
 		$this->catalogId = $array["dc_id"];
 		$this->size = $array["dvs_size"];
 		$this->mtime = $array["dvs_mtime"];
-		$this->createdAt = $array["dvs_created"];
+		$this->createdAt = $array["dvs_created_epoch"];
 		$this->type = $array["dvs_type"];
 		$this->owner = $array["dvs_owner"];
 		$this->group = $array["dvs_group"];
@@ -328,10 +328,10 @@ class Recurse {
 		 */
 		
 		if($parent==NULL) {
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent IS NULL ORDER BY dc_id, dvs_created ASC";
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent IS NULL ORDER BY dc_id, dvs_created_epoch ASC";
 		} else {
 			$param[] = $parent;
-			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent = ? ORDER BY dc_id, dvs_created ASC";
+			$query = "select * from d_catalog JOIN d_version USING (dc_id) WHERE dc_parent = ? ORDER BY dc_id, dvs_created_epoch ASC";
 		}
 		$stmt = $this->pdo->prepare($query);
 		$stmt->execute($param);
@@ -345,8 +345,8 @@ class Recurse {
 		foreach($entries as $key => $value) {
 			$version = $value->getLatest();
 			if($version->type==self::TYPE_DIR) {
-				#echo $path.$value->name."/".PHP_EOL;
-				#$this->recurseCatalog($value->id, $depth+1, $path.$value->name."/");
+				$this->restoreFile($path, $value);
+				$this->recurseCatalog($value->id, $depth+1, $path.$value->name."/");
 			}
 			if($version->type==self::TYPE_FILE) {
 				$this->restoreFile($path, $value);
@@ -358,24 +358,39 @@ class Recurse {
 	private function restoreFile($path, CatalogEntry $entry) {
 		$version = $entry->getLatest();
 		$filepath = $path.$entry->name;
+		$this->resExamined++;
 		if(!file_exists($path.$entry->name)) {
-			echo $filepath." missing, would be restored".PHP_EOL;
+			$this->resRestored++;
 			return;
 		}
 		$mtime = filemtime($filepath);
+		if($mtime==$version->mtime) {
+			$this->resEqual++;
+		}
+
 		if($mtime>$version->mtime) {
-			echo $filepath." is newer, would ignore.".PHP_EOL;
+			$this->resNewer++;
 		}
 
 		if(filemtime($filepath)<$version->mtime) {
-			echo $filepath." is older, would prompt.".PHP_EOL;
+			$this->resOlder++;
 		}
 
 	}
 	
 	function run() {
 		if($this->argv[1]=="restore") {
+			$start = hrtime(true);
 			$this->runRestore();
+			$time = (hrtime(true)-$start)/1000000000;
+			$tc = new ConvertTime(ConvertTime::SECONDS, ConvertTime::HMS);
+			echo "Examined: ".number_format($this->resExamined).PHP_EOL;
+			echo "Older:    ".number_format($this->resOlder).PHP_EOL;
+			echo "Equal:    ".number_format($this->resEqual).PHP_EOL;
+			echo "Newer:    ".number_format($this->resNewer).PHP_EOL;
+			echo "Missing:  ".number_format($this->resRestored).PHP_EOL;
+			echo "Elapsed:  ".$tc->convert($time).PHP_EOL;
+			echo "Versions: ".number_format($this->pdo->result("select count(*) from d_version", array())).PHP_EOL;
 		}
 
 		if($this->argv[1]=="backup") {
