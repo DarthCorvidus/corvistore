@@ -95,6 +95,7 @@ class Recurse {
 	private $resEqual = 0;
 	private $resOlder = 0;
 	private $resNewer = 0;
+	private $parents = array();
 	function __construct(array $argv) {
 		$this->argv = $argv;
 		$shared = new Shared();
@@ -232,7 +233,7 @@ class Recurse {
 	private function getFileId($path, $parentid = NULL)  {
 		$this->processed++;
 		if($this->processed%5000==0) {
-			echo "Processed ".$this->processed." entries.".PHP_EOL;
+			echo "Processed ".number_format($this->processed)." entries.".PHP_EOL;
 		}
 		$name = basename($path);
 		$param[] = $name;
@@ -255,6 +256,37 @@ class Recurse {
 	return $id;
 	}
 	
+	private function process(string $path) {
+		if(count($this->process)<100) {
+			$this->process[] = $path;
+		return;
+		}
+		$this->processArray($this->process);
+		$this->process = array();
+		$this->process[] = $path;
+	}
+	
+	private function processArray(array $process) {
+		$this->pdo->beginTransaction();
+		foreach($process as $value) {
+			if(is_dir($value) && dirname($value)=="/") {
+				$id = $this->getFileId($value);
+				$this->parents[$value] = $id;
+				#print_r($this->parents);
+			continue;
+			}
+			if(is_dir($value)) {
+				$id = $this->getFileId($value, $this->parents[dirname($value)]);
+				$this->parents[$value] = $id;
+			continue;
+			}
+			if(is_file($value)) {
+				$id = $this->getFileId($value, $this->parents[dirname($value)]);
+			}
+		}
+		$this->pdo->commit();
+	}
+
 	private function recurseFiles($path, $depth, $parentid = NULL) {
 		$files = array();
 		$directories = array();
@@ -271,10 +303,13 @@ class Recurse {
 			#}
 			$all[] = basename($value);
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
+				#$this->process($value);
+				#$this->recurseFiles($value, $depth+1);
 				$directories[] = $value;
 				continue;
 			}
 			if(is_file($value) and $this->inex->isValid($path)) {
+				#$this->process($value);
 				$files[] = $value;
 				continue;
 			}
