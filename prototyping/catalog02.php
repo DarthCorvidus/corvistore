@@ -59,6 +59,16 @@ class CatalogEntry {
 		if($entry->type != $latest->type) {
 			return false;
 		}
+		if($entry->type == Recurse::TYPE_DIR) {
+			return TRUE;
+		}
+		if($entry->mtime!=$latest->mtime) {
+			return FALSE;
+		}
+		if($entry->size!=$latest->size) {
+			return FALSE;
+		}
+
 	return true;
 	}
 	
@@ -472,7 +482,7 @@ class Recurse {
 		
 		$this->pdo->beginTransaction();
 		foreach($toUpdate as $key => $value) {
-			echo "Updating ".$path.$value->name.PHP_EOL;
+			echo "New version ".$value->path.PHP_EOL;
 			$catalog[$key]->update($this->pdo, $value);
 		}
 		foreach($toDelete as $value) {
@@ -481,7 +491,7 @@ class Recurse {
 		}
 		
 		foreach($toCreate as $value) {
-			echo "Adding ".$value->path.PHP_EOL;
+			echo "New entry ".$value->path.PHP_EOL;
 			$catalog[$value->name] = CatalogEntry::create($this->pdo, $value, $parent);
 		}
 		$this->pdo->commit();
@@ -624,8 +634,8 @@ class Recurse {
 		echo "Files:        ".number_format($this->files).PHP_EOL;
 		echo "Processed:    ".number_format($this->processed).PHP_EOL;
 		echo "Created:      ".number_format($this->created).PHP_EOL;
-		echo "DB Size:      ".number_format(filesize(__DIR__."/catalog.sqlite")).PHP_EOL;
-		echo "Add. DB Size: ".number_format(filesize(__DIR__."/catalog.sqlite")-$this->origSize).PHP_EOL;
+		echo "DB Size:      ".number_format(filesize(__DIR__."/catalog02.sqlite")).PHP_EOL;
+		echo "Add. DB Size: ".number_format(filesize(__DIR__."/catalog02.sqlite")-$this->origSize).PHP_EOL;
 		echo "Elapsed:      ".$tc->convert($time).PHP_EOL;
 		echo "Versions:     ".number_format($this->pdo->result("select count(*) from d_version", array())).PHP_EOL;
 
