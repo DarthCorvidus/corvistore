@@ -14,7 +14,7 @@ class CatalogEntries {
 	}
 	function addEntry(CatalogEntry $entry) {
 		$this->array[] = $entry;
-		$this->names[$this->getCount()] = $entry->getName();
+		$this->names[$entry->getName()] = $this->getCount()-1;
 	}
 	
 	function getCount(): int {
@@ -26,7 +26,7 @@ class CatalogEntries {
 	}
 	
 	function hasName(string $name): bool {
-		return in_array($name, $this->names);
+		return isset($this->names[$name]);
 	}
 	
 	function getByName(string $name): CatalogEntry {
