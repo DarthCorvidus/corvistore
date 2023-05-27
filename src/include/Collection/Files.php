@@ -13,7 +13,7 @@ class Files {
 		return count($this->entries);
 	}
 	
-	function getEntry(int $id): FileEntry {
+	function getEntry(int $id): File {
 		$this->entries[$id];
 	}
 }
