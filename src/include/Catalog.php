@@ -6,12 +6,39 @@
  */
 class Catalog {
 	private $pdo;
+	private $node;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
 	//Catchall for other types until they are implemented.
 	const TYPE_OTHER = 99;
-	function __construct(EPDO $pdo) {
+	function __construct(EPDO $pdo, Node $node) {
 		$this->pdo = $pdo;
+		$this->node = $node;
+	}
+
+	function getEntries(CatalogEntry $parent = NULL): CatalogEntries {
+		$entries = new CatalogEntries();
+		$param = array();
+		$param[] = $this->node->getId();
+		if($parent==NULL) {
+			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dnd_id = ? AND dc_parent IS NULL");
+		} else {
+			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dnd_id = ? AND dc_parent = ?");
+			$param[] = $parent->getId();
+		}
+		$stmt->setFetchMode(EPDO::FETCH_ASSOC);
+		$stmt->execute($param);
+		$tmp = array();
+		foreach($stmt as $key => $value) {
+			if($entries->hasName($value["dc_name"])) {
+				$entry = $value->getByName($value["dc_name"]);
+			} else {
+				$entry = new CatalogEntry($value);
+			}
+			$entry->addVersion($value);
+			$entries->addEntry($entry);
+		}
+	return $entries;
 	}
 	
 	/**
