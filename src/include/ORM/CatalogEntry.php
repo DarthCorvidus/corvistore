@@ -8,14 +8,21 @@
  * @author Claus-Christoph Küthe
  */
 class CatalogEntry {
-	const TYPE_DIR = 1;
-	const TYPE_FILE = 2;
 	private $pdo;
 	private $id;
 	private $name;
 	private $parentId;
 	private $nodeId;
 	private $versions;
+	public function __construct(array $array) {
+		$this->versions = new Versions();
+		$this->id = (int)$array["dc_id"];
+		$this->name = $array["dc_name"];
+		$this->nodeId = $array["dnd_id"];
+		if($array["dc_parent"]!==NULL and $array["dc_parent"]!=="") {
+			$this->parentId = (int)$array["dc_parent"];
+		}
+	}
 	static function fromArray(EPDO $pdo, array $array): CatalogEntry {
 		$ce = new CatalogEntry();
 		$ce->versions = new Versions();
