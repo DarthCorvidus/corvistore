@@ -16,4 +16,14 @@ class Files {
 	function getEntry(int $id): File {
 		$this->entries[$id];
 	}
+	
+	function getDirectories(): Files {
+		$files = new Files();
+		foreach($this->entries as $value) {
+			if($value->getType() == Catalog::TYPE_DIR) {
+				$files->addEntry($value);
+			}
+		}
+	return $files;
+	}
 }
