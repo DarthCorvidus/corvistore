@@ -7,11 +7,14 @@
  */
 class CatalogEntries {
 	private $array;
+	private $names;
 	function __construct() {
 		$this->array = array();
+		$this->names = array();
 	}
 	function addEntry(CatalogEntry $entry) {
 		$this->array[] = $entry;
+		$this->names[$this->getCount()] = $entry->getName();
 	}
 	
 	function getCount(): int {
@@ -22,29 +25,11 @@ class CatalogEntries {
 		return $this->array[$id];
 	}
 	
-	/**
-	 * Within a collection of CatalogEntries, a directory entry will be
-	 * important when recursing over a catalog, ie for restoring data.
-	 * @return boolean
-	 */
-	function hasDir() {
-		foreach($this->array as $value) {
-			if($value->getType()==Catalog::TYPE_DIR) {
-				return TRUE;
-			}
-		}
-	return FALSE;
+	function hasName(string $name): bool {
+		return in_array($name, $this->names);
 	}
-	/**
-	 * Return the directory within a collection of CatalogEntries; hasDir should
-	 * be called first.
-	 * @return \CatalogEntry
-	 */
-	function getDir(): CatalogEntry {
-		foreach($this->array as $value) {
-			if($value->getType()==Catalog::TYPE_DIR) {
-				return $value;
-			}
-		}
+	
+	function getByName(string $name): CatalogEntry {
+		return $this->array[$this->names[$name]];
 	}
 }
