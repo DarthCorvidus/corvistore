@@ -16,7 +16,7 @@ class Files {
 	}
 	
 	function getEntry(int $id): File {
-		$this->entries[$id];
+		return $this->entries[$id];
 	}
 	
 	function hasName(string $name): bool {
