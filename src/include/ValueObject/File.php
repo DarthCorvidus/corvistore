@@ -67,7 +67,7 @@ class File {
 			return false;
 		}
 		// A file has changed if the size is different.
-		if($this->getType()==Catalog::TYPE_FILE && $this->size()!=$latest->getSize()) {
+		if($this->getType()==Catalog::TYPE_FILE && $this->getSize()!=$latest->getSize()) {
 			return false;
 		}
 	return TRUE;
