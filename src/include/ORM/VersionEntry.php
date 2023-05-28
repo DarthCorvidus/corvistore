@@ -19,17 +19,19 @@ class VersionEntry {
 	static function fromArray(array $array): VersionEntry {
 		$version = new VersionEntry();
 		$version->id = (int)$array["dvs_id"];
-		#$version->atime = (int)$array["dvs_atime"];
+		$version->type = (int)$array["dvs_type"];
+		$version->created = (int)$array["dvs_created_epoch"];
 		
-		#$version->ctime = (int)$array["dvs_ctime"];
+		if($version->type==Catalog::TYPE_DELETED) {
+			return $version;
+		}
 		$version->permissions = (int)$array["dvs_permissions"];
 		$version->owner = $array["dvs_owner"];
 		$version->group = $array["dvs_group"];
 		
-		$version->created = (int)$array["dvs_created_epoch"];
+
 		$version->catalogId = (int)$array["dc_id"];
 		$version->stored = (int)$array["dvs_stored"];
-		$version->type = (int)$array["dvs_type"];
 		if($version->type==Catalog::TYPE_FILE) {
 			$version->size = (int)$array["dvs_size"];
 			$version->mtime = (int)$array["dvs_mtime"];	
