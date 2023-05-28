@@ -10,6 +10,8 @@ class Backup {
 	private $partition;
 	private $storage;
 	private $transferred = 0;
+	private $catalog;
+	private $processed;
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
@@ -18,9 +20,15 @@ class Backup {
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
+		#$this->inex = new InEx();
+		#$this->inex->addInclude("/boot/");
+		#$this->inex->addInclude("/tmp/");
+		#$this->inex->addInclude("/var/log/");
+		#$this->inex->addInclude("/home/hm/kernel/");
 		$this->node = Node::fromName($this->pdo, $this->config->getNode());
 		$this->partition = $this->node->getPolicy()->getPartition();
 		$this->storage = Storage::fromId($this->pdo, $this->partition->getStorageId());
+		$this->catalog = new Catalog($pdo, $this->node);
 	}
 	
 		private function fileowner($filename) {
@@ -151,82 +159,81 @@ class Backup {
 	#}
 	
 	private function recurseFiles(string $path, $depth, CatalogEntry $parent = NULL) {
-		$files = array();
+		$files = new Files();
 		$directories = array();
 		$all = array();
+		
 		foreach(glob($path."/{,.}*", GLOB_BRACE) as $value) {
 			if(in_array(basename($value), array(".", ".."))) {
 				continue;
 			}
+			
 			if(is_link($value)) {
 				continue;
 			}
 			#if(in_array($value, $this->exclude)) {
 			#	continue;
 			#}
-			$all[] = basename($value);
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
-				$directories[] = $value;
+				$this->processed++;
+				if($this->processed%5000==0) {
+					echo "Processed ".$this->processed." files.".PHP_EOL;
+				}
+				$file = new File($value);
+				$files->addEntry($file);
 				continue;
 			}
 			if(is_file($value) and $this->inex->isValid($path)) {
-				$files[] = $value;
+				$this->processed++;
+				if($this->processed%5000==0) {
+					echo "Processed ".$this->processed." files.".PHP_EOL;
+				}
+				$file = new File($value);
+				$files->addEntry($file);
 				continue;
 			}
+		}
+	
+		$this->pdo->beginTransaction();
+		$catalogEntries = $this->catalog->getEntries($parent);
+		$diff = $catalogEntries->getDiff($files);
+		// Add new files (did not exist before).
+		for($i=0;$i<$diff->getNew()->getCount();$i++) {
+			$file = $diff->getNew()->getEntry($i);
+			echo "Creating ".$file->getPath().PHP_EOL;
+			$entry = $this->catalog->newEntry($file, $parent);
+			$catalogEntries->addEntry($entry);
+			if($entry->getVersions()->getLatest()->getType()==Catalog::TYPE_FILE) {
+				$this->storage->store($entry->getVersions()->getLatest(), $this->partition, $file);
+			}
+			
 			
 		}
-		$directoriesCreated = array();
-		$this->pdo->beginTransaction();
-		foreach($directories as $key => $value) {
-			$this->directories++;
-			$source = new SourceObject($this->node, $value);
-			$entry = CatalogEntry::create($this->pdo, $source, $parent);
-			$version = $this->addVersion($source, $entry, $parent);
-			$directoriesCreated[$value] = $entry;
-			#echo str_repeat(" ", $depth)."+ [".$id."] ".basename($value).PHP_EOL;
-			
+		// Add changed files.
+		for($i=0;$i<$diff->getChanged()->getCount();$i++) {
+			$file = $diff->getChanged()->getEntry($i);
+			echo "Updating ".$file->getPath().PHP_EOL;
+			$entry = $this->catalog->updateEntry($catalogEntries->getByName($file->getBasename()), $file);
+			$this->storage->store($entry->getVersions()->getLatest(), $this->partition, $file);
 		}
+		
+		// Mark files as deleted.
+		for($i=0;$i<$diff->getDeleted()->getCount();$i++) {
+			$catalogEntry = $diff->getDeleted()->getEntry($i);
+			echo "Deleting ".$catalogEntry->getName().PHP_EOL;
+			$this->catalog->deleteEntry($catalogEntry);
+		}
+		
+		
+		
 		$this->pdo->commit();
 		
-		foreach($directoriesCreated as $key => $value) {
-			$this->recurseFiles($key, $depth+1, $value);
+		$directories = $files->getDirectories();
+		for($i=0;$i<$directories->getCount();$i++) {
+			$dir = $directories->getEntry($i);
+			$parent = $catalogEntries->getByName($dir->getBasename());
+			$this->recurseFiles($dir->getPath(), $depth, $parent);
 		}
-		
-		
-		$this->pdo->beginTransaction();
-		foreach($files as $key => $value) {
-			$this->files++;
-			if($this->files % 1000==0) {
-				echo "------------".$this->files." processed------------".PHP_EOL;
-			}
-			$obj = new SourceObject($this->node, $value);
-			$entry = CatalogEntry::create($this->pdo, $obj, $parent);
-			$version = $this->addVersion($obj, $entry, $parent);
-			if(!$version->isStored()) {
-				$this->storage->store($version, $this->partition, $obj);
-				$this->transferred += $obj->getSize();
-				$this->pdo->commit();
-				$this->pdo->beginTransaction();
-				$version->setStored($this->pdo);
-			}
-			#echo str_repeat(" ", $depth)." [".$fileId."] ".basename($value).PHP_EOL;
-		}
-		$this->pdo->commit();
-		
-		if($parent==NULL) {
-			$stmt = $this->pdo->prepare("select dc_id, dc_name from d_catalog where dc_parent IS NULL");
-			$stmt->execute();
-		} else {
-			$stmt = $this->pdo->prepare("select dc_id, dc_name from d_catalog where dc_parent = ?");
-			$stmt->execute(array($parent->getId()));
-		}
-		foreach($stmt as $key => $value) {
-			if(!in_array($value["dc_name"], $all)) {
-				$this->addDeleted($value["dc_id"]);
-			}
-		}
-		#print_r($directories);
-		#print_r($files);
 	}
 
 	
@@ -235,6 +242,7 @@ class Backup {
 		$this->recurseFiles("/", 0);
 		$end = hrtime();
 		$elapsed = $end[0]-$start[0];
+		echo "Processed:    ".number_format($this->processed).PHP_EOL;
 		echo "Directories:  ".$this->directories.PHP_EOL;
 		echo "Files:        ".$this->files.PHP_EOL;
 		echo "Transferred:  ".number_format($this->transferred, 0).PHP_EOL;
@@ -242,5 +250,6 @@ class Backup {
 		echo "Occupancy:    ".number_format($stored, 0).PHP_EOL;
 		$timeconvert = new ConvertTime(ConvertTime::SECONDS, ConvertTime::HMS);
 		echo "Elapsed time: ".$timeconvert->convert($elapsed).PHP_EOL;
+		
 	}
 }
