@@ -21,6 +21,7 @@ class VersionEntry {
 		$version->id = (int)$array["dvs_id"];
 		$version->type = (int)$array["dvs_type"];
 		$version->created = (int)$array["dvs_created_epoch"];
+		$version->catalogId = (int)$array["dc_id"];
 		
 		if($version->type==Catalog::TYPE_DELETED) {
 			return $version;
@@ -30,7 +31,7 @@ class VersionEntry {
 		$version->group = $array["dvs_group"];
 		
 
-		$version->catalogId = (int)$array["dc_id"];
+		
 		$version->stored = (int)$array["dvs_stored"];
 		if($version->type==Catalog::TYPE_FILE) {
 			$version->size = (int)$array["dvs_size"];
