@@ -32,4 +32,32 @@ class CatalogEntries {
 	function getByName(string $name): CatalogEntry {
 		return $this->array[$this->names[$name]];
 	}
+	
+	public function getDiff(Files $files): CatFileDiff {
+		$diff = new CatFileDiff();
+		
+		for($i = 0; $i<$files->getCount();$i++) {
+			$file = $files->getEntry($i);
+			// Determine files which are missing in the catalog.
+			if(!$this->hasName($file->getBasename())) {
+				$diff->addNew($file);
+				continue;
+			}
+			// check if file is equal;
+			$catalogEntry = $this->getByName($file->getBasename());
+			if(!$file->isEqual($catalogEntry)) {
+				$diff->addChanged($file);
+			}
+		}
+		
+		for($i = 0; $i<$this->getCount();$i++) {
+			$catalogEntry = $this->getEntry($i);
+			$latest = $catalogEntry->getVersions()->getLatest();
+			if(!$files->hasName($catalogEntry->getName()) && $latest->getType()!= Catalog::TYPE_DELETED) {
+				$diff->addDeleted($catalogEntry);
+			}
+		}
+
+	return $diff;
+	}
 }
