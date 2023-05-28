@@ -38,7 +38,7 @@ class InEx {
 		if(empty($this->exclude)) {
 			return FALSE;
 		}
-		$path = $this->covert->convert($path);
+		$path = $this->convert->convert($path);
 		foreach($this->exclude as $key => $value) {
 			if(preg_match("/^". preg_quote($value, "/")."/", $path)) {
 				return true;
