@@ -8,6 +8,7 @@ class Restore {
 	private $restored = 0;
 	private $ignored = 0;
 	private $catalog;
+	private $size;
 	function __construct(EPDO $pdo, Client\Config $config, array $argv) {
 		$this->pdo = $pdo;
 		$this->node = Node::fromName($this->pdo, $config->getNode());
@@ -74,6 +75,7 @@ class Restore {
 			touch($filepath, $version->getMtime());
 			#echo $filepath." missing, would restored".PHP_EOL;
 			$this->restored++;
+			$this->size += $version->getSize();
 			return;
 		}
 		$mtime = filemtime($filepath);
@@ -102,7 +104,8 @@ class Restore {
 			$entry = $this->catalog->getEntryByPath($this->node, $this->argv->getRestorePath());
 			$this->recurseCatalog($this->argv->getRestorePath()."/", 0, $entry);
 		}
-		echo "Restored: ".$this->restored.PHP_EOL;
-		echo "Ignored:  ".$this->ignored.PHP_EOL;
+		echo "Restored:    ".$this->restored.PHP_EOL;
+		echo "Ignored:     ".$this->ignored.PHP_EOL;
+		echo "Transferred: ".number_format($this->size)." Bytes".PHP_EOL;
 	}
 }
