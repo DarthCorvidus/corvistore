@@ -24,16 +24,7 @@ class CatalogEntry {
 		}
 	}
 	static function fromArray(EPDO $pdo, array $array): CatalogEntry {
-		$ce = new CatalogEntry();
-		$ce->versions = new Versions();
-		$ce->pdo = $pdo;
-		#$ce->versions = new Versions($pdo, $ce);
-		$ce->id = (int)$array["dc_id"];
-		$ce->name = $array["dc_name"];
-		$ce->nodeId = $array["dnd_id"];
-		if($array["dc_parent"]!==NULL and $array["dc_parent"]!=="") {
-			$ce->parentId = (int)$array["dc_parent"];
-		}
+		$ce = new CatalogEntry($array);
 	return $ce;
 	}
 	
