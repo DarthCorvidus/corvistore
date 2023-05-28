@@ -19,7 +19,7 @@ class CatalogEntry {
 		$this->id = (int)$array["dc_id"];
 		$this->name = $array["dc_name"];
 		$this->nodeId = $array["dnd_id"];
-		if($array["dc_parent"]!==NULL and $array["dc_parent"]!=="") {
+		if(isset($array["dc_parent"]) and $array["dc_parent"]!==NULL and $array["dc_parent"]!=="") {
 			$this->parentId = (int)$array["dc_parent"];
 		}
 	}
@@ -70,6 +70,9 @@ class CatalogEntry {
 	}
 
 	function addVersion(array $array) {
+		if($array["dc_id"]!=$this->id) {
+			throw new Exception("this should not happen.");
+		}
 		$this->versions->addVersion(VersionEntry::fromArray($array));
 	}
 	
