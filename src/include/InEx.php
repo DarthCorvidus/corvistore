@@ -7,28 +7,25 @@
 class InEx {
 	private $exclude = array();
 	private $include = array();
+	private $depth = 0;
+	private $convert;
 	function __construct() {
-		;
-	}
-	
-	private function normalize(string $string) {
-		$convert = new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE);
-	return $convert->convert($string);
+		$this->convert = new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE);;
 	}
 	
 	function addExclude(string $exclude) {
-		$this->exclude[] = $this->normalize($exclude);
+		$this->exclude[] = $this->convert->convert($exclude);
 	}
 	
 	function addInclude(string $include) {
-		$this->include[] = $this->normalize($include);
+		$this->include[] = $this->convert->convert($include);
 	}
 	
 	function isIncluded(string $path) {
 		if(empty($this->include)) {
 			return TRUE;
 		}
-		$path = $this->normalize($path);
+		$path = $this->convert->convert($path);
 		foreach($this->include as $key => $value) {
 			if(preg_match("/^". preg_quote($value, "/")."/", $path)) {
 				return true;
@@ -41,7 +38,7 @@ class InEx {
 		if(empty($this->exclude)) {
 			return FALSE;
 		}
-		$path = $this->normalize($path);
+		$path = $this->covert->convert($path);
 		foreach($this->exclude as $key => $value) {
 			if(preg_match("/^". preg_quote($value, "/")."/", $path)) {
 				return true;
