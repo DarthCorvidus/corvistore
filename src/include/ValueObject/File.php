@@ -55,8 +55,22 @@ class File {
 	}
 	
 	
-	function isEqual(CatalogEntry $entry) {
-		
+	function isEqual(CatalogEntry $entry): bool {
+		//not equal, if type is not equal (quite obvious)
+		$latest = $entry->getVersions()->getLatest();
+		if($this->getType()!=$latest->getType()) {
+			return FALSE;
+		}
+		// A file has changed if the mtime is different (actually, this is not
+		// certain, but the only alternative would be to calculate a checksum)
+		if($this->getType()==Catalog::TYPE_FILE && $this->getMTime()!=$latest->getMtime()) {
+			return false;
+		}
+		// A file has changed if the size is different.
+		if($this->getType()==Catalog::TYPE_FILE && $this->size()!=$latest->getSize()) {
+			return false;
+		}
+	return TRUE;
 	}
 	
 	function getPath(): string {
