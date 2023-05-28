@@ -7,6 +7,7 @@
 class Catalog {
 	private $pdo;
 	private $node;
+	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
 	//Catchall for other types until they are implemented.
@@ -30,15 +31,101 @@ class Catalog {
 		$stmt->execute($param);
 		$tmp = array();
 		foreach($stmt as $key => $value) {
-			if($entries->hasName($value["dc_name"])) {
-				$entry = $value->getByName($value["dc_name"]);
-			} else {
+			if(!$entries->hasName($value["dc_name"])) {
 				$entry = new CatalogEntry($value);
+				$entries->addEntry($entry);
 			}
+			$entry = $entries->getByName($value["dc_name"]);
 			$entry->addVersion($value);
-			$entries->addEntry($entry);
 		}
 	return $entries;
+	}
+	
+	function newEntry(File $file, CatalogEntry $parent = NULL): CatalogEntry {
+		if($file->getType() == Catalog::TYPE_DIR) {
+			return $this->newEntryDir($file, $parent);
+		}
+		if($file->getType() == Catalog::TYPE_FILE) {
+			return $this->newEntryFile($file, $parent);
+		}
+
+	}
+	
+	private function newEntryDir(File $file, CatalogEntry $parent = NULL): CatalogEntry {
+		$create["dc_name"] = $file->getBasename();
+		$create["dnd_id"] = $this->node->getId();
+		if($parent!=NULL) {
+			$create["dc_parent"] = $parent->getId();
+		}
+		$create["dc_id"] = $this->pdo->create("d_catalog", $create);
+		$version["dc_id"] = $create["dc_id"];
+		$version["dvs_owner"] = $file->getOwner();
+		$version["dvs_group"] = $file->getGroup();
+		$version["dvs_type"] = Catalog::TYPE_DIR;
+		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
+		$version["dvs_created_epoch"] = mktime();
+		$version["dvs_permissions"] = $file->getPerms();
+		// Directories are always 'stored'.
+		$version["dvs_stored"] = 1;
+		$version["dvs_id"] = $this->pdo->create("d_version", $version);
+		$entry = new CatalogEntry($create);
+		$entry->addVersion($version);
+	return $entry;
+	}
+	
+	private function newEntryFile(File $file, CatalogEntry $parent = NULL) {
+		$create["dc_name"] = $file->getBasename();
+		$create["dnd_id"] = $this->node->getId();
+		if($parent!=NULL) {
+			$create["dc_parent"] = $parent->getId();
+		}
+		$create["dc_id"] = $this->pdo->create("d_catalog", $create);
+		$version["dc_id"] = $create["dc_id"];
+		$version["dvs_owner"] = $file->getOwner();
+		$version["dvs_group"] = $file->getGroup();
+		$version["dvs_mtime"] = $file->getMTime();
+		$version["dvs_size"] = $file->getSize();
+		$version["dvs_type"] = Catalog::TYPE_FILE;
+		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
+		$version["dvs_created_epoch"] = mktime();
+		$version["dvs_permissions"] = $file->getPerms();
+		$version["dvs_stored"] = 0;
+		$version["dvs_id"] = $this->pdo->create("d_version", $version);
+		$entry = new CatalogEntry($create);
+		$entry->addVersion($version);
+	return $entry;
+	}
+	
+	function updateEntry(CatalogEntry $entry, File $file) {
+		$version["dc_id"] = $entry->getId();
+		$version["dvs_owner"] = $file->getOwner();
+		$version["dvs_group"] = $file->getGroup();
+		$version["dvs_stored"] = 1;
+		//mtime and size are only relevant for files.
+		if($file->getType()==Catalog::TYPE_FILE) {
+			$version["dvs_size"] = $file->getSize();
+			$version["dvs_mtime"] = $file->getMTime();
+			$version["dvs_stored"] = 0;
+		}
+		$version["dvs_type"] = $file->getType();
+		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
+		$version["dvs_created_epoch"] = mktime();
+		$version["dvs_permissions"] = $file->getPerms();
+		
+		$version["dvs_id"] = $this->pdo->create("d_version", $version);
+		$entry->addVersion($version);
+	return $entry;
+	}
+	
+	function deleteEntry(CatalogEntry $entry) {
+		$version["dc_id"] = $entry->getId();
+		$version["dvs_stored"] = 1;
+		$version["dvs_type"] = self::TYPE_DELETED;
+		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
+		$version["dvs_created_epoch"] = mktime();
+		$version["dvs_id"] = $this->pdo->create("d_version", $version);
+		$entry->addVersion($version);
+	return $entry;
 	}
 	
 	/**
