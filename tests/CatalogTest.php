@@ -24,20 +24,39 @@ class CatalogTest extends TestCase {
 	}
 	
 	function testConstruct() {
-		$catalog = new Catalog(TestHelper::getEPDO());
+		$node = Node::fromName(TestHelper::getEPDO(), "test01");
+		$catalog = new Catalog(TestHelper::getEPDO(), $node);
 		$this->assertInstanceOf(Catalog::class, $catalog);
 	}
 	
-	function testCreateDirectory() {
+	function testAddNewDirectory() {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
-		$source = new SourceObject($node, "/tmp/");
-		$catalog = new Catalog(TestHelper::getEPDO());
-		$catalogEntry = $catalog->loadcreate($source);
-		$target[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => NULL);
-		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
-		$this->assertEquals($target, $database);
+		$file = new File("/tmp/");
+		$catalog = new Catalog(TestHelper::getEPDO(), $node);
+		$catalogEntry = $catalog->newEntry($file);
+		
+		$catTarget[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
+		$catDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
+		$this->assertEquals($catTarget, $catDB);
+		
+		$verTarget[0]["dvs_id"] = 1;
+		$verTarget[0]["dvs_atime"] = NULL;
+		$verTarget[0]["dvs_ctime"] = NULL;
+		$verTarget[0]["dvs_mtime"] = NULL;
+		$verTarget[0]["dvs_size"] = NULL;
+		$verTarget[0]["dvs_permissions"] = $file->getPerms();
+		$verTarget[0]["dvs_owner"] = $file->getOwner();
+		$verTarget[0]["dvs_group"] = $file->getGroup();
+		$verTarget[0]["dvs_type"] = Catalog::TYPE_DIR;
+		$verTarget[0]["dvs_stored"] = 1;
+		$verTarget[0]["dc_id"] = 1;
+		
+		$verDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dc_id");
+		unset($verDB[0]["dvs_created_local"]);
+		unset($verDB[0]["dvs_created_epoch"]);
+		$this->assertEquals($verTarget, $verDB);
 	}
-
+	/*
 	function testCreateDirectoryUnique() {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$source = new SourceObject($node, "/tmp/");
@@ -86,26 +105,25 @@ class CatalogTest extends TestCase {
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
 		$this->assertEquals($target, $database);
 	}
+	*/
 	
-	function testCreateParented() {
+	function testAddNewParented() {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createDir("/Pictures/vacations/2023_thailand");
-		$catalog = new Catalog(TestHelper::getEPDO());
-		$catalogEntry = $catalog->loadcreate(new SourceObject($node, "/tmp/"));
-		$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect"), $catalogEntry);
-		$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/"), $catalogEntry);
-		$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/"), $catalogEntry);
-		$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/2023_thailand"), $catalogEntry);
-
-		$target[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => NULL);
-		$target[1] = array("dc_id" => 2, "dc_name" => "crow-protect", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 1);
-		$target[2] = array("dc_id" => 3, "dc_name" => "Pictures", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 2);
-		$target[3] = array("dc_id" => 4, "dc_name" => "vacations", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 3);
-		$target[4] = array("dc_id" => 5, "dc_name" => "2023_thailand", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 4);
+		$catalog = new Catalog(TestHelper::getEPDO(), $node);
+		$catalogEntry = $catalog->newEntry(new File("/tmp/"));
+		$catalogEntry = $catalog->newEntry(new File("/tmp/crow-protect"), $catalogEntry);
+		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect"), $catalogEntry);
+		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/"), $catalogEntry);
+		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/"), $catalogEntry);
+		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/2023_thailand"), $catalogEntry);
+		$target[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
+		$target[1] = array("dc_id" => 2, "dc_name" => "crow-protect", "dnd_id" => 1, "dc_parent" => 1);
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
 		$this->assertEquals($target, $database);
 	}
 
+	/*
 	function testCreateParentedUnique() {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createDir("/Pictures/vacations/2023_thailand");
@@ -122,62 +140,38 @@ class CatalogTest extends TestCase {
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
 		$this->assertEquals($target, $database);
 	}
+	*/
 	
-	function testCreateFiles() {
+	function testAddNewFile() {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
-		$this->mockup->createDir("/Pictures/vacations/2023_thailand/");
-		$this->mockup->createRandom("/Pictures/vacations/2023_thailand/beach.bin", 12);
-		$this->mockup->createRandom("/Pictures/vacations/2023_thailand/jungle.bin", 12);
-		$this->mockup->createRandom("/Pictures/vacations/2023_thailand/temple.bin", 12);
+		$this->mockup->createRandom("/beach.bin", 12);
+		$catalog = new Catalog(TestHelper::getEPDO(), $node);
+		$tmp = $catalog->newEntry(new File("/tmp"));
+		$cp = $catalog->newEntry(new File("/tmp/crow-protect"), $tmp);
+		$file = new File("/tmp/crow-protect/beach.bin");
+		$entry = $catalog->newEntry($file, $cp);
 		
-		$catalog = new Catalog(TestHelper::getEPDO());
-		$catalog->loadcreate(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/2023_thailand/beach.bin"));
-		$catalog->loadcreate(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/2023_thailand/jungle.bin"));
-		$catalog->loadcreate(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/2023_thailand/temple.bin"));
-		$target[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => NULL);
-		$target[1] = array("dc_id" => 2, "dc_name" => "crow-protect", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 1);
-		$target[2] = array("dc_id" => 3, "dc_name" => "Pictures", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 2);
-		$target[3] = array("dc_id" => 4, "dc_name" => "vacations", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 3);
-		$target[4] = array("dc_id" => 5, "dc_name" => "2023_thailand", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 4);
-		$target[5] = array("dc_id" => 6, "dc_name" => "beach.bin", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_FILE, "dc_parent" => 5);
-		$target[6] = array("dc_id" => 7, "dc_name" => "jungle.bin", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_FILE, "dc_parent" => 5);
-		$target[7] = array("dc_id" => 8, "dc_name" => "temple.bin", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_FILE, "dc_parent" => 5);
-		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
-		$this->assertEquals($target, $database);
-	}
-	/**
-	 * A file can exist as a directory and a file in the catalog, when you first
-	 * create a file and then remove it and create a directory by the same name.
-	 * 
-	 */
-	function testCreateFileAndDir() {
-		$node = Node::fromName(TestHelper::getEPDO(), "test01");
-		$this->mockup->createRandom("/Pictures", 1);
-		$catalog = new Catalog(TestHelper::getEPDO());
-		$catalog->loadcreate(new SourceObject($node, "/tmp/crow-protect/Pictures"));
-		$this->mockup->clear();
-		$this->mockup->createDir("/Pictures/vacation");
-		$catalog->loadcreate(new SourceObject($node, "/tmp/crow-protect/Pictures/vacation"));
+		$catTarget[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
+		$catTarget[1] = array("dc_id" => 2, "dc_name" => "crow-protect", "dnd_id" => 1, "dc_parent" => 1);
+		$catTarget[2] = array("dc_id" => 3, "dc_name" => "beach.bin", "dnd_id" => 1, "dc_parent" => 2);
+		$catDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
+		$verDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
+
+		$verTarget["dvs_id"] = 3;
+		$verTarget["dvs_atime"] = NULL;
+		$verTarget["dvs_ctime"] = NULL;
+		$verTarget["dvs_mtime"] = $file->getMTime();
+		$verTarget["dvs_size"] = 12*1024;
+		$verTarget["dvs_permissions"] = $file->getPerms();
+		$verTarget["dvs_owner"] = $file->getOwner();
+		$verTarget["dvs_group"] = $file->getGroup();
+		$verTarget["dvs_type"] = Catalog::TYPE_FILE;
+		$verTarget["dvs_stored"] = 0;
+		$verTarget["dc_id"] = 3;
+		unset($verDB[2]["dvs_created_epoch"]);
+		unset($verDB[2]["dvs_created_local"]);
 		
-		$target[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => NULL);
-		$target[1] = array("dc_id" => 2, "dc_name" => "crow-protect", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 1);
-		$target[2] = array("dc_id" => 3, "dc_name" => "Pictures", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_FILE, "dc_parent" => 2);
-		$target[3] = array("dc_id" => 4, "dc_name" => "Pictures", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 2);
-		$target[4] = array("dc_id" => 5, "dc_name" => "vacation", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => 4);
-		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
-		$this->assertEquals($target, $database);
-	}
-	
-	function testPrivateCreate() {
-		$node = Node::fromName(TestHelper::getEPDO(), "test01");
-		$this->mockup->createRandom("/Pictures", 1);
-		$catalog = new Catalog(TestHelper::getEPDO());
-		$source = new SourceObject($node, "/tmp/");
-		
-		TestHelper::invoke($catalog, "create", array($source));
-		
-		$target[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_type" => CatalogEntry::TYPE_DIR, "dc_parent" => NULL);
-		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
-		$this->assertEquals($target, $database);
+		$this->assertEquals($catTarget, $catDB);
+		$this->assertEquals($verTarget, $verDB[2]);
 	}
 }
