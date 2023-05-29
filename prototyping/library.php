@@ -3,11 +3,14 @@
 require_once __DIR__."/../vendor/autoload.php";
 class Volumes {
 	private $volumes;
+	private $names;
 	function __construct() {
 		$this->volumes = array();
+		$this->names = array();
 	}
 	function addVolume(Volume $volume) {
 		$this->volumes[] = $volume;
+		$this->names[$volume->name] = $this->getCount()-1;
 	}
 	
 	function getFree(): Volume {
@@ -16,6 +19,10 @@ class Volumes {
 				return $value;
 			}
 		}
+	}
+	
+	function getByName($name): Volume {
+		return $this->volumes[$this->names[$name]];
 	}
 	
 	function getCount(): int {
@@ -77,6 +84,18 @@ class Volume {
 		}
 		fclose($vh);
 	return $written;
+	}
+	
+	function read($write, $offset, $length) {
+		
+		$rh = fopen(__DIR__."/library/".$this->name, "r");
+		fseek($rh, $offset*$this->blocksize);
+		for($i=0;$i<=$length;$i++) {
+			echo number_format(ftell($rh))."bytes,  ".($i*$this->blocksize)." blocks, ".$this->name." ".$this->blocksize.PHP_EOL;
+			$read = fread($rh, $this->blocksize);
+			fwrite( $write, $read);
+		}
+		fclose($rh);
 	}
 	
 	function update(EPDO $pdo) {
@@ -184,9 +203,9 @@ class Library {
 			$free = $this->volumes->getFree();
 			$map["nvf_part"] = $i;
 			$map["nvf_offset"] = $free->blocksUsed;
-			$free->store($fh);
+			$written = $free->store($fh);
 			$free->update($this->pdo);
-			$map["nvf_length"] = $free->blocksUsed;
+			$map["nvf_length"] = $written;
 			$map["dfl_id"] = $libfile->id;
 			$map["dvl_id"] = $free->id;
 			$this->pdo->create("n_volume2file", $map);
@@ -194,6 +213,25 @@ class Library {
 		}
 		fclose($fh);
 		#print_r($this->volumes);
+	}
+	
+	function restore(string $path) {
+		$result = $this->pdo->result("select count(*) from d_file where dfl_path = ?", array($path));
+		if($result==0) {
+			throw new Exception("no such file.");
+		}
+		$stmt = $this->pdo->prepare("select * from d_file JOIN n_volume2file USING (dfl_id) JOIN d_volume USING (dvl_id) where dfl_path = ? order by nvf_part");
+		$stmt->execute(array($path));
+		$stmt->setFetchMode(PDO::FETCH_ASSOC);
+		if(!file_exists(__DIR__."/restore")) {
+			mkdir(__DIR__."/restore");
+		}
+		$output = fopen(__DIR__."/restore/".basename($path), "w");
+		foreach($stmt as $value) {
+			$volume = $this->volumes->getByName($value["dvl_name"]);
+			$volume->read($output, $value["nvf_offset"], $value["nvf_length"]);
+		}
+		fclose($output);
 	}
 	
 	function listFiles() {
@@ -224,11 +262,14 @@ if($argv[1]=="files") {
 	$library->listFiles();
 }
 
-/*
 if($argv[1]=="restore" and !isset($argv[2])) {
 	echo "Restore file is missing (original path).".PHP_EOL;
 	die();
 	#$library = new Library(__DIR__."/library", 25);
 	#$library->store($argv[2]);
 }
-*/
+
+if($argv[1]=="restore" and isset($argv[2])) {
+	$library = new Library(__DIR__."/library", 25);
+	$library->restore($argv[2]);
+}
