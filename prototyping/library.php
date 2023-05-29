@@ -205,8 +205,8 @@ class Library {
 
 #$library = new Library(__DIR__."/library", 25);
 
-if(!isset($argv[1])) {
-	echo "Please supply mode, 'store' or 'restore'".PHP_EOL;
+if(!isset($argv[1]) or !in_array($argv[1], array("store", "restore", "files"))) {
+	echo "Please supply mode, one of: ". implode(", ", array("store", "restore", "files")).PHP_EOL;
 	die();
 }
 
