@@ -56,9 +56,10 @@ class Volume {
 		$this->blocksUsed = $array["dvl_blocks_used"];
 	}
 	
-	function store($fh) {
+	function store($fh): int {
 		$vh = fopen(__DIR__."/library/".$this->name, "a");
 		$i = 0;
+		$written = 0;
 		while(true) {
 			if($this->blocksUsed==$this->blocks) {
 				break;
@@ -72,8 +73,10 @@ class Volume {
 			
 			fwrite($vh, $read);
 			$this->blocksUsed++;
+			$written++;
 		}
 		fclose($vh);
+	return $written;
 	}
 	
 	function update(EPDO $pdo) {
@@ -82,6 +85,54 @@ class Volume {
 	}
 }
 
+class LibraryFiles implements TerminalTableModel {
+	private $values = array();
+	private $pdo;
+	private $title;
+	const NAME = 0;
+	const SIZE = 1;
+	const PARTS = 2;
+	const MAX = 3;
+	function __construct(EPDO $pdo) {
+		$this->title[self::NAME] = "Name";
+		$this->title[self::SIZE] = "Size";
+		$this->title[self::PARTS] = "Parts";
+		$this->pdo = $pdo;
+	}
+	public function getCell(int $col, int $row): string {
+		return $this->values[$row][$col];
+	}
+
+	public function getColumns(): int {
+		return self::MAX;
+	}
+
+	public function getRows(): int {
+		return count($this->values);
+	}
+
+	public function getTitle(int $col): string {
+		return $this->title[$col];
+	}
+
+	public function hasTitle(): bool {
+		return true;
+	}
+
+	public function load() {
+		$this->values = array();
+		$stmt = $this->pdo->prepare("select dfl_path, dfl_size, count(dvl_id) as parts from d_file JOIN n_volume2file USING (dfl_id) JOIN d_volume USING (dvl_id) group by dfl_path, dfl_size");
+		$stmt->execute(array());
+		foreach($stmt as $value) {
+			$entry = array_fill(0, self::MAX, "");
+			$entry[self::NAME] = $value["dfl_path"];
+			$entry[self::SIZE] = number_format($value["dfl_size"]);
+			$entry[self::PARTS] = $value["parts"];
+			$this->values[] = $entry;
+		}
+		
+	}
+}
 
 
 class Library {
@@ -132,16 +183,23 @@ class Library {
 		while(!feof($fh)) {
 			$free = $this->volumes->getFree();
 			$map["nvf_part"] = $i;
-			$map["nvf_start"] = $free->blocksUsed;
+			$map["nvf_offset"] = $free->blocksUsed;
 			$free->store($fh);
 			$free->update($this->pdo);
-			$map["nvf_end"] = $free->blocksUsed;
+			$map["nvf_length"] = $free->blocksUsed;
 			$map["dfl_id"] = $libfile->id;
+			$map["dvl_id"] = $free->id;
 			$this->pdo->create("n_volume2file", $map);
 			$i++;
 		}
 		fclose($fh);
 		#print_r($this->volumes);
+	}
+	
+	function listFiles() {
+		$model = new LibraryFiles($this->pdo);
+		$table = new TerminalTable($model);
+		echo $table->printTable();
 	}
 }
 
@@ -160,3 +218,17 @@ if($argv[1]=="store" and file_exists($argv[2]) and is_file($argv[2])) {
 	$library = new Library(__DIR__."/library", 25);
 	$library->store($argv[2]);
 }
+
+if($argv[1]=="files") {
+	$library = new Library(__DIR__."/library", 25);
+	$library->listFiles();
+}
+
+/*
+if($argv[1]=="restore" and !isset($argv[2])) {
+	echo "Restore file is missing (original path).".PHP_EOL;
+	die();
+	#$library = new Library(__DIR__."/library", 25);
+	#$library->store($argv[2]);
+}
+*/

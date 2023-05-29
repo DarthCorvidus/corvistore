@@ -17,7 +17,7 @@ CREATE TABLE `n_volume2file` (
 `dfl_id` INTEGER,
 `dvl_id` INTEGER,
 `nvf_part` INTEGER,
-`nvf_start` INTEGER,
-`nvf_end` INTEGER
+`nvf_offset` INTEGER,
+`nvf_length` INTEGER
 );
 
