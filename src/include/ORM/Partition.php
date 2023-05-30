@@ -16,7 +16,7 @@ class Partition {
 	}
 	
 	static function define(EPDO $pdo, CommandParser $command) {
-		$command->import(new CPModelPartition());
+		$command->import(new CPModelPartition($pdo, CPModelPartition::MODE_DEFINE));
 		$name = $command->getPositional(0);
 		$storage = $command->getParam("storage");
 		$type = $command->getParam("type");
@@ -26,6 +26,25 @@ class Partition {
 		$part->storage = Storage::fromName($pdo, $storage);
 		$part->type = $type;
 		$part->create();
+	}
+	
+	static function update(EPDO $pdo, CommandParser $command) {
+		$update = array();
+		$command->import(new CPModelPartition($pdo, CPModelPartition::MODE_UPDATE));
+		$partition = Partition::fromName($pdo, $command->getPositional(0));
+		if($command->getParam("description")) {
+			$update["dpt_description"] = $command->getParam("description");
+		}
+		if($command->getParam("copy")) {
+			$copypart = Partition::fromName($pdo, $command->getParam("copy"));
+			if($copypart->type != "copy") {
+				throw new InvalidArgumentException("Partition ".$command->getParam("copy")." is no partition of type 'copy'");
+			}
+			$update["dpt_copy"] = $copypart->getId();
+		}
+		if(!empty($update)) {
+			$pdo->update("d_partition", $update, array("dpt_id"=>$partition->getId()));
+		}
 	}
 	
 	static function fromArray(EPDO $pdo, array $array): Partition {
