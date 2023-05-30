@@ -25,7 +25,9 @@ CREATE TABLE `d_partition` (
 `dpt_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `dpt_name` TEXT UNIQUE,
 `dpt_type` TEXT,
-`dst_id` INTEGER
+`dst_id` INTEGER,
+`dpt_copy` INTEGER,
+`dpt_nextpt` INTEGER
 );
 
 CREATE TABLE `d_policy` (
@@ -77,3 +79,5 @@ CREATE TABLE `n_version2basic` (
 
 CREATE INDEX d_version_index ON d_version(dvs_mtime, dvs_stored, dvs_type, dvs_size, dvs_mtime, dc_id);
 CREATE INDEX d_catalog_index ON d_catalog(dc_name, dnd_id, dc_parent);
+CREATE INDEX d_catalog_parent_index ON d_catalog(dc_parent, dnd_id);
+create index d_version_index_dc_id ON d_version(dc_id);
