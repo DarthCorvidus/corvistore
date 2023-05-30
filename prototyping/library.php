@@ -86,13 +86,19 @@ class Volume {
 	return $written;
 	}
 	
-	function read($write, $offset, $length) {
-		
+	function read($write, $offset, $length, int $truesize) {
 		$rh = fopen(__DIR__."/library/".$this->name, "r");
 		fseek($rh, $offset*$this->blocksize);
-		for($i=0;$i<=$length;$i++) {
-			echo number_format(ftell($rh))."bytes,  ".($i*$this->blocksize)." blocks, ".$this->name." ".$this->blocksize.PHP_EOL;
-			$read = fread($rh, $this->blocksize);
+		for($i=0;$i<$length;$i++) {
+			#echo number_format(ftell($rh))." bytes,  ".($i*$this->blocksize)." blocks, ".$this->name." ".$this->blocksize.PHP_EOL;
+			$written = ftell($write);
+			$rest = $truesize-$written;
+			#echo "Rest: ".$rest.PHP_EOL;
+			if($rest<$this->blocksize) {
+				$read = fread($rh, $rest);
+			} else {
+				$read = fread($rh, $this->blocksize);
+			}
 			fwrite( $write, $read);
 		}
 		fclose($rh);
@@ -229,9 +235,11 @@ class Library {
 		$output = fopen(__DIR__."/restore/".basename($path), "w");
 		foreach($stmt as $value) {
 			$volume = $this->volumes->getByName($value["dvl_name"]);
-			$volume->read($output, $value["nvf_offset"], $value["nvf_length"]);
+			$volume->read($output, $value["nvf_offset"], $value["nvf_length"], $value["dfl_size"]);
 		}
 		fclose($output);
+		#echo "Original: ".md5_file($path).PHP_EOL;
+		#echo "Restore:  ".md5_file(__DIR__."/restore/".basename($path)).PHP_EOL;
 	}
 	
 	function listFiles() {
