@@ -59,16 +59,24 @@ class PartitionList implements TerminalTableLayout, TerminalTableModel {
 		return true;
 	}
 
+	private function getUsed(array $value) {
+		if($value["dst_type"]=="basic") {
+			return $this->pdo->result("select coalesce(sum(dvs_size), 0) from d_version JOIN n_version2basic USING (dvs_id) where dpt_id = ?", array($value["dpt_id"]));
+		}
+	return 0;
+	}
+	
 	public function load() {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_partition JOIN d_storage USING (dst_id)");
+		$stmt->setFetchMode(PDO::FETCH_ASSOC);
 		$stmt->execute();
 		foreach($stmt as $key => $value) {
 			$this->values[$key][self::PARTITION] = $value["dpt_name"];
 			$this->values[$key][self::STORAGE] = $value["dst_name"];
 			$this->values[$key][self::TYPE] = $value["dpt_type"];
 			$this->values[$key][self::CAPACITY] = "0 GiB";
-			$this->values[$key][self::USED] = "0 GiB";
+			$this->values[$key][self::USED] = number_format($this->getUsed($value));
 		}
 	}
 
