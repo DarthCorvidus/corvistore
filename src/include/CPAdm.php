@@ -14,8 +14,10 @@
 class CPAdm {
 	private $pdo;
 	private $shared;
-	function __construct(EPDO $pdo) {
+	private $argv;
+	function __construct(EPDO $pdo, array $argv) {
 		$this->pdo = $pdo;
+		$this->argv = $argv;
 	}
 
 	function printWelcome() {
@@ -44,11 +46,21 @@ class CPAdm {
 			$query->run();
 			return;
 		}
+		if($command->getCommand()=="update") {
+			$query = new UpdateHandler($this->pdo, $command);
+			$query->run();
+			return;
+		}
 		throw new InvalidArgumentException("Invalid command '".$command->getCommand()."'.");
 	}
 	
 	function run() {
 		$this->printWelcome();
+		if(isset($this->argv[1])) {
+			$command = new CommandParser($this->argv[1]);
+			$this->handleCommand($command);
+			die();
+		}
 		while(true) {
 			$command = $this->getCommand();
 			if($command->getCommand()=="quit") {

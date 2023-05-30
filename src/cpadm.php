@@ -4,5 +4,5 @@ require_once __DIR__."/../vendor/autoload.php";
 $databasePath = "/var/lib/crow-protect/crow-protect.sqlite";
 $shared = new Shared();
 $shared->useSQLite($databasePath);
-$adm = new CPAdm($shared->getEPDO());
+$adm = new CPAdm($shared->getEPDO(), $argv);
 $adm->run();
