@@ -12,6 +12,7 @@ class Partition {
 	private $storage;
 	private $type;
 	private $id;
+	private $copy;
 	private function __construct() {
 	}
 	
@@ -54,6 +55,9 @@ class Partition {
 		$part->name = $array["dpt_name"];
 		$part->storage = Storage::fromId($pdo, $array["dst_id"]);
 		$part->type = $array["dpt_type"];
+		if(isset($array["dpt_copy"])) {
+			$part->copy = Partition::fromId($pdo, $array["dpt_copy"]);
+		}
 	return $part;
 	}
 	
@@ -97,5 +101,13 @@ class Partition {
 	
 	public function getType(): string {
 		return $this->type;
+	}
+	
+	public function hasCopyPartition(): bool {
+		return $this->copy!=NULL;
+	}
+	
+	public function getCopyPartition(): Partition {
+		return $this->copy;
 	}
 }
