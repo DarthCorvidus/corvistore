@@ -55,7 +55,7 @@ class TestHelper {
 	}
 	
 	static function initServer() {
-		$cpadm = new CPAdm(TestHelper::getEPDO());
+		$cpadm = new CPAdm(TestHelper::getEPDO(), array());
 		$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/storage/basic01/"));
 		$cpadm->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
 		$cpadm->handleCommand(new CommandParser("define policy forever partition=backup-main"));
