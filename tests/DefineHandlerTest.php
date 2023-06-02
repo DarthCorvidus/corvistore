@@ -33,7 +33,7 @@ class DefineHandlerTest extends TestCase {
 		$define = new DefineHandler(TestHelper::getEPDO(), $command);
 		$define->run();
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_partition", "dpt_id");
-		$target[0] = array("dpt_id" => 1, "dst_id" => 1, "dpt_name" => "primary", "dpt_type" => "common", "dst_id" => 1);
+		$target[0] = array("dpt_id" => 1, "dst_id" => 1, "dpt_name" => "primary", "dpt_type" => "common", "dst_id" => 1, "dpt_copy" => NULL, "dpt_nextpt" => NULL);
 		$this->assertEquals($target, $database);
 	}
 	
