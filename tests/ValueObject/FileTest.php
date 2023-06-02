@@ -120,7 +120,7 @@ class FileTest extends TestCase {
 	function testGetNoParent() {
 		$object = new File("/tmp/");
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage("File /tmp has no parent");
+		$this->expectExceptionMessage("File /tmp/ has no parent.");
 		$object->getParent();
 	}
 }
