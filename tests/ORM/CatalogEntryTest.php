@@ -8,7 +8,7 @@ class CatalogEntryTest extends TestCase {
 	}
 	static function setUpBeforeClass() {
 		TestHelper::resetDatabase();
-		$cpadm = new CPAdm(TestHelper::getEPDO());
+		$cpadm = new CPAdm(TestHelper::getEPDO(), array());
 		$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/../storage/basic01/"));
 		$cpadm->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
 		$cpadm->handleCommand(new CommandParser("define policy forever partition=backup-main"));
@@ -22,7 +22,6 @@ class CatalogEntryTest extends TestCase {
 		$array["dc_id"] = 1;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test03")->getId();
 		$array["dc_name"] = "root";
-		$array["dc_type"] = CatalogEntry::TYPE_DIR;
 		$array["dc_parent"] = NULL;
 		$ce = CatalogEntry::fromArray(TestHelper::getEPDO(), $array);
 		$this->assertInstanceOf(CatalogEntry::class, $ce);
@@ -32,7 +31,6 @@ class CatalogEntryTest extends TestCase {
 		$array["dc_id"] = 1;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test03")->getId();
 		$array["dc_name"] = "root";
-		$array["dc_type"] = CatalogEntry::TYPE_DIR;
 		$array["dc_parent"] = NULL;
 		TestHelper::getEPDO()->create("d_catalog", $array);
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
@@ -64,7 +62,6 @@ class CatalogEntryTest extends TestCase {
 		$array["dc_id"] = 2;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test01")->getId();
 		$array["dc_name"] = ".bash_rc";
-		$array["dc_type"] = CatalogEntry::TYPE_FILE;
 		$array["dc_parent"] = 1;
 		TestHelper::getEPDO()->create("d_catalog", $array);
 		
