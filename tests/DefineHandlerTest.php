@@ -6,11 +6,12 @@ class DefineHandlerTest extends TestCase {
 		parent::__construct();
 		$this->now = mktime();
 	}
-	static function setUpBeforeClass() {
+	
+	function setUp() {
 		TestHelper::resetDatabase();
 		TestHelper::resetStorage();
 	}
-	
+
 	function testInvalidDefine() {
 		$defineCommand = new CommandParser("define cake type=cheesecake diameter=28cm");
 		$handler = new DefineHandler(TestHelper::getEPDO(), $defineCommand);
@@ -29,15 +30,28 @@ class DefineHandlerTest extends TestCase {
 	}
 	
 	function testDefinePartition() {
+		$command = new CommandParser("define storage backup-main type=basic location=".__DIR__."/storage/basic01/");
+		$query = new DefineHandler(TestHelper::getEPDO(), $command);
+		$query->run();
+
 		$command = new CommandParser("define partition primary type=common storage=backup-main");
 		$define = new DefineHandler(TestHelper::getEPDO(), $command);
 		$define->run();
+
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_partition", "dpt_id");
 		$target[0] = array("dpt_id" => 1, "dst_id" => 1, "dpt_name" => "primary", "dpt_type" => "common", "dst_id" => 1, "dpt_copy" => NULL, "dpt_nextpt" => NULL);
 		$this->assertEquals($target, $database);
 	}
 	
 	function testDefinePolicy() {
+		$command = new CommandParser("define storage backup-main type=basic location=".__DIR__."/storage/basic01/");
+		$query = new DefineHandler(TestHelper::getEPDO(), $command);
+		$query->run();
+
+		$command = new CommandParser("define partition primary type=common storage=backup-main");
+		$define = new DefineHandler(TestHelper::getEPDO(), $command);
+		$define->run();
+		
 		$define = new DefineHandler(TestHelper::getEPDO(), new CommandParser("define policy keepv10d5month partition=primary verexists=10 verdeleted=5 retexists=31 retdeleted=15"));
 		$define->run();
 		$target[0] = array("dpo_id" => "1", "dpo_name"=>"keepv10d5month", "dpo_version_exists" => "10", "dpo_version_deleted"=>"5", "dpo_retention_exists" => "31", "dpo_retention_deleted"=>"15", "dpt_id"=>"1");
@@ -45,6 +59,17 @@ class DefineHandlerTest extends TestCase {
 	}
 	
 	function testDefineNode() {
+		$command = new CommandParser("define storage backup-main type=basic location=".__DIR__."/storage/basic01/");
+		$query = new DefineHandler(TestHelper::getEPDO(), $command);
+		$query->run();
+
+		$command = new CommandParser("define partition primary type=common storage=backup-main");
+		$define = new DefineHandler(TestHelper::getEPDO(), $command);
+		$define->run();
+		
+		$define = new DefineHandler(TestHelper::getEPDO(), new CommandParser("define policy keepv10d5month partition=primary verexists=10 verdeleted=5 retexists=31 retdeleted=15"));
+		$define->run();
+
 		$define = new DefineHandler(TestHelper::getEPDO(), new CommandParser("define node test01 policy=keepv10d5month"));
 		$define->run();
 		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1");
