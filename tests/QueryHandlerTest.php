@@ -45,9 +45,9 @@ class QueryHandlerTest extends TestCase {
 		$queryCommand = new CommandParser("query partition");
 		$query = new QueryHandler(TestHelper::getEPDO(), $queryCommand);
 		// Since we haven't implemented capacity, use 0 GiB here.
-		$expect =  "Name      Storage   Type   Capacity Used ".PHP_EOL;
-		$expect .= "primary   storage01 common    0 GiB 0 GiB".PHP_EOL;
-		$expect .= "secondary storage02 common    0 GiB 0 GiB".PHP_EOL;
+		$expect =  "Name      Storage   Type   Capacity Used".PHP_EOL;
+		$expect .= "primary   storage01 common    0 GiB    0".PHP_EOL;
+		$expect .= "secondary storage02 common    0 GiB    0".PHP_EOL;
 		$this->assertEquals($expect, $query->getResult());
 	}
 
