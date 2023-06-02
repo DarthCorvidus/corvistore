@@ -24,8 +24,8 @@ class PartitionTest extends TestCase {
 		$command = new CommandParser("define partition backup-primary storage=primary type=common");
 		Partition::define(TestHelper::getEPDO(), $command);
 		
-		$target[0] = array("dpt_id" => 1, "dst_id" => 2, "dpt_name"=>"backup-secondary", "dpt_type"=>"common");
-		$target[1] = array("dpt_id" => 2, "dst_id" => 1, "dpt_name"=>"backup-primary", "dpt_type"=>"common");
+		$target[0] = array("dpt_id" => 1, "dst_id" => 2, "dpt_name"=>"backup-secondary", "dpt_type"=>"common", "dpt_copy" => NULL, "dpt_nextpt" => NULL);
+		$target[1] = array("dpt_id" => 2, "dst_id" => 1, "dpt_name"=>"backup-primary", "dpt_type"=>"common", "dpt_copy" => NULL, "dpt_nextpt" => NULL);
 		$this->assertEquals($target, TestHelper::dumpTable(TestHelper::getEPDO(), "d_partition", "dpt_id"));
 	}
 	
