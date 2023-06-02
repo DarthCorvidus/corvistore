@@ -3,12 +3,12 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class CPAdmTest extends TestCase {
 	public function testConstruct() {
-		$adm = new CPAdm(TestHelper::getEPDO());
+		$adm = new CPAdm(TestHelper::getEPDO(), array());
 		$this->assertInstanceOf(CPAdm::class, $adm);
 	}
 	
 	public function testGetCommand() {
-		$adm = new CPAdm(TestHelper::getEPDO());
+		$adm = new CPAdm(TestHelper::getEPDO(), array());
 		$command = $adm->getCommand("define storage backup-main location=".__DIR__."/storage/basic01 type=basic description=\"main backup storage\"");
 		$command->import(new CPModelStorage());
 		$this->assertEquals("define", $command->getCommand());
@@ -20,7 +20,7 @@ class CPAdmTest extends TestCase {
 	}
 	
 	public function testHandleCommandUnknown() {
-		$adm = new CPAdm(TestHelper::getEPDO());
+		$adm = new CPAdm(TestHelper::getEPDO(), array());
 		$command = $adm->getCommand("yell at me");
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("Invalid command 'yell'.");
