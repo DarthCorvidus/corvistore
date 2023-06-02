@@ -11,7 +11,7 @@ class NodeTest extends TestCase {
 	}
 	
 	function testDefine() {
-		$cpadmin = new CPAdm(TestHelper::getEPDO());
+		$cpadmin = new CPAdm(TestHelper::getEPDO(), array());
 		$cpadmin->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/../storage/basic01"));
 		$cpadmin->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
 		$cpadmin->handleCommand(new CommandParser("define policy forever partition=backup-main"));
@@ -26,8 +26,9 @@ class NodeTest extends TestCase {
 	}
 	
 	function testDefineUnique() {
-		$this->expectException(Exception::class);
-		Policy::define(TestHelper::getEPDO(), new CommandParser("define node test01 policy=forever"));
+		// This should be nicer, ie throw its own exception.
+		$this->expectException(PDOException::class);
+		Node::define(TestHelper::getEPDO(), new CommandParser("define node test01 policy=forever"));
 	}
 	
 	function testFromArray() {
