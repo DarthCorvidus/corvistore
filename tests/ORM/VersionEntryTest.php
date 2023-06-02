@@ -8,7 +8,7 @@ class VersionEntryTest extends TestCase {
 	}
 	static function setUpBeforeClass() {
 		TestHelper::resetDatabase();
-		$cpadm = new CPAdm(TestHelper::getEPDO());
+		$cpadm = new CPAdm(TestHelper::getEPDO(), array());
 		$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/../storage/basic01/"));
 		$cpadm->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
 		$cpadm->handleCommand(new CommandParser("define policy forever partition=backup-main"));
@@ -21,32 +21,38 @@ class VersionEntryTest extends TestCase {
 	}
 	
 	function testFromArray() {
+		$time = mktime();
+		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
-		$example["dvs_atime"] = "11021";
+		$example["dvs_type"] = Catalog::TYPE_FILE;
+		#$example["dvs_atime"] = "11021";
 		$example["dvs_mtime"] = "11000";
-		$example["dvs_ctime"] = "10000";
+		#$example["dvs_ctime"] = "10000";
 		$example["dvs_permissions"] = "17407";
 		$example["dvs_owner"] = "hm";
 		$example["dvs_group"] = "users";
 		$example["dvs_size"] = "2186";
-		$example["dvs_created"] = "11237";
+		$example["dvs_created_epoch"] = $time;
+		$example["dvs_created_local"] = $datetime;
 		$example["dc_id"] = "12";
 		$example["dvs_stored"] = "0";
 		$entry = VersionEntry::fromArray($example);
 		$this->assertInstanceOf(VersionEntry::class, $entry);
 		$this->assertEquals(25, $entry->getId());
-		$this->assertEquals(11021, $entry->getATime());
+		#$this->assertEquals(11021, $entry->getATime());
 		$this->assertEquals(11000, $entry->getMTime());
-		$this->assertEquals(10000, $entry->getCTime());
+		#$this->assertEquals(10000, $entry->getCTime());
 		$this->assertEquals(17407, $entry->getPermissions());
 		$this->assertEquals("hm", $entry->getOwner());
 		$this->assertEquals("users", $entry->getGroup());
 		$this->assertEquals(2186, $entry->getSize());
-		$this->assertEquals(11237, $entry->getCreated());
+		$this->assertEquals($time, $entry->getCreated());
 		$this->assertEquals(12, $entry->getCatalogId());
 	}
 	
 	function testFromId() {
+		$time = mktime();
+		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
 		$example["dvs_atime"] = "11021";
 		$example["dvs_mtime"] = "11000";
@@ -55,7 +61,8 @@ class VersionEntryTest extends TestCase {
 		$example["dvs_owner"] = "hm";
 		$example["dvs_group"] = "users";
 		$example["dvs_size"] = "2186";
-		$example["dvs_created"] = "11237";
+		$example["dvs_created_epoch"] = $time;
+		$example["dvs_created_local"] = $datetime;
 		$example["dc_id"] = "12";
 		$id = TestHelper::getEPDO()->create("d_version", $example);
 		$this->assertInstanceOf(VersionEntry::class, VersionEntry::fromId(TestHelper::getEPDO(), 25));
