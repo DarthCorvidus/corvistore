@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "021370531055c045d99596d53fbd4701",
+    "content-hash": "e942a804cf5be932199befeeaab2c005",
     "packages": [
         {
             "name": "plibv4/argv",
@@ -57,6 +57,29 @@
                 ]
             },
             "time": "2021-12-21T20:28:33+00:00"
+        },
+        {
+            "name": "plibv4/binary",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DarthCorvidus/plibv4-binary",
+                "reference": "b979d3f116f94401bcab566aba7eb97bf1a43795"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-binary/zipball/b979d3f116f94401bcab566aba7eb97bf1a43795",
+                "reference": "b979d3f116f94401bcab566aba7eb97bf1a43795",
+                "shasum": ""
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "time": "2023-06-10T18:18:45+00:00"
         },
         {
             "name": "plibv4/convert",
@@ -158,6 +181,29 @@
                 ]
             },
             "time": "2021-12-21T20:47:40+00:00"
+        },
+        {
+            "name": "plibv4/process",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DarthCorvidus/plibv4-process",
+                "reference": "fe30b9904a07677d7d0a6f6a72601574d5af79e9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-process/zipball/fe30b9904a07677d7d0a6f6a72601574d5af79e9",
+                "reference": "fe30b9904a07677d7d0a6f6a72601574d5af79e9",
+                "shasum": ""
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "time": "2023-06-08T13:59:45+00:00"
         },
         {
             "name": "plibv4/terminaltable",
@@ -273,7 +319,9 @@
         "plibv4/longeststring": 20,
         "plibv4/uservalue": 20,
         "plibv4/import": 20,
-        "plibv4/argv": 20
+        "plibv4/argv": 20,
+        "plibv4/process": 20,
+        "plibv4/binary": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
