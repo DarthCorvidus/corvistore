@@ -4,10 +4,10 @@ class VersionEntry {
 	private $id;
 	private $atime;
 	private $ctime;
-	private $mtime;
-	private $permissions;
-	private $owner;
-	private $group;
+	private $mtime = 0;
+	private $permissions = 0;
+	private $owner = "";
+	private $group = "";
 	private $size = 0;
 	private $created;
 	private $catalogId;
@@ -38,6 +38,26 @@ class VersionEntry {
 			$version->mtime = (int)$array["dvs_mtime"];	
 		}
 	return $version;
+	}
+	
+	function toBinary() {
+		$values["dvs_id"] = $this->id;
+		$values["dvs_type"] = $this->type;
+		$values["dvs_created_epoch"] = $this->created;
+		$values["dc_id"] = $this->catalogId;
+		$values["dvs_permissions"] = $this->permissions;
+		$values["dvs_owner"] = $this->owner;
+		$values["dvs_group"] = $this->group;
+		$values["dvs_size"] = $this->size;
+		$values["dvs_mtime"] = $this->mtime;
+		$values["dvs_stored"] = $this->stored;
+	return BinaryWriter::toString($values, new \BinStruct\VersionEntry());
+	}
+	
+	static function fromBinary($string): VersionEntry {
+		$reader = new BinaryReader(new \BinStruct\VersionEntry());
+		$values = $reader->fromString($string);
+	return self::fromArray($values);
 	}
 	
 	static function fromId(EPDO $pdo, int $id): VersionEntry {

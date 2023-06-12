@@ -68,6 +68,50 @@ class VersionEntryTest extends TestCase {
 		$this->assertInstanceOf(VersionEntry::class, VersionEntry::fromId(TestHelper::getEPDO(), 25));
 	}
 	
+	function testToBinary() {
+		$time = mktime();
+		$datetime = date("Y-m-d H:i:sP", $time);
+		$example["dvs_id"] = "25";
+		$example["dvs_type"] = Catalog::TYPE_FILE;
+		$example["dvs_atime"] = "11021";
+		$example["dvs_mtime"] = "11000";
+		$example["dvs_ctime"] = "10000";
+		$example["dvs_permissions"] = "17407";
+		$example["dvs_owner"] = "hm";
+		$example["dvs_group"] = "users";
+		$example["dvs_size"] = "2186";
+		$example["dvs_created_epoch"] = $time;
+		$example["dvs_created_local"] = $datetime;
+		$example["dvs_stored"] = 1;
+		$example["dc_id"] = "12";
+		$obj = VersionEntry::fromArray($example);
+		$binary = $obj->toBinary();
+		$this->assertEquals(chr(25).chr(0).chr(0).chr(0).chr(0).chr(0).chr(0).chr(0), substr($binary, 0, 8));
+		$this->assertEquals(chr(248).chr(42).chr(0).chr(0), substr($binary, 8, 4));
+	}
+	
+	function testFromBinary() {
+		$time = mktime();
+		$datetime = date("Y-m-d H:i:sP", $time);
+		$example["dvs_id"] = "25";
+		$example["dvs_type"] = Catalog::TYPE_FILE;
+		$example["dvs_atime"] = "11021";
+		$example["dvs_mtime"] = "11000";
+		$example["dvs_ctime"] = "10000";
+		$example["dvs_permissions"] = "17407";
+		$example["dvs_owner"] = "hm";
+		$example["dvs_group"] = "users";
+		$example["dvs_size"] = "2186";
+		$example["dvs_created_epoch"] = $time;
+		$example["dvs_created_local"] = $datetime;
+		$example["dvs_stored"] = 1;
+		$example["dc_id"] = "12";
+		$obj = VersionEntry::fromArray($example);
+		$binary = $obj->toBinary();
+		$new = VersionEntry::fromBinary($binary);
+		$this->assertEquals($obj, $new);
+	}
+	
 	function testFromNoValidId() {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("No version with id '27' found");
