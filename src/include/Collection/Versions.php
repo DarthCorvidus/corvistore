@@ -45,4 +45,30 @@ class Versions {
 		}
 	return $new;
 	}
+	
+	function toBinary(): string {
+		$string = "";
+		$string .= IntVal::uint16LE()->putValue($this->getCount());
+		for($i=0;$i<$this->getCount();$i++) {
+			$string .= $this->getVersion($i)->toBinary();
+		}
+	return $string;
+	}
+	
+	static function fromBinary($string): Versions {
+		$versions = new Versions();
+		$amount = IntVal::uint16LE()->getValue(substr($string, 0, 2));
+		$rest = substr($string, 2);
+		for($i=0;$i<$amount;$i++) {
+			$version = VersionEntry::fromBinary($rest);
+			$versions->addVersion($version);
+			/*
+			 * This is terribly ugly, but there is no way for me to know how
+			 * long the part was that was used by the previous call of
+			 * fromBinary.
+			 */
+			$rest = substr($rest, strlen($version->toBinary()));
+		}
+	return $versions;
+	}
 }

@@ -158,5 +158,89 @@ class VersionsTest extends TestCase {
 		$versions->addVersion(VersionEntry::fromArray($delete));
 		$this->assertEquals(Catalog::TYPE_DELETED, $versions->getLatest()->getType());
 	}
+	
+	function testToBinary() {
+		$versions = new Versions();
+		
+		$time = mktime();
+		$dir = array();
+		$dir["dvs_id"] = 27;
+		$dir["dvs_type"] = Catalog::TYPE_DIR;
+		$dir["dvs_created_epoch"] = $time;
+		$dir["dvs_created_date"] = date("Y-m-d H:i:sP", $time);
+		$dir["dvs_permissions"] = fileperms(__DIR__);
+		$dir["dvs_owner"] = "joedoe";
+		$dir["dvs_group"] = "joedoe";
+		$dir["dvs_stored"] = 1;
+		$dir["dc_id"] = 12;
+		$versions->addVersion(VersionEntry::fromArray($dir));
+
+		$file = array();
+		$file["dvs_id"] = 28;
+		$file["dvs_type"] = Catalog::TYPE_FILE;
+		$file["dvs_created_epoch"] = $time+1;
+		$file["dvs_created_date"] = date("Y-m-d H:i:sP", $time+1);
+		$file["dvs_permissions"] = fileperms(__DIR__);
+		$file["dvs_owner"] = "joedoe";
+		$file["dvs_group"] = "joedoe";
+		$file["dvs_stored"] = 1;
+		$file["dvs_mtime"] = $time-100;
+		$file["dvs_size"] = 4096;
+		$file["dc_id"] = 12;
+		$versions->addVersion(VersionEntry::fromArray($file));
+		
+		$delete = array();
+		$delete["dvs_id"] = 29;
+		$delete["dvs_type"] = Catalog::TYPE_DELETED;
+		$delete["dvs_created_epoch"] = $time+2;
+		$delete["dvs_created_date"] = date("Y-m-d H:i:sP", $time+2);
+		$delete["dc_id"] = 12;
+		$versions->addVersion(VersionEntry::fromArray($delete));
+		$binary = $versions->toBinary();
+		$this->assertEquals(chr(3).chr(0), substr($binary, 0, 2));
+		$this->assertEquals(chr(27).chr(0).chr(0).chr(0).chr(0).chr(0).chr(0).chr(0), substr($binary, 2, 8));
+	}
+	
+	function testFromBinary() {
+		$versions = new Versions();
+		
+		$time = mktime();
+		$dir = array();
+		$dir["dvs_id"] = 27;
+		$dir["dvs_type"] = Catalog::TYPE_DIR;
+		$dir["dvs_created_epoch"] = $time;
+		$dir["dvs_created_date"] = date("Y-m-d H:i:sP", $time);
+		$dir["dvs_permissions"] = fileperms(__DIR__);
+		$dir["dvs_owner"] = "joedoe";
+		$dir["dvs_group"] = "joedoe";
+		$dir["dvs_stored"] = 1;
+		$dir["dc_id"] = 12;
+		$versions->addVersion(VersionEntry::fromArray($dir));
+
+		$file = array();
+		$file["dvs_id"] = 28;
+		$file["dvs_type"] = Catalog::TYPE_FILE;
+		$file["dvs_created_epoch"] = $time+1;
+		$file["dvs_created_date"] = date("Y-m-d H:i:sP", $time+1);
+		$file["dvs_permissions"] = fileperms(__DIR__);
+		$file["dvs_owner"] = "joedoe";
+		$file["dvs_group"] = "joedoe";
+		$file["dvs_stored"] = 1;
+		$file["dvs_mtime"] = $time-100;
+		$file["dvs_size"] = 4096;
+		$file["dc_id"] = 12;
+		$versions->addVersion(VersionEntry::fromArray($file));
+		
+		$delete = array();
+		$delete["dvs_id"] = 29;
+		$delete["dvs_type"] = Catalog::TYPE_DELETED;
+		$delete["dvs_created_epoch"] = $time+2;
+		$delete["dvs_created_date"] = date("Y-m-d H:i:sP", $time+2);
+		$delete["dc_id"] = 12;
+		$versions->addVersion(VersionEntry::fromArray($delete));
+		$binary = $versions->toBinary();
+		$new = Versions::fromBinary($binary);
+		$this->assertEquals($versions, $new);
+	}
 
 }
