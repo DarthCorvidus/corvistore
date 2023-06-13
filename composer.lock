@@ -64,12 +64,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-binary",
-                "reference": "b979d3f116f94401bcab566aba7eb97bf1a43795"
+                "reference": "29ff0e4e0e8a807d955338bb89701d2a875977ef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-binary/zipball/b979d3f116f94401bcab566aba7eb97bf1a43795",
-                "reference": "b979d3f116f94401bcab566aba7eb97bf1a43795",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-binary/zipball/29ff0e4e0e8a807d955338bb89701d2a875977ef",
+                "reference": "29ff0e4e0e8a807d955338bb89701d2a875977ef",
                 "shasum": ""
             },
             "default-branch": true,
@@ -79,7 +79,7 @@
                     "src/"
                 ]
             },
-            "time": "2023-06-10T18:18:45+00:00"
+            "time": "2023-06-12T19:08:17+00:00"
         },
         {
             "name": "plibv4/convert",
