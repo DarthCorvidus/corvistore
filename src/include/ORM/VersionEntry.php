@@ -11,7 +11,7 @@ class VersionEntry {
 	private $size = 0;
 	private $created;
 	private $catalogId;
-	private $stored;
+	private $stored = 0;
 	private $type;
 	private function __construct() {
 		
@@ -24,6 +24,7 @@ class VersionEntry {
 		$version->catalogId = (int)$array["dc_id"];
 		
 		if($version->type==Catalog::TYPE_DELETED) {
+			$version->stored = 1;
 			return $version;
 		}
 		$version->permissions = (int)$array["dvs_permissions"];
