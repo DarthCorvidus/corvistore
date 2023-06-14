@@ -3,7 +3,9 @@ class CPServe implements ProcessListener, MessageListener, SignalHandler {
 	private $socket;
 	private $clients = array();
 	private $queue;
-	function __construct() {
+	private $pdo;
+	function __construct(EPDO $pdo) {
+		$this->pdo = $pdo;
 		set_time_limit(0);
 		ob_implicit_flush();
 		pcntl_async_signals(true);

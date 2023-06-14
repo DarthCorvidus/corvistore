@@ -4,7 +4,12 @@ class RunnerServer implements Runner, MessageListener {
 	private $clientId;
 	private $queue;
 	private $mode;
+	private $pdo;
 	function __construct($conn, int $clientId) {
+		$databasePath = "/var/lib/crow-protect/crow-protect.sqlite";
+		$shared = new Shared();
+		$shared->useSQLite($databasePath);
+		$this->pdo = $shared->getEPDO();
 		$this->conn = $conn;
 		$this->clientId = $clientId;
 		$this->queue = new SysVQueue(ftok(__DIR__, "a"));
@@ -30,6 +35,39 @@ class RunnerServer implements Runner, MessageListener {
 	
 	private function write($message) {
 		socket_write($this->conn, $message, strlen($message));
+	}
+	
+	private function authenticate($trimmed) {
+		$exp = explode(" ", $trimmed);
+		if(!in_array(strtoupper($exp[0]), array("NODE", "ADMIN", "QUIT"))) {
+			$this->write("CP001E: Select mode NODE, ADMIN or end connection QUIT".PHP_EOL);		
+		}
+		if(strtoupper($exp[0])=="ADMIN") {
+			$this->mode = new ModeAdmin();
+			return;
+		}
+		if(strtoupper($exp[0])=="NODE" and !isset($exp[1])) {
+			$this->write("CP002E: missing node.".PHP_EOL);
+			return;
+		}
+		
+		if($this->mode==NULL and strtoupper($exp[0])=="NODE") {
+			try {
+				$this->mode = new ModeNode($this->pdo, $exp[1]);
+				echo sprintf("Client %d identified as NODE %s", $this->clientId, $exp[1]).PHP_EOL;
+			} catch (Exception $e) {
+				$this->write($e->getMessage());
+				socket_close($this->conn);
+				exit(0);
+			}
+			return;
+		}
+
+		if($this->mode==NULL and strtoupper($trimmed)=="ADMIN") {
+			$this->mode = new ModeAdmin($pdo);
+			echo sprintf("Client %d identified as 'ADMIN'", $this->clientId).PHP_EOL;
+			return;
+		}
 	}
 	
 	public function run() {
@@ -60,27 +98,18 @@ class RunnerServer implements Runner, MessageListener {
 			if($trimmed=="") {
 				continue;
 			}
-			if($this->mode==NULL and !in_array(strtoupper($trimmed), array("NODE", "ADMIN", "QUIT"))) {
-				$this->write("CP001E: Select mode NODE, ADMIN, QUIT".PHP_EOL);
-				continue;
-			}
-			if($this->mode==NULL and $trimmed=="QUIT") {
+
+			if($this->mode==NULL and strtoupper($trimmed)=="QUIT") {
 				echo $this->clientId." requested end of connection".PHP_EOL;
 				socket_close($this->conn);
 				return;
 			}
+			
+			if($this->mode==NULL) {
+				$this->authenticate($trimmed);
+				continue;
+			}
 
-			if($this->mode==NULL and $trimmed=="NODE") {
-				$this->mode = new ModeNode();
-				continue;
-			}
-			
-			if($this->mode==NULL and strtoupper($trimmed)=="ADMIN") {
-				$this->mode = new ModeAdmin($pdo);
-				echo sprintf("Client %d identified as 'ADMIN'", $this->clientId, $buf).PHP_EOL;
-				continue;
-			}
-			
 			if($this->mode!=NULL) {
 				$this->mode->onServerMessage($trimmed);
 				if($this->mode->isQuit()) {
