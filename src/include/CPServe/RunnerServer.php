@@ -53,7 +53,7 @@ class RunnerServer implements Runner, MessageListener {
 		
 		if($this->mode==NULL and strtoupper($exp[0])=="NODE") {
 			try {
-				$this->mode = new ModeNode($this->pdo, $exp[1]);
+				$this->mode = new ModeNode($this->pdo, $exp[1], $this->conn);
 				echo sprintf("Client %d identified as NODE %s", $this->clientId, $exp[1]).PHP_EOL;
 			} catch (Exception $e) {
 				$this->write($e->getMessage());
@@ -117,32 +117,6 @@ class RunnerServer implements Runner, MessageListener {
 					socket_close($this->conn);
 					return;
 				}
-				continue;
-			}
-				
-			if($buf == 'quit') {
-				echo $this->clientId." requested end of connection".PHP_EOL;
-				socket_close($this->conn);
-				return;
-			}
-			if($buf == "sleep") {
-				$message = "Going to sleep for 15 seconds!".PHP_EOL;
-				$this->write($message);
-				sleep(15);
-				$this->write("Woke up.").PHP_EOL;
-				continue;
-			}
-			
-			if($buf == "status") {
-				$this->queue->sendHyperwave("status", 1, posix_getppid());
-			}
-			
-			if($buf == "help") {
-				$message = "help - this help".PHP_EOL;
-				$message .= "status - print status".PHP_EOL;
-				$message .= "quit - disconnect".PHP_EOL;
-				$message .= "sleep - sleep for 15 seconds".PHP_EOL;
-				$this->write($message);
 				continue;
 			}
 			$msg = sprintf("Unknown command: ".$buf);
