@@ -39,7 +39,7 @@ class RunnerServer implements Runner, MessageListener {
 	
 	private function authenticate($trimmed) {
 		$exp = explode(" ", $trimmed);
-		if(!in_array(strtoupper($exp[0]), array("NODE", "ADMIN", "QUIT"))) {
+		if(!in_array(strtoupper($exp[0]), array("NODE", "ADMIN", "QUIT", "TEST"))) {
 			$this->write("CP001E: Select mode NODE, ADMIN or end connection QUIT".PHP_EOL);		
 		}
 		if(strtoupper($exp[0])=="ADMIN") {
@@ -68,12 +68,15 @@ class RunnerServer implements Runner, MessageListener {
 			echo sprintf("Client %d identified as 'ADMIN'", $this->clientId).PHP_EOL;
 			return;
 		}
+		if($this->mode==NULL and strtoupper($trimmed)=="TEST") {
+			$this->mode = new ModeTest($this->clientId);
+			echo sprintf("Client %d identified as 'TEST'", $this->clientId).PHP_EOL;
+			return;
+		}
+
 	}
 	
-	public function run() {
-		$shared = new Shared();
-		$shared->useSQLite("/var/lib/crow-protect/crow-protect.sqlite");
-		$pdo = $shared->getEPDO();
+	public function runInitial() {
 		echo "Start loop for client ".$this->clientId.PHP_EOL;
 		do {
 			$read[] = $this->conn;
@@ -107,9 +110,17 @@ class RunnerServer implements Runner, MessageListener {
 			
 			if($this->mode==NULL) {
 				$this->authenticate($trimmed);
+			}
+			
+			if($this->mode!=NULL) {
+				echo "Breaking initial loop.".PHP_EOL;
+				break;
+			}
+			
+			if($this->mode==NULL) {
 				continue;
 			}
-
+			
 			if($this->mode!=NULL) {
 				$this->mode->onServerMessage($trimmed);
 				if($this->mode->isQuit()) {
@@ -123,5 +134,13 @@ class RunnerServer implements Runner, MessageListener {
 			$talkback = sprintf("Client %d said %s", $this->clientId, $buf).PHP_EOL;
 			socket_write($this->conn, $talkback, strlen($talkback));
 		} while(true);
+	}
+	
+	public function run() {
+		$this->runInitial();
+		$protocol = new \Net\Protocol($this->conn);
+		$protocol->addProtocolListener($this->mode);
+		$protocol->listen();
+		socket_close($this->conn);
 	}
 }
