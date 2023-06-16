@@ -46,14 +46,24 @@ class Test {
 		for($i=0;$i<2500;$i++) {
 			$test[] = sha1($i.time());
 		}
-		$serialize = serialize($test);
-		$serlen = strlen($serialize);
-		echo "Serialized length: ".number_format($serlen).PHP_EOL;
-		socket_write($this->socket, \IntVal::uint8()->putValue(\Net\Protocol::SERIAL_PHP));
-		socket_write($this->socket, \IntVal::uint32LE()->putValue($serlen));
-		socket_write($this->socket, $serialize);
-		echo "Quitting...";
-		$this->protocol->sendCommand("HELLO");
+		#$serialize = serialize($test);
+		#$serlen = strlen($serialize);
+		#echo "Serialized length: ".number_format($serlen).PHP_EOL;
+		#socket_write($this->socket, \IntVal::uint8()->putValue(\Net\Protocol::SERIAL_PHP));
+		#socket_write($this->socket, \IntVal::uint32LE()->putValue($serlen));
+		#socket_write($this->socket, $serialize);
+		#echo "Quitting...";
+		echo "Requesting date from server:".PHP_EOL;
+		$this->protocol->sendCommand("DATE");
+		echo " ".$this->protocol->getMessage().PHP_EOL;
+		echo "Requesting wrong result from server:".PHP_EOL;
+		try {
+			$this->protocol->sendCommand("FAKE");
+			echo " ".$this->protocol->getMessage().PHP_EOL;
+		} catch (\Exception $e) {
+			echo " ".$e->getMessage().PHP_EOL;
+		}
+		
 		$this->protocol->sendCommand("QUIT");
 		echo "Done.".PHP_EOL;
 	}

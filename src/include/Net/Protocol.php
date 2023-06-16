@@ -5,6 +5,8 @@ class Protocol {
 	const COMMAND = 2;
 	const SERIAL_PHP = 3;
 	const RAW = 4;
+	const MESSAGE = 5;
+	const ERROR = 254;
 	const CANCEL = 255;
 	private $socket;
 	private $listener;
@@ -20,6 +22,33 @@ class Protocol {
 		socket_write($this->socket, \IntVal::uint8()->putValue(self::COMMAND));
 		socket_write($this->socket, \IntVal::uint16LE()->putValue(strlen($command)));
 		socket_write($this->socket, $command);
+	}
+
+	function sendMessage(string $message) {
+		socket_write($this->socket, \IntVal::uint8()->putValue(self::MESSAGE));
+		socket_write($this->socket, \IntVal::uint16LE()->putValue(strlen($message)));
+		socket_write($this->socket, $message);
+	}
+	
+	function sendError(string $error) {
+		socket_write($this->socket, \IntVal::uint8()->putValue(self::ERROR));
+		socket_write($this->socket, \IntVal::uint8()->putValue(strlen($error)));
+		socket_write($this->socket, $error);
+	}
+	
+	function getMessage(): string {
+		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
+		if($init==self::ERROR) {
+			$length = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
+			$error = socket_read($this->socket, $length);
+			throw new \Exception("Server error: ".$error);
+		}
+		if($init!=self::MESSAGE) {
+			throw new \Exception("Invalid server answer, expected ".self::MESSAGE.", got ".$init);
+		}
+		$length = \IntVal::uint16LE()->getValue(socket_read($this->socket, 2));
+		$message = socket_read($this->socket, $length);
+	return $message;
 	}
 	
 	function listen() {
@@ -42,13 +71,12 @@ class Protocol {
 			echo "Init: ".$init.PHP_EOL;
 			if($init == self::COMMAND) {
 				$length = \IntVal::uint16LE()->getValue(socket_read($this->socket, 2));
-				echo "Command length: ".$length.PHP_EOL;
 				$command = socket_read($this->socket, $length);
-				echo "Command: ".$command.PHP_EOL;
 				if($command=="QUIT") {
 					$this->listener->onQuit();
 					return;
 				}
+				$this->listener->onCommand($command, $this);
 				continue;
 			}
 			
