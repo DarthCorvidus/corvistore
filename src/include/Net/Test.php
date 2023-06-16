@@ -63,6 +63,13 @@ class Test {
 		} catch (\Exception $e) {
 			echo " ".$e->getMessage().PHP_EOL;
 		}
+		echo "Requesting file from server: ".PHP_EOL;
+		$this->protocol->sendCommand("SEND FILE");
+		$fh = fopen(__DIR__."/test.bin", "w");
+		$this->protocol->getRaw($fh);
+		fclose($fh);
+		echo " Size:     ".number_format(filesize(__DIR__."/test.bin")).PHP_EOL;
+		echo " File md5: ".md5_file(__DIR__."/test.bin").PHP_EOL;
 		
 		$this->protocol->sendCommand("QUIT");
 		echo "Done.".PHP_EOL;

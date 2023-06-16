@@ -35,6 +35,35 @@ class Protocol {
 		socket_write($this->socket, \IntVal::uint8()->putValue(strlen($error)));
 		socket_write($this->socket, $error);
 	}
+
+	function sendRaw($size, $handle) {
+		socket_write($this->socket, \IntVal::uint8()->putValue(self::RAW));
+		socket_write($this->socket, \IntVal::uint64LE()->putValue($size));
+		$rest = $size;
+		while($rest>4096) {
+			socket_write($this->socket, fread($handle, 4096));
+			$rest -= 4096;
+		}
+		if($rest!=0) {
+			socket_write($this->socket, fread($handle, $rest));
+		}
+	}
+	
+	function getRaw($handle) {
+		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
+		if($init!=self::RAW) {
+			throw new \Exception("Invalid server answer, expected ".self::RAW.", got ".$init);
+		}
+		$size = \IntVal::uint64LE()->getValue(socket_read($this->socket, 8));
+		$rest = $size;
+		while($rest>4096) {
+			fwrite($handle, socket_read($this->socket, 4096));
+			$rest -= 4096;
+		}
+		if($rest!=0) {
+			fwrite($handle, socket_read($this->socket, $rest));
+		}
+	}
 	
 	function getMessage(): string {
 		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
@@ -50,7 +79,7 @@ class Protocol {
 		$message = socket_read($this->socket, $length);
 	return $message;
 	}
-	
+
 	function listen() {
 		do {
 			$read[] = $this->socket;
