@@ -14,21 +14,23 @@ class ModeTest implements \Net\ProtocolListener {
 		}
 		if($command=="SEND FILE") {
 			$file = "/tmp/crowfile.".$this->clientId.".bin";
-			$read = fopen("/dev/urandom", "r");
-			$write = fopen($file, "w");
-			for($i=0;$i<10;$i++) {
-				fwrite($write, fread($read, 4096));
-			}
-			fwrite($write, fread($read, 386));
-			
-			fclose($write);
-			fclose($read);
+			\Net\Test::createRandom($file, 25, 112);
 			echo "md5sum: ".md5_file($file).PHP_EOL;
 			$reread = fopen($file, "r");
 			$protocol->sendRaw(filesize($file), $reread);
 			fclose($reread);
 		return;
 		}
+		
+		if($command=="RECEIVE FILE") {
+			$filename = "/tmp/crowclient.".$this->clientId.".bin";
+			$handle = fopen($filename, "w");
+			$protocol->getRaw($handle);
+			fclose($handle);
+			echo "Received: ".md5_file($filename).PHP_EOL;
+			return;
+		}
+		
 	$protocol->sendError("Command ".$command." not known.");
 	}
 

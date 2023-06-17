@@ -41,6 +41,17 @@ class Test {
 	return $data;
 	}
 	
+	static function createRandom(string $filename, int $blocks, int $rest) {
+		$read = fopen("/dev/urandom", "r");
+		$write = fopen($filename, "w");
+		for($i=0;$i<$blocks;$i++) {
+			fwrite($write, fread($read, 4096));
+		}
+		fwrite($write, fread($read, $rest));
+		fclose($write);
+		fclose($read);
+	}
+	
 	function run() {
 		$test = array();
 		for($i=0;$i<2500;$i++) {
@@ -70,6 +81,17 @@ class Test {
 		fclose($fh);
 		echo " Size:     ".number_format(filesize(__DIR__."/test.bin")).PHP_EOL;
 		echo " File md5: ".md5_file(__DIR__."/test.bin").PHP_EOL;
+		
+		echo "Sending file to server: ".PHP_EOL;
+		$this->protocol->sendCommand("RECEIVE FILE");
+		$send = __DIR__."/client.bin";
+		self::createRandom($send, 25, 674);
+		echo " md5sum: ".md5_file($send).PHP_EOL;
+		$fh = fopen($send, "r");
+		$this->protocol->sendRaw(filesize($send), $fh);
+		fclose($fh);
+		
+		
 		
 		$this->protocol->sendCommand("QUIT");
 		echo "Done.".PHP_EOL;

@@ -49,11 +49,15 @@ class Protocol {
 		}
 	}
 	
+	private function assertType(int $expected, int $received) {
+		if($expected!=$received) {
+			throw new \Exception("Invalid server answer, expected ".$expected.", got ".$received);
+		}
+	}
+	
 	function getRaw($handle) {
 		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
-		if($init!=self::RAW) {
-			throw new \Exception("Invalid server answer, expected ".self::RAW.", got ".$init);
-		}
+		$this->assertType(self::RAW, $init);
 		$size = \IntVal::uint64LE()->getValue(socket_read($this->socket, 8));
 		$rest = $size;
 		while($rest>4096) {
@@ -72,9 +76,7 @@ class Protocol {
 			$error = socket_read($this->socket, $length);
 			throw new \Exception("Server error: ".$error);
 		}
-		if($init!=self::MESSAGE) {
-			throw new \Exception("Invalid server answer, expected ".self::MESSAGE.", got ".$init);
-		}
+		$this->assertType(self::MESSAGE, $init);
 		$length = \IntVal::uint16LE()->getValue(socket_read($this->socket, 2));
 		$message = socket_read($this->socket, $length);
 	return $message;
