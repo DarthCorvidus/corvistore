@@ -36,6 +36,10 @@ class Protocol {
 		socket_write($this->socket, $error);
 	}
 
+	function sendOK() {
+		socket_write($this->socket, \IntVal::uint8()->putValue(self::OK));
+	}
+	
 	function sendRaw($size, $handle) {
 		socket_write($this->socket, \IntVal::uint8()->putValue(self::RAW));
 		socket_write($this->socket, \IntVal::uint64LE()->putValue($size));
@@ -47,6 +51,7 @@ class Protocol {
 		if($rest!=0) {
 			socket_write($this->socket, fread($handle, $rest));
 		}
+		#$this->sendOK();
 	}
 	
 	private function assertType(int $expected, int $received) {
@@ -80,6 +85,13 @@ class Protocol {
 		$length = \IntVal::uint16LE()->getValue(socket_read($this->socket, 2));
 		$message = socket_read($this->socket, $length);
 	return $message;
+	}
+
+	function getOK() {
+		$status = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
+		if($status!=self::OK) {
+			throw new \Exception("expected OK, got ".$status);
+		}
 	}
 
 	function listen() {
