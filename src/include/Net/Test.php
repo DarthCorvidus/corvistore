@@ -68,9 +68,8 @@ class Test {
 		echo "Requesting OK from server: ".PHP_EOL;
 		$this->protocol->sendCommand("SEND OK");
 		$this->protocol->getOK();
-				
 		
-		echo "Requesting date from server:".PHP_EOL;
+		echo "Requesting DATE from server:".PHP_EOL;
 		$this->protocol->sendCommand("DATE");
 		echo " ".$this->protocol->getMessage().PHP_EOL;
 		echo "Requesting wrong result from server:".PHP_EOL;
@@ -80,6 +79,13 @@ class Test {
 		} catch (\Exception $e) {
 			echo " ".$e->getMessage().PHP_EOL;
 		}
+		
+		echo "Requesting SEND STRUCTURED PHP from server:".PHP_EOL;
+		$this->protocol->sendCommand("SEND STRUCTURED PHP");
+		$unserialized = $this->protocol->getUnserializePHP();
+		echo " Array count: ".count($unserialized).PHP_EOL;
+		echo " Value 1000 : ".md5($unserialized[1000]).PHP_EOL;
+		
 		echo "Requesting file from server: ".PHP_EOL;
 		$this->protocol->sendCommand("SEND FILE");
 		$fh = fopen(__DIR__."/test.bin", "w");

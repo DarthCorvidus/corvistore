@@ -54,6 +54,23 @@ class Protocol {
 		#$this->sendOK();
 	}
 	
+	function sendSerializePHP($unserialized) {
+		$serialized = serialize($unserialized);
+		$size = strlen($serialized);
+		socket_write($this->socket, \IntVal::uint8()->putValue(self::SERIAL_PHP));
+		socket_write($this->socket, \IntVal::uint32LE()->putValue($size));
+		$rest = $size;
+		$pos = 0;
+		while($rest>4096) {
+			socket_write($this->socket, substr($serialized, $pos, 4096));
+			$rest -= 4096;
+			$pos += 4096;
+		}
+		if($rest!=0) {
+			socket_write($this->socket, substr($serialized, $pos));
+		}
+	}
+	
 	private function assertType(int $expected, int $received) {
 		if($expected!=$received) {
 			throw new \Exception("Invalid server answer, expected ".$expected.", got ".$received);
@@ -85,6 +102,24 @@ class Protocol {
 		$length = \IntVal::uint16LE()->getValue(socket_read($this->socket, 2));
 		$message = socket_read($this->socket, $length);
 	return $message;
+	}
+
+	function getUnserializePHP() {
+		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
+		$this->assertType(self::SERIAL_PHP, $init);
+		$size = \IntVal::uint32LE()->getValue(socket_read($this->socket, 4));
+		
+		$serialized = "";
+		$rest = $size;
+		$pos = 0;
+		while($rest>4096) {
+			$serialized .= socket_read($this->socket, 4096);
+			$rest -= 4096;
+		}
+		if($rest!=0) {
+			$serialized .= socket_read($this->socket, $rest);
+		}
+	return unserialize($serialized);
 	}
 
 	function getOK() {

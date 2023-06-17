@@ -1,7 +1,6 @@
 <?php
 class ModeTest implements \Net\ProtocolListener {
 	private $clientId;
-	private $protocol;
 	function __construct(int $clientId) {
 		$this->clientId = $clientId;
 	}
@@ -19,7 +18,7 @@ class ModeTest implements \Net\ProtocolListener {
 		if($command=="SEND FILE") {
 			$file = "/tmp/crowfile.".$this->clientId.".bin";
 			\Net\Test::createRandom($file, 25, 112);
-			echo "md5sum: ".md5_file($file).PHP_EOL;
+			echo " Sent: ".md5_file($file).PHP_EOL;
 			$reread = fopen($file, "r");
 			$protocol->sendRaw(filesize($file), $reread);
 			fclose($reread);
@@ -31,8 +30,19 @@ class ModeTest implements \Net\ProtocolListener {
 			$handle = fopen($filename, "w");
 			$protocol->getRaw($handle);
 			fclose($handle);
-			echo "Received: ".md5_file($filename).PHP_EOL;
+			echo " Received: ".md5_file($filename).PHP_EOL;
 			return;
+		}
+
+		if($command=="SEND STRUCTURED PHP") {
+			$array = array();
+			for($i=0;$i<2500;$i++) {
+				$array[] = random_bytes(64);
+			}
+			echo " Array count: ".count($array).PHP_EOL;
+			echo " Value 1000:  ".md5($array[1000]).PHP_EOL;
+			$protocol->sendSerializePHP($array);
+		return;
 		}
 		
 	$protocol->sendError("Command ".$command." not known.");
