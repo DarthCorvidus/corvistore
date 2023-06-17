@@ -1,5 +1,5 @@
 <?php
-class ModeNode implements Mode{
+class ModeNode implements \Net\ProtocolListener {
 	private $pdo;
 	private $catalog;
 	private $quit = FALSE;
@@ -8,52 +8,49 @@ class ModeNode implements Mode{
 		$this->pdo = $pdo;
 		$this->node = Node::fromName($this->pdo, $node);
 		$this->catalog = new Catalog($this->pdo, $this->node);
-		$this->conn = $conn;
+		#$this->conn = $conn;
 	}
-	public function onServerMessage(string $message) {
-		if(strtoupper($message)=="QUIT") {
-			$this->quit = TRUE;
-			return "End connection.";
-		}
-		$exp = explode(" ", $message);
-		$exp[0] = strtoupper($exp[0]);
+	
+	public function onCommand(string $command, \Net\Protocol $protocol) {
+		$exp = explode(" ", $command);
 		if(count($exp)==1) {
-			#return $this->handleOne($exp);
+			$this->handleOne($exp, $protocol);
+		return;
 		}
 
 		if(count($exp)==2) {
-			$this->handleTwo($exp);
+			$this->handleTwo($exp, $protocol);
 			return;
 		}
 
 		if(count($exp)==3) {
-			$this->handleThree($exp);
+			$this->handleThree($exp, $protocol);
 			return;
 		}
 	return "Invalid command ".$message;
 	}
 	
-	public function handleTwo(array $command): string {
+	public function handleTwo(array $command, \Net\Protocol $protocol): string {
 		if($command[0]=="GET" and strtoupper($command[1])=="CATALOG") {
 			$entries = $this->catalog->getEntries();
-			$serialized = serialize($entries);
-			socket_write($this->conn, \IntVal::uint32LE()->putValue(strlen($serialized)));
-			socket_write($this->conn, $serialized);
+			$protocol->sendSerializePHP($entries);
+			#$entries = $this->catalog->getEntries();
+			#$serialized = serialize($entries);
+			#socket_write($this->conn, \IntVal::uint32LE()->putValue(strlen($serialized)));
+			#socket_write($this->conn, $serialized);
 			#return serialize($entries);
 		}
 	return "Invalid command.";
 	}
 	
-	public function handleThree(array $command) {
+	public function handleThree(array $command, \Net\Protocol $protocol) {
 		if($command[0]=="GET" and strtoupper($command[1])=="CATALOG") {
 			$entries = $this->catalog->getEntries($command[2]);
-			$serialized = serialize($entries);
-			socket_write($this->conn, \IntVal::uint32LE()->putValue(strlen($serialized)));
-			socket_write($this->conn, $serialized);
+			$protocol->sendSerializePHP($entries);
 		}
 	}
 	
-	public function isQuit(): bool {
-		return $this->quit;
+	public function onQuit() {
+		
 	}
 }

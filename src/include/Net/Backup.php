@@ -13,6 +13,7 @@ class Backup {
 	private $catalog;
 	private $processed;
 	private $socket;
+	private $protocol;
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
@@ -20,32 +21,15 @@ class Backup {
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
-		$this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		socket_connect($this->socket, '127.0.0.1', 4096);
-		socket_write($this->socket, "node desktop02\n");
+		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+		socket_connect($socket, '127.0.0.1', 4096);
+		socket_write($socket, "node desktop02\n");
+		$this->protocol = new Protocol($socket);
 		#$this->inex = new InEx();
 		#$this->inex->addInclude("/boot/");
 		#$this->inex->addInclude("/tmp/");
 		#$this->inex->addInclude("/var/log/");
 		#$this->inex->addInclude("/home/hm/kernel/");
-	}
-	
-	function readData() {
-		$length = \IntVal::uint32LE()->getValue(socket_read($this->socket, 4));
-		#echo "Reading ".number_format($length)." bytes of Data.".PHP_EOL;
-		if($length<=4096) {
-			$data = socket_read($this->socket, $length);
-			#echo "Got ".strlen($data).PHP_EOL;
-			return $data;
-		}
-		$rest = $length;
-		$data = "";
-		while($rest>4096) {
-			$data .= socket_read($this->socket, 4096);
-			$rest -= 4096;
-		}$data .= socket_read($this->socket, $rest);
-		#echo "Got ".number_format(strlen($data)).PHP_EOL;
-	return $data;
 	}
 	
 	private function fileowner($filename) {
@@ -94,11 +78,11 @@ class Backup {
 			}
 		}
 		if($parent == NULL) {
-			socket_write($this->socket, "GET CATALOG\n");
-			$catalogEntries = unserialize($this->readData());
+			$this->protocol->sendCommand("GET CATALOG");
+			$catalogEntries = $this->protocol->getUnserializePHP();
 		} else {
-			socket_write($this->socket, "GET CATALOG ".$parent->getId()."\n");
-			$catalogEntries = unserialize($this->readData());
+			$this->protocol->sendCommand("GET CATALOG ".$parent->getId());
+			$catalogEntries = $this->protocol->getUnserializePHP();
 		}
 		
 		#$this->pdo->beginTransaction();
@@ -146,7 +130,6 @@ class Backup {
 	function run() {
 		$start = hrtime();
 		$this->recurseFiles("/", 0);
-		socket_write($this->socket, "QUIT\n");
 		$end = hrtime();
 		$elapsed = $end[0]-$start[0];
 		echo "Processed:    ".number_format($this->processed).PHP_EOL;
