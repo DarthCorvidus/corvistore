@@ -64,6 +64,12 @@ class Test {
 		#socket_write($this->socket, \IntVal::uint32LE()->putValue($serlen));
 		#socket_write($this->socket, $serialize);
 		#echo "Quitting...";
+		
+		echo "Requesting OK from server: ".PHP_EOL;
+		$this->protocol->sendCommand("SEND OK");
+		$this->protocol->getOK();
+				
+		
 		echo "Requesting date from server:".PHP_EOL;
 		$this->protocol->sendCommand("DATE");
 		echo " ".$this->protocol->getMessage().PHP_EOL;

@@ -7,6 +7,10 @@ class ModeTest implements \Net\ProtocolListener {
 	}
 	public function onCommand(string $command, \Net\Protocol $protocol) {
 		echo "Received command in mode test: ".$command.PHP_EOL;
+		if($command=="SEND OK") {
+			$protocol->sendOK();
+		return;
+		}
 		if($command=="DATE") {
 			echo date("Y-m-d H:i:sP").PHP_EOL;
 			$protocol->sendMessage(date("Y-m-d H:i:sP"));
