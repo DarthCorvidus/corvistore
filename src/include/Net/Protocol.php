@@ -148,26 +148,32 @@ class Protocol {
 		}
 	}
 	
-	function getRaw($handle) {
+	function getRaw(TransferListener $listener) {
 		$init = \IntVal::uint8()->getValue($this->read(1));
 		$this->assertType(self::RAW, $init);
 		$size = \IntVal::uint64LE()->getValue($this->read(8));
 		$rest = $size;
 		$i=0;
-		$this->getOK();
-		while($rest>4096) {
-			fwrite($handle, $this->read(4096));
-			$rest -= 4096;
-			$i++;
+		try {
+			$this->getOK();
+			$listener->onStart($size);
+			while($rest>4096) {
+				$listener->onData($this->read(4096));
+				$rest -= 4096;
+				$i++;
 
-			if($i%10==0) {
-				$this->getOK();
+				if($i%10==0) {
+					$this->getOK();
+				}
 			}
+			if($rest!=0) {
+				$listener->onData($this->read($rest));
+			}
+			$this->getOK();
+			$listener->onEnd();
+		} catch (\Net\CancelException $e) {
+			$listener->onCancel();
 		}
-		if($rest!=0) {
-			fwrite($handle, $this->read($rest));
-		}
-		$this->getOK();
 	}
 	
 	function getMessage(): string {
