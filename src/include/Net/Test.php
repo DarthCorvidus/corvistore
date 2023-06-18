@@ -86,16 +86,16 @@ class Test {
 		echo " Array count: ".count($unserialized).PHP_EOL;
 		echo " Value 1000 : ".md5($unserialized[1000]).PHP_EOL;
 		
-		echo "Requesting file from server: ".PHP_EOL;
-		$this->protocol->sendCommand("SEND FILE");
+		echo "Requesting RAW data from server: ".PHP_EOL;
+		$this->protocol->sendCommand("SEND RAW");
 		$fh = fopen(__DIR__."/test.bin", "w");
 		$this->protocol->getRaw($fh);
 		fclose($fh);
 		echo " Size:     ".number_format(filesize(__DIR__."/test.bin")).PHP_EOL;
 		echo " File md5: ".md5_file(__DIR__."/test.bin").PHP_EOL;
 		
-		echo "Sending file to server: ".PHP_EOL;
-		$this->protocol->sendCommand("RECEIVE FILE");
+		echo "Sending RAW data to server: ".PHP_EOL;
+		$this->protocol->sendCommand("RECEIVE RAW");
 		$send = __DIR__."/client.bin";
 		self::createRandom($send, 25, 674);
 		echo " md5sum: ".md5_file($send).PHP_EOL;

@@ -15,7 +15,7 @@ class ModeTest implements \Net\ProtocolListener {
 			$protocol->sendMessage(date("Y-m-d H:i:sP"));
 			return;
 		}
-		if($command=="SEND FILE") {
+		if($command=="SEND RAW") {
 			$file = "/tmp/crowfile.".$this->clientId.".bin";
 			\Net\Test::createRandom($file, 25, 112);
 			echo " Sent: ".md5_file($file).PHP_EOL;
@@ -25,7 +25,7 @@ class ModeTest implements \Net\ProtocolListener {
 		return;
 		}
 		
-		if($command=="RECEIVE FILE") {
+		if($command=="RECEIVE RAW") {
 			$filename = "/tmp/crowclient.".$this->clientId.".bin";
 			$handle = fopen($filename, "w");
 			$protocol->getRaw($handle);
@@ -51,10 +51,4 @@ class ModeTest implements \Net\ProtocolListener {
 	public function onQuit() {
 		echo "Client ".$this->clientId." requested quit. Ending connection.".PHP_EOL;
 	}
-
-	public function onSerializedPHP(string $data, \Net\Protocol $protocol) {
-		$unser = unserialize($data);
-		echo "Got structured data: ".gettype($unser).PHP_EOL;
-	}
-
 }
