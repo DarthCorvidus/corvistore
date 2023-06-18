@@ -46,6 +46,10 @@ class Protocol {
 	function sendOK() {
 		socket_write($this->socket, \IntVal::uint8()->putValue(self::OK));
 	}
+
+	function sendCancel() {
+		socket_write($this->socket, \IntVal::uint8()->putValue(self::CANCEL));
+	}
 	
 	function sendRaw($size, $handle) {
 		socket_write($this->socket, \IntVal::uint8()->putValue(self::RAW));
@@ -63,6 +67,52 @@ class Protocol {
 		}
 		if($rest!=0) {
 			socket_write($this->socket, fread($handle, $rest));
+		}
+		$this->sendOK();
+	}
+	private function checkFile(\File $file) {
+		$path = $file->getPath();
+		if(!is_file($path)) {
+			throw new \Exception("file has vanished during upload.");
+		}
+
+		if(filesize($path)!=$file->getSize()) {
+			throw new \Exception("filesize has changed during upload.");
+		}
+
+		if(filemtime($path)!=$file->getMTime()) {
+			throw new \Exception("file has changed during upload.");
+		}
+	}
+	
+	function sendFile(\File $file) {
+		socket_write($this->socket, \IntVal::uint8()->putValue(self::RAW));
+		socket_write($this->socket, \IntVal::uint64LE()->putValue($size));
+		$rest = $size;
+		$this->sendOK();
+		$i = 0;
+		while($rest>4096) {
+			socket_write($this->socket, fread($handle, 4096));
+			$rest -= 4096;
+			$i++;
+			if($i%10==0) {
+				try {
+					$this->checkFile($file);
+				} catch(\Exception $e) {
+					$this->sendCancel();
+					throw $e;
+				}
+				$this->sendOK();
+			}
+		}
+		if($rest!=0) {
+			socket_write($this->socket, fread($handle, $rest));
+		}
+		try {
+			$this->checkFile($file);
+		} catch(\Exception $e) {
+			$this->sendCancel();
+			throw $e;
 		}
 		$this->sendOK();
 	}
@@ -111,7 +161,7 @@ class Protocol {
 		}
 		$this->getOK();
 	}
-
+	
 	function getMessage(): string {
 		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
 		if($init==self::ERROR) {

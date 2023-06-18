@@ -16,15 +16,20 @@ class File {
 		// relative path, apart from any initial path supplied by pesky users,
 		// on which realpath() can be called once.
 		$this->path = $path;
+		$this->reload();
+	}
+	
+	function reload() {
+		clearstatcache();
 		$stat = stat($this->path);
 		$this->ctime = $stat["ctime"];
 		$this->atime = $stat["atime"];
 		$this->mtime = $stat["mtime"];
-		$this->permissions = fileperms($path);
+		$this->permissions = fileperms($this->path);
 		// group & user names are cached
 		$this->owner = $this->getOwnerName($stat["uid"]);
 		$this->group = $this->getGroupName($stat["gid"]); 
-		$this->size = filesize($path);
+		$this->size = filesize($this->path);
 		$this->type = Catalog::TYPE_OTHER;
 		//usually, most files are files, so check for file first and end early.
 		if(is_file($this->path)) {
