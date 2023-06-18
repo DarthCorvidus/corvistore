@@ -71,26 +71,30 @@ class Protocol {
 		$this->sendOK();
 	}
 	private function checkFile(\File $file) {
+		clearstatcache();
 		$path = $file->getPath();
 		if(!is_file($path)) {
-			throw new \Exception("file has vanished during upload.");
+			throw new UploadException("file has vanished during upload.");
 		}
 
 		if(filesize($path)!=$file->getSize()) {
-			throw new \Exception("filesize has changed during upload.");
+			throw new UploadException("filesize has changed during upload.");
 		}
 
 		if(filemtime($path)!=$file->getMTime()) {
-			throw new \Exception("file has changed during upload.");
+			throw new UploadException("file has changed during upload.");
 		}
 	}
 	
 	function sendFile(\File $file) {
+		$file->reload();
+		$this->checkFile($file);
 		socket_write($this->socket, \IntVal::uint8()->putValue(self::RAW));
-		socket_write($this->socket, \IntVal::uint64LE()->putValue($size));
-		$rest = $size;
+		socket_write($this->socket, \IntVal::uint64LE()->putValue($file->getSize()));
+		$rest = $file->getSize();
 		$this->sendOK();
 		$i = 0;
+		$handle = fopen($file->getPath(), "r");
 		while($rest>4096) {
 			socket_write($this->socket, fread($handle, 4096));
 			$rest -= 4096;
@@ -98,11 +102,13 @@ class Protocol {
 			if($i%10==0) {
 				try {
 					$this->checkFile($file);
-				} catch(\Exception $e) {
+					$this->sendOK();
+				} catch(UploadException $e) {
 					$this->sendCancel();
+					fclose($handle);
 					throw $e;
 				}
-				$this->sendOK();
+				
 			}
 		}
 		if($rest!=0) {
@@ -110,11 +116,13 @@ class Protocol {
 		}
 		try {
 			$this->checkFile($file);
-		} catch(\Exception $e) {
+			$this->sendOK();
+		} catch(UploadException $e) {
 			$this->sendCancel();
+			fclose($handle);
 			throw $e;
 		}
-		$this->sendOK();
+		fclose($handle);
 	}
 
 	function sendSerializePHP($unserialized) {
@@ -195,6 +203,9 @@ class Protocol {
 
 	function getOK() {
 		$status = \IntVal::uint8()->getValue($this->read(1));
+		if($status==self::CANCEL) {
+			throw new \Net\CancelException("expected OK, got CANCEL");
+		}
 		if($status!=self::OK) {
 			throw new \Exception("expected OK, got ".$status);
 		}

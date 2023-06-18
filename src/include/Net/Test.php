@@ -93,7 +93,7 @@ class Test {
 		fclose($fh);
 		echo " Size:     ".number_format(filesize(__DIR__."/test.bin")).PHP_EOL;
 		echo " File md5: ".md5_file(__DIR__."/test.bin").PHP_EOL;
-		
+
 		echo "Sending RAW data to server: ".PHP_EOL;
 		$this->protocol->sendCommand("RECEIVE RAW");
 		$send = __DIR__."/client.bin";
@@ -103,7 +103,22 @@ class Test {
 		$this->protocol->sendRaw(filesize($send), $fh);
 		fclose($fh);
 		
-		
+		if(isset($this->argv[2])) {
+			echo "Sending FILE to server: ".PHP_EOL;
+			$file = new \File($this->argv[2]);
+			for($i=0;$i<5;$i++) {
+				try {
+					echo "Try ".($i+1)." out of 5: ";
+					$this->protocol->sendCommand("RECEIVE RAW");
+					$this->protocol->sendFile($file);
+					echo "Upload complete.".PHP_EOL;
+					break;
+				} catch (\Net\UploadException $e) {
+					echo "Upload failed.".PHP_EOL;
+				}
+			}
+		}
+
 		
 		$this->protocol->sendCommand("QUIT");
 		echo "Done.".PHP_EOL;

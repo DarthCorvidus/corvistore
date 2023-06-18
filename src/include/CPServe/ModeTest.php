@@ -26,11 +26,18 @@ class ModeTest implements \Net\ProtocolListener {
 		}
 		
 		if($command=="RECEIVE RAW") {
-			$filename = "/tmp/crowclient.".$this->clientId.".bin";
-			$handle = fopen($filename, "w");
-			$protocol->getRaw($handle);
-			fclose($handle);
-			echo " Received: ".md5_file($filename).PHP_EOL;
+			try {
+				$filename = "/tmp/crowclient.".$this->clientId.".bin";
+				$handle = fopen($filename, "w");
+				$protocol->getRaw($handle);
+				fclose($handle);
+				echo " Received: ".md5_file($filename).PHP_EOL;
+			} catch (\Net\CancelException $e) {
+				echo " Upload aborted, recoverable error.".PHP_EOL;
+				fclose($handle);
+				unlink($filename);
+			}
+			
 			return;
 		}
 
