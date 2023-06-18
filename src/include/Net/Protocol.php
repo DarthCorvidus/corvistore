@@ -6,6 +6,7 @@ class Protocol {
 	const SERIAL_PHP = 3;
 	const RAW = 4;
 	const MESSAGE = 5;
+	const FILE = 6;
 	const ERROR = 254;
 	const CANCEL = 255;
 	private $socket;
@@ -44,16 +45,22 @@ class Protocol {
 		socket_write($this->socket, \IntVal::uint8()->putValue(self::RAW));
 		socket_write($this->socket, \IntVal::uint64LE()->putValue($size));
 		$rest = $size;
+		$this->sendOK();
+		$i = 0;
 		while($rest>4096) {
 			socket_write($this->socket, fread($handle, 4096));
 			$rest -= 4096;
+			$i++;
+			if($i%10==0) {
+				$this->sendOK();
+			}
 		}
 		if($rest!=0) {
 			socket_write($this->socket, fread($handle, $rest));
 		}
-		#$this->sendOK();
+		$this->sendOK();
 	}
-	
+
 	function sendSerializePHP($unserialized) {
 		$serialized = serialize($unserialized);
 		$size = strlen($serialized);
@@ -82,15 +89,25 @@ class Protocol {
 		$this->assertType(self::RAW, $init);
 		$size = \IntVal::uint64LE()->getValue(socket_read($this->socket, 8));
 		$rest = $size;
+		$i=0;
+		$this->getOK();
 		while($rest>4096) {
-			fwrite($handle, socket_read($this->socket, 4096));
+			$read = "";
+			socket_recv($this->socket, $read, 4096, MSG_WAITALL);
+			fwrite($handle, $read);
 			$rest -= 4096;
+			$i++;
+
+			if($i%10==0) {
+				$this->getOK();
+			}
 		}
 		if($rest!=0) {
 			fwrite($handle, socket_read($this->socket, $rest));
 		}
+		$this->getOK();
 	}
-	
+
 	function getMessage(): string {
 		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
 		if($init==self::ERROR) {
