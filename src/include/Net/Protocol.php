@@ -15,6 +15,12 @@ class Protocol {
 		$this->socket = $socket;
 	}
 	
+	private function read(int $amount): string {
+		$read = "";
+		socket_recv($this->socket, $read, $amount, MSG_WAITALL);
+	return $read;
+	}
+	
 	function addProtocolListener(\Net\ProtocolListener $listener) {
 		$this->listener = $listener;
 	}
@@ -85,16 +91,14 @@ class Protocol {
 	}
 	
 	function getRaw($handle) {
-		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
+		$init = \IntVal::uint8()->getValue($this->read(1));
 		$this->assertType(self::RAW, $init);
-		$size = \IntVal::uint64LE()->getValue(socket_read($this->socket, 8));
+		$size = \IntVal::uint64LE()->getValue($this->read(8));
 		$rest = $size;
 		$i=0;
 		$this->getOK();
 		while($rest>4096) {
-			$read = "";
-			socket_recv($this->socket, $read, 4096, MSG_WAITALL);
-			fwrite($handle, $read);
+			fwrite($handle, $this->read(4096));
 			$rest -= 4096;
 			$i++;
 
@@ -103,7 +107,7 @@ class Protocol {
 			}
 		}
 		if($rest!=0) {
-			fwrite($handle, socket_read($this->socket, $rest));
+			fwrite($handle, $this->read($rest));
 		}
 		$this->getOK();
 	}
@@ -140,7 +144,7 @@ class Protocol {
 	}
 
 	function getOK() {
-		$status = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
+		$status = \IntVal::uint8()->getValue($this->read(1));
 		if($status!=self::OK) {
 			throw new \Exception("expected OK, got ".$status);
 		}
@@ -157,15 +161,10 @@ class Protocol {
 				}
 				continue;
 			}
-			if(false === ($binInit = socket_read($this->socket, 1, PHP_BINARY_READ))) {
-				echo "socket_read() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
-				return;
-			}
-			
-			$init = \IntVal::uint8()->getValue($binInit);
+			$init = \IntVal::uint8()->getValue($this->read(1));
 			if($init == self::COMMAND) {
-				$length = \IntVal::uint16LE()->getValue(socket_read($this->socket, 2));
-				$command = socket_read($this->socket, $length);
+				$length = \IntVal::uint16LE()->getValue($this->read(2));
+				$command = $this->read($length);
 				if($command=="QUIT") {
 					$this->listener->onQuit();
 					return;
