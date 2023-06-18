@@ -1,6 +1,8 @@
 <?php
-class ModeTest implements \Net\ProtocolListener {
+class ModeTest implements \Net\ProtocolListener, \Net\TransferListener {
 	private $clientId;
+	private $filename;
+	private $transfer;
 	function __construct(int $clientId) {
 		$this->clientId = $clientId;
 	}
@@ -27,11 +29,8 @@ class ModeTest implements \Net\ProtocolListener {
 		
 		if($command=="RECEIVE RAW") {
 			try {
-				$filename = "/tmp/crowclient.".$this->clientId.".bin";
-				$handle = fopen($filename, "w");
-				$protocol->getRaw($handle);
-				fclose($handle);
-				echo " Received: ".md5_file($filename).PHP_EOL;
+				$this->filename = "/tmp/crowclient.".$this->clientId.".bin";
+				$protocol->getRaw($this);
 			} catch (\Net\CancelException $e) {
 				echo " Upload aborted, recoverable error.".PHP_EOL;
 				fclose($handle);
@@ -58,4 +57,28 @@ class ModeTest implements \Net\ProtocolListener {
 	public function onQuit() {
 		echo "Client ".$this->clientId." requested quit. Ending connection.".PHP_EOL;
 	}
+
+	public function onCancel() {
+		echo "Transfer aborted.".PHP_EOL;
+		fclose($this->transfer);
+	}
+
+	public function onData(string $data) {
+		fwrite($this->transfer, $data);
+	}
+
+	public function onEnd() {
+		echo " Received: ".md5_file($this->filename).PHP_EOL;
+		fclose($this->transfer);
+	}
+
+	public function onFail() {
+		echo "Transfer aborted, catastrophic failure.".PHP_EOL;
+		fclose($this->transfer);
+	}
+
+	public function onStart(int $size) {
+		$this->transfer = fopen($this->filename, "w");
+	}
+
 }

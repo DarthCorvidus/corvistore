@@ -1,10 +1,12 @@
 <?php
 namespace Net;
-class Test {
+class Test implements TransferListener {
 	private $config;
 	private $argv;
 	private $socket;
 	private $protocol;
+	private $transfer;
+	private $filename;
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
@@ -88,11 +90,10 @@ class Test {
 		
 		echo "Requesting RAW data from server: ".PHP_EOL;
 		$this->protocol->sendCommand("SEND RAW");
-		$fh = fopen(__DIR__."/test.bin", "w");
-		$this->protocol->getRaw($fh);
-		fclose($fh);
-		echo " Size:     ".number_format(filesize(__DIR__."/test.bin")).PHP_EOL;
-		echo " File md5: ".md5_file(__DIR__."/test.bin").PHP_EOL;
+		$this->filename = __DIR__."/test.bin";
+		$this->protocol->getRaw($this);
+		#echo " Size:     ".number_format(files).PHP_EOL;
+		#echo " File md5: ".md5_file(__DIR__."/test.bin").PHP_EOL;
 
 		echo "Sending RAW data to server: ".PHP_EOL;
 		$this->protocol->sendCommand("RECEIVE RAW");
@@ -106,6 +107,7 @@ class Test {
 		if(isset($this->argv[2])) {
 			echo "Sending FILE to server: ".PHP_EOL;
 			$file = new \File($this->argv[2]);
+			echo " md5sum: ".md5_file($file->getPath()).PHP_EOL;
 			for($i=0;$i<5;$i++) {
 				try {
 					echo "Try ".($i+1)." out of 5: ";
@@ -123,4 +125,29 @@ class Test {
 		$this->protocol->sendCommand("QUIT");
 		echo "Done.".PHP_EOL;
 	}
+
+	public function onCancel() {
+		fclose($this->handle);
+		unlink($this->filename);
+	}
+
+	public function onData(string $data) {
+		fwrite($this->transfer, $data);
+	}
+
+	public function onEnd() {
+		fclose($this->transfer);
+		echo " Size:     ".number_format(filesize($this->filename)).PHP_EOL;
+		echo " File md5: ".md5_file($this->filename).PHP_EOL;
+	}
+
+	public function onFail() {
+		fclose($this->handle);
+		unlink($this->filename);
+	}
+
+	public function onStart(int $size) {
+		$this->transfer = fopen($this->filename, "w");
+	}
+
 }
