@@ -146,7 +146,6 @@ class Protocol {
 			}
 			
 			$init = \IntVal::uint8()->getValue($binInit);
-			echo "Init: ".$init.PHP_EOL;
 			if($init == self::COMMAND) {
 				$length = \IntVal::uint16LE()->getValue(socket_read($this->socket, 2));
 				$command = socket_read($this->socket, $length);
@@ -155,19 +154,6 @@ class Protocol {
 					return;
 				}
 				$this->listener->onCommand($command, $this);
-				continue;
-			}
-			
-			if($init == self::SERIAL_PHP) {
-				$length = \IntVal::uint32LE()->getValue(socket_read($this->socket, 4));
-				$rest = $length;
-				echo "Structured Data Length: ".number_format($length).PHP_EOL;
-				$structured = "";
-				while($rest>4096) {
-					$structured .= socket_read($this->socket, 4096);
-					$rest -= 4096;
-				}
-				$structured .= socket_read($this->socket, $rest);
 				continue;
 			}
 		} while(true);
