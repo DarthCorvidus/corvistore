@@ -119,7 +119,20 @@ class Backup {
 		// Add changed files.
 		for($i=0;$i<$diff->getChanged()->getCount();$i++) {
 			$file = $diff->getChanged()->getEntry($i);
-			#echo "Updating ".$file->getPath().PHP_EOL;
+			if($file->getType()== \Catalog::TYPE_FILE) {
+				echo "Updating ".$file->getPath().PHP_EOL;
+				$this->protocol->sendCommand("UPDATE FILE");
+				echo "Sending ".$file->getPath().PHP_EOL;
+				$entry = $catalogEntries->getByName($file->getBasename());
+				$this->protocol->sendSerializePHP($file);
+				$this->protocol->sendSerializePHP($entry);
+				try {
+					$this->protocol->sendFile($file);
+				} catch (\Net\UploadException $e) {
+					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
+				}
+			}
+			
 			#$entry = $this->catalog->updateEntry($catalogEntries->getByName($file->getBasename()), $file);
 			#$this->storage->store($entry->getVersions()->getLatest(), $this->partition, $file);
 		}

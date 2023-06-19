@@ -56,8 +56,16 @@ class ModeNode implements \Net\ProtocolListener {
 		if($command[0]=="DELETE" and $command[1]=="ENTRY") {
 			$entry = $protocol->getUnserializePHP();
 			$this->catalog->deleteEntry($entry);
+			return;
 		}
-
+		if($command[0]=="UPDATE" and $command[1]=="FILE") {
+			$file = $protocol->getUnserializePHP();
+			$entry = $protocol->getUnserializePHP();
+			$updated = $this->catalog->updateEntry($entry, $file);
+			$storage = Storage::fromId($this->pdo, $this->partition->getStorageId());
+			$storage->prepare($this->partition, $updated->getVersions()->getLatest());
+			$protocol->getRaw($storage);
+		}
 	return "Invalid command.";
 	}
 	
