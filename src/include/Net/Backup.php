@@ -78,7 +78,7 @@ class Backup {
 			}
 		}
 		if($parent == NULL) {
-			$this->protocol->sendCommand("GET CATALOG");
+			$this->protocol->sendCommand("GET CATALOG 0");
 			$catalogEntries = $this->protocol->getUnserializePHP();
 		} else {
 			$this->protocol->sendCommand("GET CATALOG ".$parent->getId());
@@ -97,7 +97,7 @@ class Backup {
 			#}
 			echo "Creating ".$file->getPath().PHP_EOL;
 			if($parent == NULL) {
-				$this->protocol->sendCommand("CREATE FILE");
+				$this->protocol->sendCommand("CREATE FILE 0");
 			} else {
 				$this->protocol->sendCommand("CREATE FILE ".$parent->getId());
 			}

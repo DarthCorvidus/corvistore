@@ -33,6 +33,7 @@ class ModeNode implements \Net\ProtocolListener {
 	}
 	
 	public function handleTwo(array $command, \Net\Protocol $protocol) {
+		/*
 		if($command[0]=="GET" and strtoupper($command[1])=="CATALOG") {
 			$entries = $this->catalog->getEntries();
 			$protocol->sendSerializePHP($entries);
@@ -43,12 +44,14 @@ class ModeNode implements \Net\ProtocolListener {
 			#return serialize($entries);
 		return;
 		}
-		if($command[0]=="CREATE" and $command[1]=="FILE") {
-			$file = $protocol->getUnserializePHP();
-			$new = $this->catalog->newEntry($file);
-			$protocol->sendSerializePHP($new);
-		return;
-		}
+		 * 
+		 */
+		#if($command[0]=="CREATE" and $command[1]=="FILE") {
+		#	$file = $protocol->getUnserializePHP();
+		#	$new = $this->catalog->newEntry($file);
+		#	$protocol->sendSerializePHP($new);
+		#return;
+		#}
 
 		if($command[0]=="DELETE" and $command[1]=="ENTRY") {
 			$entry = $protocol->getUnserializePHP();

@@ -17,12 +17,12 @@ class Catalog {
 		$this->node = $node;
 	}
 
-	function getEntries(int $parent = NULL): CatalogEntries {
+	function getEntries(int $parent = 0): CatalogEntries {
 		$entries = new CatalogEntries();
 		$param = array();
 		$param[] = 1;
 		$param[] = $this->node->getId();
-		if($parent==NULL) {
+		if($parent===0) {
 			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent IS NULL");
 		} else {
 			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent = ?");
@@ -42,7 +42,7 @@ class Catalog {
 	return $entries;
 	}
 	
-	function newEntry(File $file, int $parent = NULL): CatalogEntry {
+	function newEntry(File $file, int $parent = 0): CatalogEntry {
 		if($file->getType() == Catalog::TYPE_DIR) {
 			return $this->newEntryDir($file, $parent);
 		}
@@ -52,10 +52,10 @@ class Catalog {
 
 	}
 	
-	private function newEntryDir(File $file, int $parent = NULL): CatalogEntry {
+	private function newEntryDir(File $file, int $parent = 0): CatalogEntry {
 		$create["dc_name"] = $file->getBasename();
 		$create["dnd_id"] = $this->node->getId();
-		if($parent!=NULL) {
+		if($parent!==0) {
 			$create["dc_parent"] = $parent;
 		}
 		$create["dc_id"] = $this->pdo->create("d_catalog", $create);
@@ -74,10 +74,10 @@ class Catalog {
 	return $entry;
 	}
 	
-	private function newEntryFile(File $file, int $parent = NULL) {
+	private function newEntryFile(File $file, int $parent = 0) {
 		$create["dc_name"] = $file->getBasename();
 		$create["dnd_id"] = $this->node->getId();
-		if($parent!=NULL) {
+		if($parent!==0) {
 			$create["dc_parent"] = $parent;
 		}
 		$create["dc_id"] = $this->pdo->create("d_catalog", $create);
