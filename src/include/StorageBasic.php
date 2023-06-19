@@ -115,7 +115,14 @@ class StorageBasic extends Storage implements \Net\TransferListener {
 	}
 	
 	public function onCancel() {
-		echo "Failed to write to storage.".PHP_EOL;
+		echo "Transfer cancelled, cleaning up.".PHP_EOL;
+		if(file_exists($this->getPathForIdFile($this->storeId))) {
+			unlink($this->getPathForIdFile($this->storeId));
+		}
+		$this->pdo->delete("n_version2basic", array("nvb_id"=>$this->storeId));
+		$this->partition = NULL;
+		$this->versionEntry = NULL;
+		$this->storeId = NULL;
 		fclose($this->writeHandle);
 	}
 
