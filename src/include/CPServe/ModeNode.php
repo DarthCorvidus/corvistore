@@ -62,9 +62,11 @@ class ModeNode implements \Net\ProtocolListener {
 			$file = $protocol->getUnserializePHP();
 			$entry = $protocol->getUnserializePHP();
 			$updated = $this->catalog->updateEntry($entry, $file);
-			$storage = Storage::fromId($this->pdo, $this->partition->getStorageId());
-			$storage->prepare($this->partition, $updated->getVersions()->getLatest());
-			$protocol->getRaw($storage);
+			if($file->getType()== Catalog::TYPE_FILE) {
+				$storage = Storage::fromId($this->pdo, $this->partition->getStorageId());
+				$storage->prepare($this->partition, $updated->getVersions()->getLatest());
+				$protocol->getRaw($storage);
+			}
 		}
 	return "Invalid command.";
 	}

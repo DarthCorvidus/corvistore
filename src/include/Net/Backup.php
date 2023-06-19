@@ -22,8 +22,8 @@ class Backup {
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
 		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		socket_connect($socket, '127.0.0.1', 4096);
-		socket_write($socket, "node desktop02\n");
+		socket_connect($socket, $config->getHost(), 4096);
+		socket_write($socket, "node ".$config->getNode()."\n");
 		$this->protocol = new Protocol($socket);
 		#$this->inex = new InEx();
 		#$this->inex->addInclude("/boot/");
@@ -60,7 +60,7 @@ class Backup {
 			#}
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
 				$this->processed++;
-				if($this->processed%500==0) {
+				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
 				$file = new \File($value);
@@ -69,7 +69,7 @@ class Backup {
 			}
 			if(is_file($value) and $this->inex->isValid($path)) {
 				$this->processed++;
-				if($this->processed%500==0) {
+				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
 				$file = new \File($value);
@@ -119,20 +119,19 @@ class Backup {
 		// Add changed files.
 		for($i=0;$i<$diff->getChanged()->getCount();$i++) {
 			$file = $diff->getChanged()->getEntry($i);
-			if($file->getType()== \Catalog::TYPE_FILE) {
-				echo "Updating ".$file->getPath().PHP_EOL;
-				$this->protocol->sendCommand("UPDATE FILE");
+			echo "Updating ".$file->getPath().PHP_EOL;
+			$this->protocol->sendCommand("UPDATE FILE");
+			$entry = $catalogEntries->getByName($file->getBasename());
+			$this->protocol->sendSerializePHP($file);
+			$this->protocol->sendSerializePHP($entry);
+			if($file->getType()==\Catalog::TYPE_FILE) {
 				echo "Sending ".$file->getPath().PHP_EOL;
-				$entry = $catalogEntries->getByName($file->getBasename());
-				$this->protocol->sendSerializePHP($file);
-				$this->protocol->sendSerializePHP($entry);
 				try {
 					$this->protocol->sendFile($file);
 				} catch (\Net\UploadException $e) {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
 			}
-			
 			#$entry = $this->catalog->updateEntry($catalogEntries->getByName($file->getBasename()), $file);
 			#$this->storage->store($entry->getVersions()->getLatest(), $this->partition, $file);
 		}
