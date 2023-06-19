@@ -8,7 +8,11 @@
  *
  * @author Claus-Christoph Küthe
  */
-class StorageBasic extends Storage {
+class StorageBasic extends Storage implements \Net\TransferListener {
+	private $versionEntry;
+	private $partition;
+	private $writeHandle;
+	private $storeId;
 	static function getHexArray(int $id) {
 		$hex = str_pad(dechex($id), 16, 0, STR_PAD_LEFT);
 		$grouped = array();
@@ -104,5 +108,55 @@ class StorageBasic extends Storage {
 		}
 	return $result;
 	}
+
+	public function prepare(Partition $partition, VersionEntry $entry) {
+		$this->partition = $partition;
+		$this->versionEntry = $entry;
+	}
 	
+	public function onCancel() {
+		echo "Failed to write to storage.".PHP_EOL;
+		fclose($this->writeHandle);
+	}
+
+	public function onData(string $data) {
+		fwrite($this->writeHandle, $data);
+	}
+
+	public function onEnd() {
+		$this->pdo->update("n_version2basic", array("nvb_stored"=>1), array("nvb_id"=>$this->storeId));
+		$this->versionEntry->setStored($this->pdo);
+		$this->partition = NULL;
+		$this->versionEntry = NULL;
+		$this->storeId = NULL;
+		fclose($this->writeHandle);
+	}
+
+	public function onFail() {
+		$this->partition = NULL;
+		$this->versionEntry = NULL;
+		$this->storeId = NULL;
+		fclose($this->writeHandle);
+	}
+
+	public function onStart(int $size) {
+		$new["dvs_id"] = $this->versionEntry->getId();
+		$new["dst_id"] = $this->getId();
+		$new["dpt_id"] = $this->partition->getId();
+		$new["nvb_stored"] = 0;
+		$this->storeId = $this->pdo->create("n_version2basic", $new);
+		
+		$path = $this->getPathForIdFile($this->storeId);
+		$location = $this->getPathForIdLocation($this->storeId);
+		#echo "Target Path: ".$path.PHP_EOL;
+		if(!file_exists($location)) {
+			mkdir($location, 0700, true);
+		}
+		$this->writeHandle = fopen($path, "w");
+		if($this->writeHandle==FALSE) {
+			throw new Exception("could not open ".$path);
+		}
+		echo "Writing to ".$path.PHP_EOL;
+	}
+
 }

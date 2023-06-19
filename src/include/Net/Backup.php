@@ -60,7 +60,7 @@ class Backup {
 			#}
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
 				$this->processed++;
-				if($this->processed%5000==0) {
+				if($this->processed%500==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
 				$file = new \File($value);
@@ -69,7 +69,7 @@ class Backup {
 			}
 			if(is_file($value) and $this->inex->isValid($path)) {
 				$this->processed++;
-				if($this->processed%5000==0) {
+				if($this->processed%500==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
 				$file = new \File($value);
@@ -91,9 +91,25 @@ class Backup {
 		// Add new files (did not exist before).
 		for($i=0;$i<$diff->getNew()->getCount();$i++) {
 			$file = $diff->getNew()->getEntry($i);
+			// Skip files for now.
+			#if($file->getType()!= \Catalog::TYPE_DIR) {
+			#	continue;
+			#}
 			echo "Creating ".$file->getPath().PHP_EOL;
+			if($parent == NULL) {
+				$this->protocol->sendCommand("CREATE FILE");
+			} else {
+				$this->protocol->sendCommand("CREATE FILE ".$parent->getId());
+			}
+			$this->protocol->sendSerializePHP($file);
+			if($file->getType()== \Catalog::TYPE_FILE) {
+				echo "Sending ".$file->getPath().PHP_EOL;
+				$this->protocol->sendFile($file);
+			}
+			$entry = $this->protocol->getUnserializePHP();
+			
 			#$entry = $this->catalog->newEntry($file, $parent);
-			#$catalogEntries->addEntry($entry);
+			$catalogEntries->addEntry($entry);
 			#if($entry->getVersions()->getLatest()->getType()==Catalog::TYPE_FILE) {
 			#	$this->storage->store($entry->getVersions()->getLatest(), $this->partition, $file);
 			#}
@@ -103,7 +119,7 @@ class Backup {
 		// Add changed files.
 		for($i=0;$i<$diff->getChanged()->getCount();$i++) {
 			$file = $diff->getChanged()->getEntry($i);
-			echo "Updating ".$file->getPath().PHP_EOL;
+			#echo "Updating ".$file->getPath().PHP_EOL;
 			#$entry = $this->catalog->updateEntry($catalogEntries->getByName($file->getBasename()), $file);
 			#$this->storage->store($entry->getVersions()->getLatest(), $this->partition, $file);
 		}
@@ -111,7 +127,9 @@ class Backup {
 		// Mark files as deleted.
 		for($i=0;$i<$diff->getDeleted()->getCount();$i++) {
 			$catalogEntry = $diff->getDeleted()->getEntry($i);
-			#echo "Deleting ".$catalogEntry->getName().PHP_EOL;
+			echo "Deleting ".$catalogEntry->getName().PHP_EOL;
+			$this->protocol->sendCommand("DELETE ENTRY");
+			$this->protocol->sendSerializePHP($catalogEntry);
 			#$this->catalog->deleteEntry($catalogEntry);
 		}
 		#$this->pdo->commit();
@@ -130,6 +148,7 @@ class Backup {
 	function run() {
 		$start = hrtime();
 		$this->recurseFiles("/", 0);
+		$this->protocol->sendCommand("QUIT");
 		$end = hrtime();
 		$elapsed = $end[0]-$start[0];
 		echo "Processed:    ".number_format($this->processed).PHP_EOL;

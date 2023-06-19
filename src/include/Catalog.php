@@ -17,15 +17,16 @@ class Catalog {
 		$this->node = $node;
 	}
 
-	function getEntries(CatalogEntry $parent = NULL): CatalogEntries {
+	function getEntries(int $parent = NULL): CatalogEntries {
 		$entries = new CatalogEntries();
 		$param = array();
+		$param[] = 1;
 		$param[] = $this->node->getId();
 		if($parent==NULL) {
-			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dnd_id = ? AND dc_parent IS NULL");
+			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent IS NULL");
 		} else {
-			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dnd_id = ? AND dc_parent = ?");
-			$param[] = $parent->getId();
+			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent = ?");
+			$param[] = $parent;
 		}
 		$stmt->setFetchMode(EPDO::FETCH_ASSOC);
 		$stmt->execute($param);
@@ -41,7 +42,7 @@ class Catalog {
 	return $entries;
 	}
 	
-	function newEntry(File $file, CatalogEntry $parent = NULL): CatalogEntry {
+	function newEntry(File $file, int $parent = NULL): CatalogEntry {
 		if($file->getType() == Catalog::TYPE_DIR) {
 			return $this->newEntryDir($file, $parent);
 		}
@@ -51,11 +52,11 @@ class Catalog {
 
 	}
 	
-	private function newEntryDir(File $file, CatalogEntry $parent = NULL): CatalogEntry {
+	private function newEntryDir(File $file, int $parent = NULL): CatalogEntry {
 		$create["dc_name"] = $file->getBasename();
 		$create["dnd_id"] = $this->node->getId();
 		if($parent!=NULL) {
-			$create["dc_parent"] = $parent->getId();
+			$create["dc_parent"] = $parent;
 		}
 		$create["dc_id"] = $this->pdo->create("d_catalog", $create);
 		$version["dc_id"] = $create["dc_id"];
@@ -73,11 +74,11 @@ class Catalog {
 	return $entry;
 	}
 	
-	private function newEntryFile(File $file, CatalogEntry $parent = NULL) {
+	private function newEntryFile(File $file, int $parent = NULL) {
 		$create["dc_name"] = $file->getBasename();
 		$create["dnd_id"] = $this->node->getId();
 		if($parent!=NULL) {
-			$create["dc_parent"] = $parent->getId();
+			$create["dc_parent"] = $parent;
 		}
 		$create["dc_id"] = $this->pdo->create("d_catalog", $create);
 		$version["dc_id"] = $create["dc_id"];
