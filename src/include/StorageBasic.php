@@ -56,5 +56,53 @@ class StorageBasic extends Storage {
 			throw new Exception("file could not be copied");
 		}
 	}
-
+	
+	function getReadHandle(Partition $partition, int $versionId) {
+		$param[] = $this->getId();
+		$param[] = $partition->getId();
+		$param[] = $versionId;
+		$param[] = 1;
+		$result = $this->pdo->result("select nvb_id from n_version2basic where dst_id = ? and dpt_id = ? and dvs_id = ? and nvb_stored = ? limit 1", $param);
+		$path = $this->getPathForIdFile($result);
+		#echo "Source Path: ".$path.PHP_EOL;
+	return fopen($path, "r");
+	}
+	
+	function storeFromHandle(Partition $partition, int $versionId, $handle) {
+		$new["dvs_id"] = $versionId;
+		$new["dst_id"] = $this->getId();
+		$new["dpt_id"] = $partition->getId();
+		$new["nvb_stored"] = 0;
+		$id = $this->pdo->create("n_version2basic", $new);
+		$path = $this->getPathForIdFile($id);
+		$location = $this->getPathForIdLocation($id);
+		#echo "Target Path: ".$path.PHP_EOL;
+		if(!file_exists($location)) {
+			mkdir($location, 0700, true);
+		}
+		$wh = fopen($path, "w");
+		if($wh==FALSE) {
+			throw new Exception("could not open ".$path);
+		}
+		while($read = fread($handle, 10*1024*1024)) {
+			fwrite($wh, $read);
+		}
+		$this->pdo->update("n_version2basic", array("nvb_stored"=>1), array("nvb_id"=>$id));
+		fclose($wh);
+		fclose($handle);
+	}
+	
+	public function getStoredVersions(Partition $partition): array {
+		$result = array();
+		$param[] = $this->getId();
+		$param[] = $partition->getId();
+		$param[] = 1;
+		$stmt = $this->pdo->prepare("select dvs_id from d_version JOIN n_version2basic USING (dvs_id) where dst_id = ? and dpt_id = ? and nvb_stored = ?");
+		$stmt->execute($param);
+		foreach($stmt as $key => $value) {
+			$result[] = $value["dvs_id"];
+		}
+	return $result;
+	}
+	
 }
