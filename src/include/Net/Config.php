@@ -49,6 +49,10 @@ class Config implements \ImportModel {
 	return $inex;
 	}
 
+	function getHost(): string {
+		return $this->values["host"];
+	}
+	
 	public function getImportListModel($name): \ImportModel {
 		
 	}
