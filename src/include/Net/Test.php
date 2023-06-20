@@ -15,7 +15,7 @@ class Test implements TransferListener {
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
 		$this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		socket_connect($this->socket, '127.0.0.1', 4096);
+		socket_connect($this->socket, $config->getHost(), 4096);
 		socket_write($this->socket, "test\n");
 		$this->protocol = new Protocol($this->socket);
 		#$this->inex = new InEx();
