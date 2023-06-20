@@ -177,32 +177,32 @@ class Protocol {
 	}
 	
 	function getMessage(): string {
-		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
+		$init = \IntVal::uint8()->getValue($this->read(1));
 		if($init==self::ERROR) {
-			$length = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
-			$error = socket_read($this->socket, $length);
+			$length = \IntVal::uint8()->getValue($this->read(1));
+			$error = $this->read($length);
 			throw new \Exception("Server error: ".$error);
 		}
 		$this->assertType(self::MESSAGE, $init);
-		$length = \IntVal::uint16LE()->getValue(socket_read($this->socket, 2));
-		$message = socket_read($this->socket, $length);
+		$length = \IntVal::uint16LE()->getValue($this->read(2));
+		$message = $this->read($length);
 	return $message;
 	}
 
 	function getUnserializePHP() {
-		$init = \IntVal::uint8()->getValue(socket_read($this->socket, 1));
+		$init = \IntVal::uint8()->getValue($this->read(1));
 		$this->assertType(self::SERIAL_PHP, $init);
-		$size = \IntVal::uint32LE()->getValue(socket_read($this->socket, 4));
+		$size = \IntVal::uint32LE()->getValue($this->read(4));
 		
 		$serialized = "";
 		$rest = $size;
 		$pos = 0;
 		while($rest>4096) {
-			$serialized .= socket_read($this->socket, 4096);
+			$serialized .= $this->read(4096);
 			$rest -= 4096;
 		}
 		if($rest!=0) {
-			$serialized .= socket_read($this->socket, $rest);
+			$serialized .= $this->read($rest);
 		}
 	return unserialize($serialized);
 	}
