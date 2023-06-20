@@ -14,7 +14,7 @@ class CPServe implements ProcessListener, MessageListener, SignalHandler {
 		$signal->addSignalHandler(SIGTERM, $this);
 		$this->queue = new SysVQueue(ftok(__DIR__, "a"));
 		$this->queue->addListener($signal, $this);
-		$address = '127.0.0.1';
+		$address = '0.0.0.0';
 		$port = 4096;
 		if (($this->socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
 			throw new RuntimeException(sprintf("Socket creation failed: %s", socket_strerror(socket_last_error())));
