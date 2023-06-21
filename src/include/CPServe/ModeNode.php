@@ -16,7 +16,7 @@ class ModeNode implements \Net\ProtocolListener {
 	public function onCommand(string $command, \Net\Protocol $protocol) {
 		$exp = explode(" ", $command);
 		if(count($exp)==1) {
-			$this->handleOne($exp, $protocol);
+			$this->handleOne($command, $protocol);
 		return;
 		}
 
@@ -30,6 +30,20 @@ class ModeNode implements \Net\ProtocolListener {
 			return;
 		}
 	return "Invalid command ".$message;
+	}
+	
+	public function handleOne($command, \Net\Protocol $protocol) {
+		if($command=="REPORT") {
+			$report["files"] = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ? and dc_id in (select dc_id from d_version where dvs_type = ?)", array($this->node->getId(), Catalog::TYPE_FILE));
+			$params[] = $this->node->getId();
+			$params[] = 1;
+			$report["occupancy"] = $this->pdo->result("select sum(dvs_size) from d_catalog JOIN d_version USING (dc_id) JOIN n_version2basic USING (dvs_id) WHERE dnd_id = ? and dvs_stored = ?", $params);
+			$report["oldest"] = $this->pdo->result("select min(dvs_created_epoch) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ?", array($this->node->getId()));
+			$report["newest"] = $this->pdo->result("select max(dvs_created_epoch) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ?", array($this->node->getId()));
+			$protocol->sendSerializePHP($report);
+			return;
+		}
+
 	}
 	
 	public function handleTwo(array $command, \Net\Protocol $protocol) {
