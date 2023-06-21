@@ -1,5 +1,5 @@
 <?php
-namespace Client;
+namespace Net;
 /**
  * Does the import of the client configuration.
  *
@@ -49,6 +49,10 @@ class Config implements \ImportModel {
 	return $inex;
 	}
 
+	function getHost(): string {
+		return $this->values["host"];
+	}
+	
 	public function getImportListModel($name): \ImportModel {
 		
 	}
@@ -76,14 +80,14 @@ class Config implements \ImportModel {
 	}
 
 	public function getScalarModel($name): \UserValue {
-		if($name=="node") {
+		if($name=="node" or $name=="host") {
 			$userValue = \UserValue::asMandatory();
 			return $userValue;
 		}
 	}
 
 	public function getScalarNames(): array {
-		return array("node");
+		return array("node", "host");
 	}
 
 }
