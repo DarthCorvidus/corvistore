@@ -1,5 +1,5 @@
 <?php
-namespace Net;
+namespace Client;
 /**
  * Does the import of the client configuration.
  *

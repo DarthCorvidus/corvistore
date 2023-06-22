@@ -82,6 +82,10 @@ class ModeNode implements \Net\ProtocolListener {
 				$protocol->getRaw($storage);
 			}
 		}
+		if($command[0]=="REPORT") {
+			$entry = $this->catalog->getEntryByPath($this->node, $command[1]);
+			$protocol->sendSerializePHP($entry);
+		}
 	return "Invalid command.";
 	}
 	

@@ -32,14 +32,14 @@ class Report {
 	}
 	
 	private function runPath() {
-		$argvReport = new ArgvReport();
-		$argv = new Argv($this->argv, $argvReport);
-	
-		$catalog = new Catalog($this->pdo, $this->node);
-		$entry = $catalog->getEntryByPath($this->node, $this->argv[2]);
+		$argvReport = new \ArgvReport();
+		$argv = new \Argv($this->argv, $argvReport);
 		
-		$model = new ReportFile($entry, $argv);
-		$table = new TerminalTable($model);
+		$this->protocol->sendCommand("REPORT ".$argvReport->getPositionalArg(1)->getValue());
+		$entry = $this->protocol->getUnserializePHP();
+		
+		$model = new \ReportFile($entry, $argv);
+		$table = new \TerminalTable($model);
 		echo "Report for ".$this->argv[2].":".PHP_EOL;
 		$table->printTable();
 	}
