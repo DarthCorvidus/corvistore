@@ -104,7 +104,11 @@ class Backup {
 			$this->protocol->sendSerializePHP($file);
 			if($file->getType()== \Catalog::TYPE_FILE) {
 				echo "Sending ".$file->getPath().PHP_EOL;
-				$this->protocol->sendFile($file);
+				try {
+					$this->protocol->sendFile($file);
+				} catch (\Net\UploadException $e) {
+					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
+				}
 			}
 			$entry = $this->protocol->getUnserializePHP();
 			
