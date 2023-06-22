@@ -34,7 +34,6 @@ class Versions {
 	}
 	
 	function filterToTimestamp(int $timestamp): Versions {
-		echo date("Y-m-d H:i:s", $timestamp).PHP_EOL;
 		$new = new Versions();
 		for($i=0; $i<$this->getCount();$i++) {
 			$version = $this->getVersion($i);
