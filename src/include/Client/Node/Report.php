@@ -36,9 +36,13 @@ class Report {
 		$argv = new \Argv($this->argv, $argvReport);
 		
 		$this->protocol->sendCommand("REPORT ".$argvReport->getPositionalArg(1)->getValue());
-		$entry = $this->protocol->getUnserializePHP();
-		
-		$model = new \ReportFile($entry, $argv);
+		if(substr($argvReport->getPositionalArg(1)->getValue(), -1)=="/") {
+			$entries = $this->protocol->getUnserializePHP();
+			$model = new ReportDirectory($entries, $argv);
+		} else {
+			$entry = $this->protocol->getUnserializePHP();
+			$model = new \ReportFile($entry, $argv);
+		}
 		$table = new \TerminalTable($model);
 		echo "Report for ".$this->argv[2].":".PHP_EOL;
 		$table->printTable();

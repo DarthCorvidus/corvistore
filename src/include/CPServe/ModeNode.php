@@ -83,8 +83,28 @@ class ModeNode implements \Net\ProtocolListener {
 			}
 		}
 		if($command[0]=="REPORT") {
+			// Report for the root directory.
+			if($command[1]=="/") {
+				$entries = $this->catalog->getEntries(0);
+				$protocol->sendSerializePHP($entries);
+			return;
+			}
+			/*
+			 * Report for a directory; get parent first, then entries below
+			 * parent.
+			 */
+			if(substr($command[1], -1)=="/") {
+				$parent = $this->catalog->getEntryByPath($this->node, substr($command[1], 0, -1));
+				$entries = $this->catalog->getEntries($parent->getId());
+				$protocol->sendSerializePHP($entries);
+			return;
+			}
+			/*
+			 * Report for single file
+			 */
 			$entry = $this->catalog->getEntryByPath($this->node, $command[1]);
 			$protocol->sendSerializePHP($entry);
+		return;
 		}
 	return "Invalid command.";
 	}
