@@ -60,6 +60,21 @@ class StorageBasic extends Storage implements \Net\TransferListener {
 			throw new Exception("file could not be copied");
 		}
 	}
+	/*
+	 * Have StorageBasic send a requested version/file,
+	 * TODO: Error handling.
+	 */
+	public function sendFile(\Net\Protocol $protocol, int $versionId) {
+		$param[] = $this->getId();
+		$param[] = $versionId;
+		$param[] = 1;
+		$result = $this->pdo->result("select nvb_id from n_version2basic where dst_id = ? and dvs_id = ? and nvb_stored = ? limit 1", $param);
+		$path = $this->getPathForIdFile($result);
+		$size = filesize($path);
+		$handle = fopen($path, "r");
+		$protocol->sendRaw($size, $handle);
+		fclose($handle);
+	}
 	
 	function getReadHandle(Partition $partition, int $versionId) {
 		$param[] = $this->getId();
