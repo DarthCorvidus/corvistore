@@ -115,6 +115,26 @@ class ModeNode implements \Net\ProtocolListener {
 			$protocol->sendSerializePHP($entries);
 		return;
 		}
+
+		if($command[0]=="GET" and $command[1]=="PATH") {
+			$entry = $this->catalog->getEntryByPath($this->node, $command[2]);
+			$protocol->sendSerializePHP($entry);
+		return;
+		}
+		/*
+		 * TODO: This is plain wrong, as it assumes that the version (file) is
+		 * on the same storage as the partition of the node's policy. This is
+		 * true for the current state of the product, however, in the long run
+		 * there will be data migration/move to other partitions/storages, and
+		 * there will be different types of storage as well.
+		 */
+		if($command[0]=="GET" and $command[1]=="VERSION") {
+			$storage = Storage::fromId($this->pdo, $this->partition->getStorageId());
+			$storage->sendFile($protocol, $command[2]);
+		return;
+		}
+		
+		
 		if($command[0]=="CREATE" and $command[1]=="FILE") {
 			$file = $protocol->getUnserializePHP();
 			$new = $this->catalog->newEntry($file, $command[2]);

@@ -35,13 +35,9 @@ class Client {
 			$backup->run();
 		}
 
-		/*
 		if($this->argv[1]=="restore") {
-			$backup = new Restore($this->pdo, $this->config, $this->argv);
+			$backup = new Restore($this->config, $this->argv);
 			$backup->run();
 		}
-		
-		 * 
-		 */
 	}
 }
