@@ -209,6 +209,13 @@ class Catalog {
 		$exp = array_slice(explode("/", $path), 1);
 		$entry = NULL;
 		foreach($exp as $value) {
+			/*
+			 * trailing or double slashes can lead to an empty value within the
+			 * array. Ignore them. 
+			 */
+			if($value==NULL) {
+				continue;
+			}
 			if($entry==NULL) {
 				$entry = CatalogEntry::fromName($this->pdo, $node, $value, $entry);
 			} else {
