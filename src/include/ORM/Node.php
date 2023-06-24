@@ -11,6 +11,8 @@ class Node {
 	private $id;
 	private $name;
 	private $policy;
+	private $salt;
+	private $password;
 	private function __construct() {
 		;
 	}
@@ -39,6 +41,18 @@ class Node {
 		}
 	return "No changes.";
 	}
+	
+	static function authenticate(EPDO $pdo, string $conjoined) {
+		$exp = explode(":", $conjoined, 2);
+		if(count($exp)==1) {
+			throw new Exception("Unable to read password for node ".$exp[0]);
+		}
+		$node = Node::fromName($pdo, $exp[0]);
+		if(sha1($exp[1].$node->getSalt())!=$node->getPassword()) {
+			throw new Exception("Unable to authenticate");
+		}
+	return $node;
+	}
 
 	
 	private function create() {
@@ -54,6 +68,8 @@ class Node {
 		$node->id = (int)$array["dnd_id"];
 		$node->name = $array["dnd_name"];
 		$node->policy = Policy::fromId($pdo, $array["dpo_id"]);
+		$node->salt = $array["dnd_salt"];
+		$node->password = $array["dnd_password"];
 	return $node;
 	}
 
@@ -83,5 +99,13 @@ class Node {
 	
 	function getPolicy(): Policy {
 		return $this->policy;
+	}
+	
+	function getSalt(): string {
+		return $this->salt;
+	}
+	
+	function getPassword(): string {
+		return $this->password;
 	}
 }

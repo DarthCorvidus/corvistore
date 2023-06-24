@@ -69,4 +69,30 @@ class NodeTest extends TestCase {
 		Node::fromId(TestHelper::getEPDO(), 27);
 
 	}
+	
+	function testUpdatePassword() {
+		Node::update(TestHelper::getEPDO(), new CommandParser("update node test01 password=secure123"));
+		$db = TestHelper::getEPDO()->row("select * from d_node where dnd_name = ?", array("test01"));
+		$hash = sha1("secure123".$db["dnd_salt"]);
+		$this->assertEquals($hash, $db["dnd_password"]);
+	}
+	
+	function testAuthenticateSuccess() {
+		$node = Node::authenticate(TestHelper::getEPDO(), "test01:secure123");
+		$this->assertInstanceOf(Node::class, $node);
+	}
+
+	function testAuthenticateNoPass() {
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage("Unable to read password for node test01");
+		$node = Node::authenticate(TestHelper::getEPDO(), "test01");
+	}
+
+	function testAuthenticateWrongPass() {
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage("Unable to authenticate");
+		$node = Node::authenticate(TestHelper::getEPDO(), "test01:letmein");
+	}
+	
+	
 }
