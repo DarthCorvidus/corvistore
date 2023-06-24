@@ -25,8 +25,12 @@ class Client {
 	
 	function run() {
 		while(TRUE) {
-			echo "> ";
-			$input = trim(fgets(STDIN));
+			$input = trim(readline("cpadm> "));
+			readline_add_history($input);
+			if($input=="") {
+				continue;
+			}
+
 			if($input=="quit") {
 				$this->protocol->sendCommand("QUIT");
 				return;
