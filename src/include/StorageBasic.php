@@ -181,4 +181,21 @@ class StorageBasic extends Storage implements \Net\TransferListener {
 		echo "Writing to ".$path.PHP_EOL;
 	}
 
+	public function getFree(): int {
+		return disk_free_space($this->location);
+	}
+
+	public function getUsed(\Partition $partition = NULL): int {
+		if($partition==NULL) {
+			$param[] = 1;
+			$param[] = $this->id;
+			return $this->pdo->result("select coalesce(sum(dvs_size), 0) from d_version JOIN n_version2basic USING (dvs_id) where dvs_stored = ? and dst_id = ?", $param);
+		} else {
+			$param[] = 1;
+			$param[] = $this->id;
+			$param[] = $partition->getId();
+			return $this->pdo->result("select coalesce(sum(dvs_size), 0) from d_version JOIN n_version2basic USING (dvs_id) where dvs_stored = ? and dst_id = ? and dpt_id = ?", $param);
+		}
+	}
+
 }

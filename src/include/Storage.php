@@ -84,4 +84,7 @@ abstract class Storage {
 	}
 	abstract function store(VersionEntry $entry, Partition $partition, File $file);
 	abstract function restore(VersionEntry $entry, string $target);
+	abstract function getFree(): int ;
+	abstract function getUsed(Partition $partition = NULL): int;
+	
 }
