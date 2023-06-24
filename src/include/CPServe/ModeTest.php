@@ -19,7 +19,7 @@ class ModeTest implements \Net\ProtocolListener, \Net\TransferListener {
 		}
 		if($command=="SEND RAW") {
 			$file = "/tmp/crowfile.".$this->clientId.".bin";
-			\Net\Test::createRandom($file, 25, 112);
+			\Node\Test::createRandom($file, 25, 112);
 			echo " Sent: ".md5_file($file).PHP_EOL;
 			$reread = fopen($file, "r");
 			$protocol->sendRaw(filesize($file), $reread);

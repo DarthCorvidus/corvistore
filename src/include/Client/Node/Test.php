@@ -1,6 +1,6 @@
 <?php
-namespace Net;
-class Test implements TransferListener {
+namespace Node;
+class Test implements \Net\TransferListener {
 	private $config;
 	private $argv;
 	private $socket;
@@ -10,14 +10,14 @@ class Test implements TransferListener {
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
-	function __construct(Config $config, array $argv) {
+	function __construct(\Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
 		$this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 		socket_connect($this->socket, $config->getHost(), 4096);
 		socket_write($this->socket, "test\n");
-		$this->protocol = new Protocol($this->socket);
+		$this->protocol = new \Net\Protocol($this->socket);
 		#$this->inex = new InEx();
 		#$this->inex->addInclude("/boot/");
 		#$this->inex->addInclude("/tmp/");
