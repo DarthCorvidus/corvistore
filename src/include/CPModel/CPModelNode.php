@@ -5,6 +5,7 @@ class CPModelNode extends CPModelGeneric {
 	public function __construct(EPDO $pdo, int $mode = self::MODE_DEFINE) {
 		if($mode == self::MODE_DEFINE) {
 			$policy = UserValue::asMandatory();
+			$this->addParamUserValue("policy", $policy);
 		} 
 		if($mode == self::MODE_UPDATE) {
 			$policy = UserValue::asOptional();

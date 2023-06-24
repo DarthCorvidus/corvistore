@@ -15,7 +15,7 @@ class Node {
 		;
 	}
 	static function define(EPDO $pdo, CommandParser $commandParser) {
-		$commandParser->import(new CPModelNode());
+		$commandParser->import(new CPModelNode($pdo, CPModelNode::MODE_DEFINE));
 		$node = new Node();
 		$node->pdo = $pdo;
 		$node->name = $commandParser->getPositional(0);

@@ -19,9 +19,9 @@ class NodeTest extends TestCase {
 		Node::define(TestHelper::getEPDO(), new CommandParser("define node test01 policy=forever"));
 		Node::define(TestHelper::getEPDO(), new CommandParser("define node test02 policy=forever"));
 		Node::define(TestHelper::getEPDO(), new CommandParser("define node test03 policy=month"));
-		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1");
-		$target[1] = array("dnd_id" => "2", "dnd_name"=>"test02", "dpo_id"=>"1");
-		$target[2] = array("dnd_id" => "3", "dnd_name"=>"test03", "dpo_id"=>"2");
+		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1", "dnd_password" => NULL, "dnd_salt" => NULL);
+		$target[1] = array("dnd_id" => "2", "dnd_name"=>"test02", "dpo_id"=>"1", "dnd_password" => NULL, "dnd_salt" => NULL);
+		$target[2] = array("dnd_id" => "3", "dnd_name"=>"test03", "dpo_id"=>"2", "dnd_password" => NULL, "dnd_salt" => NULL);
 		$this->assertEquals($target, TestHelper::dumpTable(TestHelper::getEPDO(), "d_node", "dnd_id"));
 	}
 	
