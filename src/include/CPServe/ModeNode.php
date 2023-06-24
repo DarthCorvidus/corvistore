@@ -7,7 +7,7 @@ class ModeNode implements \Net\ProtocolListener {
 	private $partition;
 	function __construct(EPDO $pdo, string $node, $conn) {
 		$this->pdo = $pdo;
-		$this->node = Node::fromName($this->pdo, $node);
+		$this->node = Node::authenticate($this->pdo, $node);
 		$this->catalog = new Catalog($this->pdo, $this->node);
 		$this->partition = $this->node->getPolicy()->getPartition();
 		#$this->conn = $conn;

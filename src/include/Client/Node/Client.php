@@ -10,19 +10,27 @@ namespace Node;
 class Client {
 	private $pdo;
 	private $config;
+	private $password;
 	function __construct($argv) {
 	$this->config = new \Client\Config("/etc/crow-protect/client.yml");
 		$this->argv = $argv;
 		if(!isset($this->argv[1]) or !in_array($this->argv[1], array("restore", "backup", "report", "test"))) {
 			throw new \Exception("Please select operation mode: restore, backup, report, test");
 		}
-		
+		$pwfile = "/root/.crow-protect";
+		if(!file_exists($pwfile)) {
+			echo "Please enter password: ";
+			$password = fgets(STDIN);
+			file_put_contents($pwfile, trim($password));
+			chmod($pwfile, 0600);
+		}
 	}
 	
 	function run() {
 		if($this->argv[1]=="test") {
 			$backup = new Test($this->config, $this->argv);
 			$backup->run();
+			return;
 		}
 
 		if($this->argv[1]=="backup") {

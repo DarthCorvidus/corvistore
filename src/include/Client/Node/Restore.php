@@ -16,7 +16,7 @@ class Restore {
 		$this->inex = $config->getInEx();
 		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 		socket_connect($socket, $config->getHost(), 4096);
-		socket_write($socket, "node ".$config->getNode()."\n");
+		socket_write($socket, "node ".$config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
 		$this->protocol = new \Net\Protocol($socket);
 		$this->target = $this->argv->getTargetPath();
 		/*
