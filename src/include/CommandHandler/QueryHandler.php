@@ -15,29 +15,23 @@ class QueryHandler {
 		$this->command = $command;
 	}
 	
-	function getStorageList() {
+	function getStorageList(): string {
 		$result = "";
 		$model = new StorageList($this->pdo);
 		$table = new TerminalTable($model);
-		foreach($table->getLines() as $key => $value) {
-			$result .= $value.PHP_EOL;
-		}
-	return $result;
+	return $table->getString();
 	}
 
-	function getPartitionList() {
-		$result = "";
+	function getPartitionList(): string {
+		$result = array();
 		$model = new PartitionList($this->pdo);
 		$table = new TerminalTable($model);
-		foreach($table->getLines() as $key => $value) {
-			$result .= $value.PHP_EOL;
-		}
-	return $result;
+	return $table->getString();
 	}
 	
 	
 	
-	function getResult() {
+	function getResult(): string  {
 		if($this->command->getObject()=="storage") {
 			return $this->getStorageList();
 		}
@@ -47,11 +41,7 @@ class QueryHandler {
 		throw new Exception("query ".$this->command->getObject()." is not a valid query.");
 	}
 	
-	function run() {
-		try {
-			echo $this->getResult();
-		} catch (Exception $e) {
-			echo $e->getMessage();
-		}
+	function run(): string {
+		return $this->getResult();
 	}
 }

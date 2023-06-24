@@ -43,7 +43,7 @@ class RunnerServer implements Runner, MessageListener {
 			$this->write("CP001E: Select mode NODE, ADMIN or end connection QUIT".PHP_EOL);		
 		}
 		if(strtoupper($exp[0])=="ADMIN") {
-			$this->mode = new ModeAdmin();
+			$this->mode = new ModeAdmin($this->pdo);
 			return;
 		}
 		if(strtoupper($exp[0])=="NODE" and !isset($exp[1])) {
@@ -64,7 +64,7 @@ class RunnerServer implements Runner, MessageListener {
 		}
 
 		if($this->mode==NULL and strtoupper($trimmed)=="ADMIN") {
-			$this->mode = new ModeAdmin($pdo);
+			$this->mode = new ModeAdmin($this->pdo);
 			echo sprintf("Client %d identified as 'ADMIN'", $this->clientId).PHP_EOL;
 			return;
 		}

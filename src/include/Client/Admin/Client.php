@@ -1,5 +1,5 @@
 <?php
-namespace Node;
+namespace Admin;
 /**
  * Core class for cpclient.php, which does backup, restore and report.
  *
@@ -8,36 +8,31 @@ namespace Node;
 
 
 class Client {
-	private $pdo;
 	private $config;
+	private $protocol;
 	function __construct($argv) {
-	$this->config = new \Client\Config("/etc/crow-protect/client.yml");
+		$this->config = new \Client\Config("/etc/crow-protect/client.yml");
 		$this->argv = $argv;
-		if(!isset($this->argv[1]) or !in_array($this->argv[1], array("restore", "backup", "report", "test"))) {
-			throw new \Exception("Please select operation mode: restore, backup, report, test");
+		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+		$result = socket_connect($socket, $this->config->getHost(), 4096);
+		if($result===FALSE) {
+			exit(255);
 		}
-		
+		socket_write($socket, "admin ".$this->config->getNode()."\n");
+		$this->protocol = new \Net\Protocol($socket);
+
 	}
 	
 	function run() {
-		if($this->argv[1]=="test") {
-			$backup = new Test($this->config, $this->argv);
-			$backup->run();
-		}
-
-		if($this->argv[1]=="backup") {
-			$backup = new Backup($this->config, $this->argv);
-			$backup->run();
-		}
-
-		if($this->argv[1]=="report") {
-			$backup = new Report($this->config, $this->argv);
-			$backup->run();
-		}
-
-		if($this->argv[1]=="restore") {
-			$backup = new Restore($this->config, $this->argv);
-			$backup->run();
+		while(TRUE) {
+			echo "> ";
+			$input = trim(fgets(STDIN));
+			if($input=="quit") {
+				$this->protocol->sendCommand("QUIT");
+				return;
+			}
+			$this->protocol->sendCommand($input);
+			echo $this->protocol->getMessage();
 		}
 	}
 }
