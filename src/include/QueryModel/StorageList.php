@@ -55,7 +55,7 @@ class StorageList implements TerminalTableLayout, TerminalTableModel {
 	public function hasTitle(): bool {
 		return true;
 	}
-
+	
 	public function load() {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_storage");
@@ -63,8 +63,9 @@ class StorageList implements TerminalTableLayout, TerminalTableModel {
 		foreach($stmt as $key => $value) {
 			$this->values[$key][self::NAME] = $value["dst_name"];
 			$this->values[$key][self::TYPE] = $value["dst_type"];
-			$this->values[$key][self::CAPACITY] = "0 GiB";
-			$this->values[$key][self::USED] = "0 GiB";
+			$storage = Storage::fromName($this->pdo, $value["dst_name"]);
+			$this->values[$key][self::CAPACITY] = number_format($storage->getFree());
+			$this->values[$key][self::USED] = number_format($storage->getUsed());
 		}
 	}
 

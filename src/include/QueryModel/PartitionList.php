@@ -75,8 +75,10 @@ class PartitionList implements TerminalTableLayout, TerminalTableModel {
 			$this->values[$key][self::PARTITION] = $value["dpt_name"];
 			$this->values[$key][self::STORAGE] = $value["dst_name"];
 			$this->values[$key][self::TYPE] = $value["dpt_type"];
-			$this->values[$key][self::CAPACITY] = "0 GiB";
-			$this->values[$key][self::USED] = number_format($this->getUsed($value));
+			$partition = Partition::fromArray($this->pdo, $value);
+			$storage = Storage::fromId($this->pdo, $partition->getStorageId());
+			$this->values[$key][self::CAPACITY] = number_format($storage->getFree());
+			$this->values[$key][self::USED] = number_format($storage->getUsed($partition));
 		}
 	}
 
