@@ -43,7 +43,9 @@ CREATE TABLE `d_policy` (
 CREATE TABLE `d_node` (
 `dnd_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `dnd_name` TEXT UNIQUE,
-`dpo_id` INTEGER
+`dpo_id` INTEGER,
+`dnd_password` TEXT,
+`dnd_salt` TEXT
 );
 
 CREATE TABLE `d_catalog` (
