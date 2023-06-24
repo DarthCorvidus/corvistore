@@ -20,8 +20,10 @@ class UpdateHandler {
 		#	return;
 		#}
 		if($this->command->getObject()=="partition") {
-			Partition::update($this->pdo, $this->command);
-			return;
+			return Partition::update($this->pdo, $this->command);
+		}
+		if($this->command->getObject()=="node") {
+			return Node::update($this->pdo, $this->command);
 		}
 		#if($this->command->getObject()=="policy") {
 		#	Policy::update($this->pdo, $this->command);

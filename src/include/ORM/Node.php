@@ -23,6 +23,24 @@ class Node {
 		$node->create();
 	}
 	
+	static function update(EPDO $pdo, CommandParser $command): string {
+		$update = array();
+		$command->import(new CPModelNode($pdo, CPModelNode::MODE_UPDATE));
+		if($command->getParam("password")) {
+			$salt = sha1(random_bytes(256));
+			$update["dnd_salt"] = $salt;
+			$update["dnd_password"] = sha1($command->getParam("password").$salt);
+		}
+
+		$node = Node::fromName($pdo, $command->getPositional(0));
+		if(!empty($update)) {
+			$pdo->update("d_node", $update, array("dnd_id"=>$node->getId()));
+			return "Node ".$command->getPositional(0)." updated";
+		}
+	return "No changes.";
+	}
+
+	
 	private function create() {
 		$new = array();
 		$new["dnd_name"] = $this->name;
