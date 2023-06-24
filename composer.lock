@@ -211,12 +211,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-terminaltable",
-                "reference": "8adfbf5c52e57dd1c5913384e553a8cfb07c1e50"
+                "reference": "a57c1bd0fda2b6b8aefc826124fef0cfdf8105bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-terminaltable/zipball/8adfbf5c52e57dd1c5913384e553a8cfb07c1e50",
-                "reference": "8adfbf5c52e57dd1c5913384e553a8cfb07c1e50",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-terminaltable/zipball/a57c1bd0fda2b6b8aefc826124fef0cfdf8105bb",
+                "reference": "a57c1bd0fda2b6b8aefc826124fef0cfdf8105bb",
                 "shasum": ""
             },
             "require": {
@@ -230,7 +230,7 @@
                     "src/"
                 ]
             },
-            "time": "2021-12-28T16:28:22+00:00"
+            "time": "2023-06-24T13:01:31+00:00"
         },
         {
             "name": "plibv4/uservalue",
