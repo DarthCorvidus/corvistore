@@ -1,5 +1,6 @@
 ## YAML Template.
 ---
+host: backup.example.com
 node: test01
 include:
        - /home/user/

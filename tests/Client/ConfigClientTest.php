@@ -50,5 +50,10 @@ class ConfigClientTest extends TestCase {
 		$this->assertEquals(TRUE, $config->getInEx()->isValid("/home/user"));
 		$this->assertEquals(FALSE, $config->getInEx()->isValid("/storage"));
 	}
+	
+	function testGetHost() {
+		$config = new Config(__DIR__."/include.yml");
+		$this->assertEquals("backup.example.com", $config->getHost());
+	}
 
 }
