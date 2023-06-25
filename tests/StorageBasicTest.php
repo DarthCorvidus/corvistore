@@ -99,12 +99,16 @@ class StorageBasicTest extends TestCase {
 		
 		$files = new MockupFiles("/tmp/crow-protect");
 		$files->createRandom("image01.bin", 12);
-		$source = new SourceObject($node, "/tmp/crow-protect/image01.bin");
-		$catalog = new Catalog(TestHelper::getEPDO());
-		$catalogEntry = $catalog->loadcreate($source);
-		$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
-		$versionEntry = $versions->addVersion($source);
-		$storage->store($versionEntry, $partition, $source);
+		$file = new File("/tmp/crow-protect/image01.bin");
+		$catalog = new Catalog(TestHelper::getEPDO(), $node);
+		/*
+		 * This is not correct, since we create the entry below / instead of
+		 * /tmp/crow-protect/, but this is irrelevant for this test.
+		 */
+		$entry = $catalog->newEntry($file);
+		#$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
+		#$versionEntry = $versions->addVersion($source);
+		$storage->store($entry->getVersions()->getLatest(), $partition, $file);
 		$this->assertFileExists(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp");
 		$this->assertEquals(md5_file("/tmp/crow-protect/image01.bin"), md5_file(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp"));
 	}
