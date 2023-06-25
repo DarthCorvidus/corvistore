@@ -112,7 +112,7 @@ class CatalogTest extends TestCase {
 		$this->mockup->createDir("/Pictures/vacations/2023_thailand");
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
 		$catalogEntry = $catalog->newEntry(new File("/tmp/"));
-		$catalogEntry = $catalog->newEntry(new File("/tmp/crow-protect"), $catalogEntry);
+		$catalogEntry = $catalog->newEntry(new File("/tmp/crow-protect"), $catalogEntry->getId());
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/"), $catalogEntry);
@@ -147,9 +147,9 @@ class CatalogTest extends TestCase {
 		$this->mockup->createRandom("/beach.bin", 12);
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
 		$tmp = $catalog->newEntry(new File("/tmp"));
-		$cp = $catalog->newEntry(new File("/tmp/crow-protect"), $tmp);
+		$cp = $catalog->newEntry(new File("/tmp/crow-protect"), $tmp->getId());
 		$file = new File("/tmp/crow-protect/beach.bin");
-		$entry = $catalog->newEntry($file, $cp);
+		$entry = $catalog->newEntry($file, $cp->getId());
 		
 		$catTarget[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
 		$catTarget[1] = array("dc_id" => 2, "dc_name" => "crow-protect", "dnd_id" => 1, "dc_parent" => 1);
