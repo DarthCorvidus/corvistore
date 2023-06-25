@@ -11,11 +11,20 @@ class ArgvServe {
 		$this->argv = new Argv($argv, $model);
 	}
 	
-	function hasRunPath(): bool {
+	function hasRun(): bool {
 		return $this->argv->hasValue("run");
 	}
 	
-	function getRunPath(): string {
+	function getRun(): string {
 		return $this->argv->getValue("run");
 	}
+
+	function hasRunFile(): bool {
+		return $this->argv->hasValue("run-file");
+	}
+	
+	function getRunFile(): string {
+		return $this->argv->getValue("run-file");
+	}
+
 }

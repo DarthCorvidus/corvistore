@@ -5,9 +5,23 @@ $databasePath = "/var/lib/crow-protect/crow-protect.sqlite";
 $shared = new Shared();
 $shared->useSQLite($databasePath);
 $arg = new ArgvServe($argv);
-if($arg->hasRunPath()) {
+
+if($arg->hasRun()) {
 	try {
-		$commands = file($arg->getRunPath());
+		echo $arg->getRun().PHP_EOL;
+		$command = new CommandParser($arg->getRun());
+		$handler = new CommandHandler($shared->getEPDO(), $command);
+		echo $handler->execute();
+		echo PHP_EOL;
+	} catch (Exception $e) {
+		echo $e->getMessage().PHP_EOL;
+	}
+	exit();
+}
+
+if($arg->hasRunFile()) {
+	try {
+		$commands = file($arg->getRunFile());
 		foreach($commands as $cmd) {
 			echo $cmd;
 			$command = new CommandParser(trim($cmd));
@@ -20,6 +34,7 @@ if($arg->hasRunPath()) {
 	}
 	exit();
 }
+
 try {
 	$adm = new CPServe($shared->getEPDO(), $argv);
 	$adm->run();

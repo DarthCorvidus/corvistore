@@ -20,6 +20,6 @@ class CommandHandler {
 			$update = new UpdateHandler($this->pdo, $this->command);
 			return $update->run();
 		}
-	throw new RuntimeException("'".$cmd."' is not a valid command.");
+	throw new RuntimeException("'".$this->command->getCommand()."' is not a valid command.");
 	}
 }

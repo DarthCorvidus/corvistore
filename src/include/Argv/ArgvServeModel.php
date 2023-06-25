@@ -10,7 +10,8 @@ class ArgvServeModel implements ArgvModel {
 	private $named = array();
 	public function __construct() {
 		$this->named["run"] = UserValue::asOptional();
-		$this->named["run"]->setValidate(new ValidatePath(ValidatePath::FILE));
+		$this->named["run-file"] = UserValue::asOptional();
+		$this->named["run-file"]->setValidate(new ValidatePath(ValidatePath::FILE));
 	}
 
 	public function getArgNames(): array {
