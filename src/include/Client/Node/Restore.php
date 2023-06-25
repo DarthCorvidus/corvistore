@@ -10,14 +10,11 @@ class Restore {
 	private $ignored = 0;
 	private $size;
 	private $protocol;
-	function __construct(\Client\Config $config, array $argv) {
+	function __construct(\Net\Protocol $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvRestore($argv);
 		$this->inex = $config->getInEx();
-		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		socket_connect($socket, $config->getHost(), 4096);
-		socket_write($socket, "node ".$config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
-		$this->protocol = new \Net\Protocol($socket);
+		$this->protocol = $protocol;
 		$this->target = $this->argv->getTargetPath();
 		/*
 		 * As long as the product is in a „pre alpha state“, in-place restores

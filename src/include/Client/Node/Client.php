@@ -32,19 +32,25 @@ class Client {
 			$backup->run();
 			return;
 		}
+		
+		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+		socket_connect($socket, $this->config->getHost(), 4096);
+		socket_write($socket, "node ".$this->config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
+		$protocol = new \Net\Protocol($socket);
 
+		
 		if($this->argv[1]=="backup") {
-			$backup = new Backup($this->config, $this->argv);
+			$backup = new Backup($protocol, $this->config, $this->argv);
 			$backup->run();
 		}
 
 		if($this->argv[1]=="report") {
-			$backup = new Report($this->config, $this->argv);
+			$backup = new Report($protocol, $this->config, $this->argv);
 			$backup->run();
 		}
 
 		if($this->argv[1]=="restore") {
-			$backup = new Restore($this->config, $this->argv);
+			$backup = new Restore($protocol, $this->config, $this->argv);
 			$backup->run();
 		}
 	}

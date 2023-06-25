@@ -17,14 +17,11 @@ class Backup {
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
-	function __construct(\Client\Config $config, array $argv) {
+	function __construct(\Net\Protocol $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
-		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		socket_connect($socket, $config->getHost(), 4096);
-		socket_write($socket, "node ".$config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
-		$this->protocol = new \Net\Protocol($socket);
+		$this->protocol = $protocol;
 		#$this->inex = new InEx();
 		#$this->inex->addInclude("/boot/");
 		#$this->inex->addInclude("/tmp/");

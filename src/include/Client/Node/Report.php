@@ -11,15 +11,9 @@ class Report {
 	private $pdo;
 	private $argv;
 	private $protocol;
-	function __construct(\Client\Config $config, array $argv) {
-		#$this->pdo = $pdo;
-		#$this->node = \Node::fromName($this->pdo, $config->getNode());
+	function __construct(\Net\Protocol $protocol, \Client\Config $config, array $argv) {
 		$this->argv = $argv;
-		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		socket_connect($socket, $config->getHost(), 4096);
-		socket_write($socket, "node ".$config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
-		$this->protocol = new \Net\Protocol($socket);
-
+		$this->protocol = $protocol;
 	}
 	
 	private function runGeneral() {
