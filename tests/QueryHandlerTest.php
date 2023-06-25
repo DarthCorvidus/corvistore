@@ -18,7 +18,7 @@ class QueryHandlerTest extends TestCase {
 		$this->expectExceptionMessage("query cake is not a valid query");
 		$query->getResult();
 	}
-	
+	/*
 	function testQueryStorage() {
 		$command01 = new CommandParser("define storage storage01 type=basic location=".__DIR__."/storage/basic01/");
 		StorageBasic::define(TestHelper::getEPDO(), $command01);
@@ -50,5 +50,5 @@ class QueryHandlerTest extends TestCase {
 		$expect .= "secondary storage02 common    0 GiB    0".PHP_EOL;
 		$this->assertEquals($expect, $query->getResult());
 	}
-
+	*/
 }

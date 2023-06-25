@@ -72,7 +72,7 @@ class DefineHandlerTest extends TestCase {
 
 		$define = new DefineHandler(TestHelper::getEPDO(), new CommandParser("define node test01 policy=keepv10d5month"));
 		$define->run();
-		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1");
+		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1", "dnd_password" => NULL, "dnd_salt" => NULL);
 		$this->assertEquals($target, TestHelper::dumpTable(TestHelper::getEPDO(), "d_node", "dnd_id"));
 
 	}
