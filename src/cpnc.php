@@ -1,5 +1,9 @@
 #!/usr/bin/env php
 <?php
 require_once __DIR__."/../vendor/autoload.php";
-$backup = new Node\Client($argv);
-$backup->run();
+try {
+	$backup = new Node\Client($argv);
+	$backup->run();
+} catch (Exception $e) {
+	echo $e->getMessage().PHP_EOL;
+}

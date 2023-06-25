@@ -34,7 +34,9 @@ class Client {
 		}
 		
 		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		socket_connect($socket, $this->config->getHost(), 4096);
+		if(@socket_connect($socket, $this->config->getHost(), 4096)===FALSE) {
+			throw new \RuntimeException(sprintf("Socket connect with %s:%d failed: %s", $this->config->getHost(), 4096, socket_strerror(socket_last_error())));	
+		}
 		socket_write($socket, "node ".$this->config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
 		$protocol = new \Net\Protocol($socket);
 
