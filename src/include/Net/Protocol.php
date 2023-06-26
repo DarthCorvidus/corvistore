@@ -17,12 +17,16 @@ class Protocol {
 	
 	private function read(int $amount): string {
 		$read = "";
+		#\plibv4\profiler\Profiler::startTimer("read");
 		socket_recv($this->socket, $read, $amount, MSG_WAITALL);
+		#\plibv4\profiler\Profiler::endTimer("read");
 	return $read;
 	}
 
 	private function write(string $data) {
+		#\plibv4\profiler\Profiler::startTimer("write");
 		socket_write($this->socket, $data);
+		#\plibv4\profiler\Profiler::endTimer("write");
 	}
 	
 	function addProtocolListener(\Net\ProtocolListener $listener) {
@@ -30,9 +34,10 @@ class Protocol {
 	}
 	
 	function sendCommand(string $command) {
-		$this->write(\IntVal::uint8()->putValue(self::COMMAND));
-		$this->write(\IntVal::uint16LE()->putValue(strlen($command)));
-		$this->write($command);
+		$data = \IntVal::uint8()->putValue(self::COMMAND);
+		$data .= \IntVal::uint16LE()->putValue(strlen($command));
+		$data .= $command;
+		$this->write($data);
 	}
 
 	function sendMessage(string $message) {
