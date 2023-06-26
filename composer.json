@@ -60,6 +60,11 @@
 			"type": "vcs",
 			"url": "https://github.com/DarthCorvidus/plibv4-binary",
 			"no-api": true
+		},
+		{
+			"type": "vcs",
+			"url": "https://github.com/DarthCorvidus/plibv4-profiler",
+			"no-api": true
 		}
 	],
 	"name": "crow-protect/crow-protect",
@@ -72,7 +77,8 @@
 		"plibv4/import": "dev-main",
 		"plibv4/argv": "dev-main",
 		"plibv4/process": "dev-main",
-		"plibv4/binary": "dev-main"
+		"plibv4/binary": "dev-main",
+		"plibv4/profiler": "dev-main"
 	},
 	"autoload": {
         "classmap": ["src/include/"]

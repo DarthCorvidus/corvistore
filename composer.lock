@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e942a804cf5be932199befeeaab2c005",
+    "content-hash": "db8edcc3587d21a7f7540cff294a03b0",
     "packages": [
         {
             "name": "plibv4/argv",
@@ -206,6 +206,32 @@
             "time": "2023-06-08T13:59:45+00:00"
         },
         {
+            "name": "plibv4/profiler",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/DarthCorvidus/plibv4-profiler",
+                "reference": "77103313c775effb87042a04b9ff0fb0ccd548f2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-profiler/zipball/77103313c775effb87042a04b9ff0fb0ccd548f2",
+                "reference": "77103313c775effb87042a04b9ff0fb0ccd548f2",
+                "shasum": ""
+            },
+            "require": {
+                "plibv4/terminaltable": "dev-main"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "time": "2023-06-26T15:02:53+00:00"
+        },
+        {
             "name": "plibv4/terminaltable",
             "version": "dev-main",
             "source": {
@@ -321,7 +347,8 @@
         "plibv4/import": 20,
         "plibv4/argv": 20,
         "plibv4/process": 20,
-        "plibv4/binary": 20
+        "plibv4/binary": 20,
+        "plibv4/profiler": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
