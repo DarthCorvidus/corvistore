@@ -137,8 +137,13 @@ class Protocol {
 	function sendSerializePHP($unserialized) {
 		$serialized = serialize($unserialized);
 		$size = strlen($serialized);
-		$this->write(\IntVal::uint8()->putValue(self::SERIAL_PHP));
-		$this->write(\IntVal::uint32LE()->putValue($size));
+		$header = \IntVal::uint8()->putValue(self::SERIAL_PHP);
+		$header .= \IntVal::uint32LE()->putValue($size);
+		/*
+		 * We prepend the header to the payload; it will be sent with the first
+		 * chunk and read by one and by four bytes, before the payload is read.
+		 */
+		$serialized = $header.$serialized;
 		$rest = $size;
 		$pos = 0;
 		while($rest>4096) {
