@@ -10,12 +10,14 @@ class Restore {
 	private $ignored = 0;
 	private $size;
 	private $protocol;
+	private $timestamp;
 	function __construct(\Net\Protocol $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvRestore($argv);
 		$this->inex = $config->getInEx();
 		$this->protocol = $protocol;
 		$this->target = $this->argv->getTargetPath();
+		$this->timestamp = strtotime($this->argv->getTimestamp());
 		/*
 		 * As long as the product is in a „pre alpha state“, in-place restores
 		 * are disabled, to prevent data loss due to a failed test run.
@@ -43,7 +45,13 @@ class Restore {
 		$files = array();
 		for($i=0;$i<$entries->getCount();$i++) {
 			$entry = $entries->getEntry($i);
-			$latest = $entry->getVersions()->getLatest();
+			// get Versions filtered by Timestamp.
+			$versions = $entry->getVersions()->filterToTimestamp($this->timestamp);
+			// If there are no versions for a given timestamp, abort.
+			if($versions->getCount()==0) {
+				continue;
+			}
+			$latest = $versions->getLatest();
 			if($latest->getType()==\Catalog::TYPE_DIR) {
 				$directories[] = $entry;
 			}
@@ -63,7 +71,8 @@ class Restore {
 	}
 
 	private function restoreDirectory($path, \CatalogEntry $entry) {
-		$version = $entry->getVersions()->getLatest();
+		# We have to filter again.
+		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
 		$filepath = $this->target.$path.$entry->getName();
 		if(!file_exists($filepath)) {
 			echo "Restoring directory ".$filepath.PHP_EOL;
@@ -75,7 +84,8 @@ class Restore {
 	}
 	
 	private function restoreFile($path, \CatalogEntry $entry) {
-		$version = $entry->getVersions()->getLatest();
+		# We have to filter again.
+		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
 		$filepath = $this->target.$path.$entry->getName();
 		if(!file_exists($filepath)) {
 			echo "Restore file to ".$filepath.PHP_EOL;
@@ -117,6 +127,11 @@ class Restore {
 		if($this->argv->getRestorePath()=="/") {
 			$this->recurseCatalog("/", 0);
 		} else {
+			/*
+			 * TODO
+			 *  Restoring to a path deeper than /xxx throws an error. I have to
+			 *  create all directories leading to the restore path first.
+			 */
 			$this->protocol->sendCommand("GET PATH ".$this->argv->getRestorePath());
 			$entry = $this->protocol->getUnserializePHP();
 			$this->recurseCatalog($this->argv->getRestorePath()."/", 0, $entry);

@@ -21,4 +21,8 @@ class ArgvRestore {
 		}
 		return $this->argv->getPositional(2);
 	}
+	
+	function getTimestamp(): string {
+		return $this->argv->getValue("date")." ".$this->argv->getValue("time");
+	}
 }
