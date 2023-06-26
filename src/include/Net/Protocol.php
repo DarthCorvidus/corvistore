@@ -20,45 +20,49 @@ class Protocol {
 		socket_recv($this->socket, $read, $amount, MSG_WAITALL);
 	return $read;
 	}
+
+	private function write(string $data) {
+		socket_write($this->socket, $data);
+	}
 	
 	function addProtocolListener(\Net\ProtocolListener $listener) {
 		$this->listener = $listener;
 	}
 	
 	function sendCommand(string $command) {
-		socket_write($this->socket, \IntVal::uint8()->putValue(self::COMMAND));
-		socket_write($this->socket, \IntVal::uint16LE()->putValue(strlen($command)));
-		socket_write($this->socket, $command);
+		$this->write(\IntVal::uint8()->putValue(self::COMMAND));
+		$this->write(\IntVal::uint16LE()->putValue(strlen($command)));
+		$this->write($command);
 	}
 
 	function sendMessage(string $message) {
-		socket_write($this->socket, \IntVal::uint8()->putValue(self::MESSAGE));
-		socket_write($this->socket, \IntVal::uint16LE()->putValue(strlen($message)));
-		socket_write($this->socket, $message);
+		$this->write(\IntVal::uint8()->putValue(self::MESSAGE));
+		$this->write(\IntVal::uint16LE()->putValue(strlen($message)));
+		$this->write($message);
 	}
 	
 	function sendError(string $error) {
-		socket_write($this->socket, \IntVal::uint8()->putValue(self::ERROR));
-		socket_write($this->socket, \IntVal::uint8()->putValue(strlen($error)));
-		socket_write($this->socket, $error);
+		$this->write(\IntVal::uint8()->putValue(self::ERROR));
+		$this->write(\IntVal::uint8()->putValue(strlen($error)));
+		$this->write($error);
 	}
 
 	function sendOK() {
-		socket_write($this->socket, \IntVal::uint8()->putValue(self::OK));
+		$this->write(\IntVal::uint8()->putValue(self::OK));
 	}
 
 	function sendCancel() {
-		socket_write($this->socket, \IntVal::uint8()->putValue(self::CANCEL));
+		$this->write(\IntVal::uint8()->putValue(self::CANCEL));
 	}
 	
 	function sendRaw($size, $handle) {
-		socket_write($this->socket, \IntVal::uint8()->putValue(self::RAW));
-		socket_write($this->socket, \IntVal::uint64LE()->putValue($size));
+		$this->write(\IntVal::uint8()->putValue(self::RAW));
+		$this->write(\IntVal::uint64LE()->putValue($size));
 		$rest = $size;
 		$this->sendOK();
 		$i = 0;
 		while($rest>4096) {
-			socket_write($this->socket, fread($handle, 4096));
+			$this->write(fread($handle, 4096));
 			$rest -= 4096;
 			$i++;
 			if($i%10==0) {
@@ -66,7 +70,7 @@ class Protocol {
 			}
 		}
 		if($rest!=0) {
-			socket_write($this->socket, fread($handle, $rest));
+			$this->write(fread($handle, $rest));
 		}
 		$this->sendOK();
 	}
@@ -89,14 +93,14 @@ class Protocol {
 	function sendFile(\File $file) {
 		$file->reload();
 		$this->checkFile($file);
-		socket_write($this->socket, \IntVal::uint8()->putValue(self::RAW));
-		socket_write($this->socket, \IntVal::uint64LE()->putValue($file->getSize()));
+		$this->write(\IntVal::uint8()->putValue(self::RAW));
+		$this->write(\IntVal::uint64LE()->putValue($file->getSize()));
 		$rest = $file->getSize();
 		$this->sendOK();
 		$i = 0;
 		$handle = fopen($file->getPath(), "r");
 		while($rest>4096) {
-			socket_write($this->socket, fread($handle, 4096));
+			$this->write(fread($handle, 4096));
 			$rest -= 4096;
 			$i++;
 			if($i%10==0) {
@@ -112,7 +116,7 @@ class Protocol {
 			}
 		}
 		if($rest!=0) {
-			socket_write($this->socket, fread($handle, $rest));
+			$this->write(fread($handle, $rest));
 		}
 		try {
 			$this->checkFile($file);
@@ -128,17 +132,17 @@ class Protocol {
 	function sendSerializePHP($unserialized) {
 		$serialized = serialize($unserialized);
 		$size = strlen($serialized);
-		socket_write($this->socket, \IntVal::uint8()->putValue(self::SERIAL_PHP));
-		socket_write($this->socket, \IntVal::uint32LE()->putValue($size));
+		$this->write(\IntVal::uint8()->putValue(self::SERIAL_PHP));
+		$this->write(\IntVal::uint32LE()->putValue($size));
 		$rest = $size;
 		$pos = 0;
 		while($rest>4096) {
-			socket_write($this->socket, substr($serialized, $pos, 4096));
+			$this->write(substr($serialized, $pos, 4096));
 			$rest -= 4096;
 			$pos += 4096;
 		}
 		if($rest!=0) {
-			socket_write($this->socket, substr($serialized, $pos));
+			$this->write(substr($serialized, $pos));
 		}
 	}
 	
