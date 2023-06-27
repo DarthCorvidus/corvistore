@@ -174,4 +174,34 @@ class CatalogTest extends TestCase {
 		$this->assertEquals($catTarget, $catDB);
 		$this->assertEquals($verTarget, $verDB[2]);
 	}
+	
+	/**
+	 * Testing if the sort order of Versions is correct, oldest first, newer
+	 * later.
+	 */
+	function testCheckLatest() {
+		$node = Node::fromName(TestHelper::getEPDO(), "test01");
+		$this->mockup->createRandom("/beach.bin", 12);
+		$catalog = new Catalog(TestHelper::getEPDO(), $node);
+		$tmp = $catalog->newEntry(new File("/tmp"));
+		$cp = $catalog->newEntry(new File("/tmp/crow-protect"), $tmp->getId());
+		$file = new File("/tmp/crow-protect/beach.bin");
+		$entry = $catalog->newEntry($file, $cp->getId());
+		$entry->getVersions()->getLatest()->setStored(TestHelper::getEPDO());
+		$this->mockup->createRandom("/beach.bin", 12);
+		$file = new File("/tmp/crow-protect/beach.bin");
+		
+		$entries = $catalog->getEntries($cp->getId());
+		$latest = $entries->getEntry(0)->getVersions()->getLatest();
+		
+		$entry = $catalog->updateEntry($entry, $file);
+		$entry->getVersions()->getLatest()->setStored(TestHelper::getEPDO());
+		
+		$entries = $catalog->getEntries($cp->getId());
+		
+		$this->assertEquals(1, $entries->getCount());
+		$this->assertEquals(2, $entries->getEntry(0)->getVersions()->getCount());
+		$this->assertEquals($latest, $entries->getEntry(0)->getVersions()->getVersion(0));
+		$this->assertEquals($file->getMTime(), $entries->getEntry(0)->getVersions()->getLatest()->getMtime());
+	}
 }
