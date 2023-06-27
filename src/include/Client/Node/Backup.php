@@ -103,6 +103,7 @@ class Backup {
 				echo "Sending ".$file->getPath().PHP_EOL;
 				try {
 					$this->protocol->sendFile($file);
+					$this->transferred += $file->getSize();
 				} catch (\Net\UploadException $e) {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
@@ -129,6 +130,7 @@ class Backup {
 				echo "Sending ".$file->getPath().PHP_EOL;
 				try {
 					$this->protocol->sendFile($file);
+					$this->transferred += $file->getSize();
 				} catch (\Net\UploadException $e) {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
