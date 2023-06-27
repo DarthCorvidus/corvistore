@@ -29,10 +29,9 @@ class UpdateHandler {
 		#	Policy::update($this->pdo, $this->command);
 		#	return;
 		#}
-		#if($this->command->getObject()=="node") {
-		#	Node::update($this->pdo, $this->command);
-		#	return;
-		#}
+		if($this->command->getObject()=="user") {
+			return User::update($this->pdo, $this->command);
+		}
 		throw new Exception("'update ".$this->command->getObject()."' is not a valid command.");
 	}
 }

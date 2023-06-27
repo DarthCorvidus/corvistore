@@ -48,6 +48,13 @@ CREATE TABLE `d_node` (
 `dnd_salt` TEXT
 );
 
+CREATE TABLE `d_user` (
+`du_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`du_name` TEXT UNIQUE,
+`du_password` TEXT,
+`du_salt` TEXT
+);
+
 CREATE TABLE `d_catalog` (
 `dc_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `dc_name` TEXT,
