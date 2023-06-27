@@ -23,9 +23,9 @@ class Catalog {
 		$param[] = 1;
 		$param[] = $this->node->getId();
 		if($parent===0) {
-			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent IS NULL");
+			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent IS NULL order by dc_id, dvs_created_epoch");
 		} else {
-			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent = ?");
+			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent = ? order by dc_id, dvs_created_epoch");
 			$param[] = $parent;
 		}
 		$stmt->setFetchMode(EPDO::FETCH_ASSOC);
