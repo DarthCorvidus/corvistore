@@ -14,25 +14,12 @@ class ModeAdmin implements \Net\ProtocolListener {
 
 	public function onCommand(string $cmd, \Net\Protocol $protocol) {
 		$command = new CommandParser($cmd);
+		$handler = new CommandHandler($this->pdo, $command);
 		try {
-			if($command->getCommand()=="query") {
-				$query = new QueryHandler($this->pdo, $command);
-				$protocol->sendMessage($query->run());
-			return;
-			}
-			if($command->getCommand()=="define") {
-				$define = new DefineHandler($this->pdo, $command);
-				$protocol->sendMessage($define->run());
-			return;
-			}
-			if($command->getCommand()=="update") {
-				$update = new UpdateHandler($this->pdo, $command);
-				$protocol->sendMessage($update->run());
-			return;
-			}
-			$protocol->sendMessage("'".$cmd."' is not a valid command.".PHP_EOL);
-		} catch (Exception $e) {
-			$protocol->sendMessage($e->getMessage().PHP_EOL);
+			$result = $handler->execute();
+			$protocol->sendMessage($result);
+		} catch (Exception $ex) {
+			$protocol->sendMessage($ex->getMessage());
 		}
 	}
 
