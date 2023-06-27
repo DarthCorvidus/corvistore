@@ -27,7 +27,7 @@ class Restore {
 			exit();
 		}
 	}
-
+	
 	function recurseCatalog(string $path, int $depth, \CatalogEntry $parent = NULL) {
 		if($parent!=NULL) {
 			#$parent->getName().PHP_EOL;
@@ -122,23 +122,76 @@ class Restore {
 
 	}
 	
-	function run() {
-		echo $this->argv->getRestorePath().PHP_EOL;
-		if($this->argv->getRestorePath()=="/") {
-			$this->recurseCatalog("/", 0);
-		} else {
-			/*
-			 * TODO
-			 *  Restoring to a path deeper than /xxx throws an error. I have to
-			 *  create all directories leading to the restore path first.
-			 */
-			$this->protocol->sendCommand("GET PATH ".$this->argv->getRestorePath());
-			$entry = $this->protocol->getUnserializePHP();
-			$this->recurseCatalog($this->argv->getRestorePath()."/", 0, $entry);
+	private function restoreHierarchy() {
+		
+	}
+
+	private function restoreParents() {
+		$exp = explode("/", $this->argv->getRestorePath());
+		$i = 0;
+		$parent = 0;
+		$parentpath = "";
+		foreach($exp as $key => $value) {
+			if($value==NULL) {
+				continue;
+			}
+			$this->protocol->sendCommand("GET CATALOG ".$parent);
+			$entries = $this->protocol->getUnserializePHP();
+			$entry = $entries->getByName($value);
+			$versions = $entry->getVersions()->filterToTimestamp($this->timestamp);
+			if($versions->getLatest()->getType()== \Catalog::TYPE_DIR) {
+				#echo $parentpath.PHP_EOL;
+				#echo $entry->getName().PHP_EOL;
+				$this->restoreDirectory($parentpath."/", $entry);
+				$parent = $entry->getId();
+				$parententry = $entry;
+				$parentpath .= "/".$entry->getName();
+			}
 		}
-		$this->protocol->sendCommand("QUIT");
+	return $parentpath;
+	}
+	
+	private function displaySummary() {
 		echo "Restored:    ".$this->restored.PHP_EOL;
 		echo "Ignored:     ".$this->ignored.PHP_EOL;
 		echo "Transferred: ".number_format($this->size)." Bytes".PHP_EOL;
+	}
+	
+	function run() {
+		#echo $this->argv->getRestorePath().PHP_EOL;
+		if($this->argv->getRestorePath()=="/") {
+			$this->recurseCatalog("/", 0);
+		} else {
+			/**
+			 * When a restore path is deeper below root, the path leading to the
+			 * part to be restored has to be created as well. This could of
+			 * course just be done by mkdir, but then the path would have
+			 * root.root as path. Therefore, Restore::restoreParents will be
+			 * used to follow the restore path to the point where a restore is
+			 * wished.
+			 */
+			// Get requested path/backup.
+			$this->protocol->sendCommand("GET PATH ".$this->argv->getRestorePath());
+			$targetEntry = $this->protocol->getUnserializePHP();
+			// quit with error message if no version exists on or before timestamp.
+			$targetVersions = $targetEntry->getVersions()->filterToTimestamp($this->timestamp);
+			if($targetVersions->getCount()==0) {
+				$this->protocol->sendCommand("QUIT");
+				throw new \Exception($this->argv->getRestorePath()." does not exist in backup before ".date("Y-m-d H:i:s", $this->timestamp));
+			}
+			// restore all paths leading to the desired target
+			$parentpath = $this->restoreParents();
+			// if the target is a file, restore single file and quit.
+			if($targetVersions->getLatest()->getType()== \Catalog::TYPE_FILE) {
+				$this->restoreFile($parentpath."/", $targetEntry);
+				$this->displaySummary();
+				$this->protocol->sendCommand("QUIT");
+				return;
+			}
+			// if target is a folder, recurse folder
+			$this->recurseCatalog($parentpath."/", 0, $targetEntry);
+		}
+		$this->displaySummary();
+		$this->protocol->sendCommand("QUIT");
 	}
 }
