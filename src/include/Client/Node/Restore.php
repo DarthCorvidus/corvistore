@@ -14,7 +14,8 @@ class Restore {
 	private $replaceOlder = NULL;
 	private $replaceEqual = NULL;
 	private $replaceNewer = NULL;
-	private $replaceSize = NULL;
+	private $replaceSmaller = NULL;
+	private $replaceLarger = NULL;
 	function __construct(\Net\Protocol $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvRestore($argv);
@@ -32,11 +33,11 @@ class Restore {
 		}
 	}
 	
-	private function queryReplace(&$keep, string $filepath, string $status) {
+	private function queryReplace(&$keep, $reason) {
 		if($keep != NULL) {
 			return $keep;
 		}
-		echo "File ".$filepath." exists and is ".$status.". Action:".PHP_EOL;
+		echo $reason.PHP_EOL;
 		while(true) {
 			echo "[r]eplace once".PHP_EOL;
 			echo "[R]eplace always".PHP_EOL;
@@ -63,19 +64,31 @@ class Restore {
 			}
 		}
 	}
+
+	function queryReplaceLarger($filepath) {
+		$reason = "File ".$filepath." exists and is smaller. Action:".PHP_EOL;
+		$input = $this->queryReplace($this->replaceLarger, $reason);
+	return $input;
+	}
+
+	function queryReplaceSmaller($filepath) {
+		$reason = "File ".$filepath." exists and is smaller. Action:".PHP_EOL;
+		$input = $this->queryReplace($this->replaceSmaller, $reason);
+	return $input;
+	}
 	
 	function queryReplaceOlder($filepath) {
-		$input = $this->queryReplace($this->replaceOlder, $filepath, "older");
+		$input = $this->queryReplace($this->replaceOlder, "File ".$filepath." exists and is older. Action:");
 	return $input;
 	}
 
 	function queryReplaceEqual($filepath) {
-		$input = $this->queryReplace($this->replaceEqual, $filepath, "equal");
+		$input = $this->queryReplace($this->replaceEqual, "File ".$filepath." exists and is equal. Action:");
 	return $input;
 	}
 	
 	function queryReplaceNewer($filepath) {
-		$input = $this->queryReplace($this->replaceNewer, $filepath, "newer");
+		$input = $this->queryReplace($this->replaceNewer, "File ".$filepath." exists and is newer. Action:");
 	return $input;
 	}
 
@@ -139,12 +152,22 @@ class Restore {
 		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
 		$filepath = $this->target.$path.$entry->getName();
 		if(file_exists($filepath)) {
+			if(filesize($filepath)<$version->getSize() && $this->queryReplaceSmaller($filepath)=="s") {
+				$this->ignored++;
+			return;
+			}
+			if(filesize($filepath)>$version->getSize() && $this->queryReplaceLarger($filepath)=="s") {
+				$this->ignored++;
+			return;
+			}
+
 			if(filemtime($filepath)<$version->getMtime() && $this->queryReplaceOlder($filepath)=="s") {
 				$this->ignored++;
 				return;
 			}
-
-			if(filemtime($filepath)==$version->getMtime() && $this->queryReplaceEqual($filepath)=="s") {
+			
+			// Currently, I see no use in replacing files with the same timestamp.
+			if(filemtime($filepath)==$version->getMtime()) {
 				$this->ignored++;
 				return;
 			}
