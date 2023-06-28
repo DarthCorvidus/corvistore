@@ -11,6 +11,10 @@ class Restore {
 	private $size;
 	private $protocol;
 	private $timestamp;
+	private $replaceOlder = NULL;
+	private $replaceEqual = NULL;
+	private $replaceNewer = NULL;
+	private $replaceSize = NULL;
 	function __construct(\Net\Protocol $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvRestore($argv);
@@ -28,6 +32,53 @@ class Restore {
 		}
 	}
 	
+	private function queryReplace(&$keep, string $filepath, string $status) {
+		if($keep != NULL) {
+			return $keep;
+		}
+		echo "File ".$filepath." exists and is ".$status.". Action:".PHP_EOL;
+		while(true) {
+			echo "[r]eplace once".PHP_EOL;
+			echo "[R]eplace always".PHP_EOL;
+			echo "[s]kip (or enter)".PHP_EOL;
+			echo "[S]kip always".PHP_EOL;
+			echo "[c]ancel".PHP_EOL;
+			echo "> ";
+			$input = trim(fgets(STDIN));
+			if($input=="S") {
+				$keep = "s";
+			return "s";
+			}
+			if($input=="R") {
+				$keep = "r";
+			return "r";
+			}
+			if($input=="c") {
+				$this->displaySummary();
+				$this->protocol->sendCommand("QUIT");
+				exit(0);
+			}
+			if(in_array($input, array("c", "s", "r", "S", "R"))) {
+				return $input;
+			}
+		}
+	}
+	
+	function queryReplaceOlder($filepath) {
+		$input = $this->queryReplace($this->replaceOlder, $filepath, "older");
+	return $input;
+	}
+
+	function queryReplaceEqual($filepath) {
+		$input = $this->queryReplace($this->replaceEqual, $filepath, "equal");
+	return $input;
+	}
+	
+	function queryReplaceNewer($filepath) {
+		$input = $this->queryReplace($this->replaceNewer, $filepath, "newer");
+	return $input;
+	}
+
 	function recurseCatalog(string $path, int $depth, \CatalogEntry $parent = NULL) {
 		if($parent!=NULL) {
 			#$parent->getName().PHP_EOL;
@@ -87,39 +138,38 @@ class Restore {
 		# We have to filter again.
 		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
 		$filepath = $this->target.$path.$entry->getName();
-		if(!file_exists($filepath)) {
-			echo "Restore file to ".$filepath.PHP_EOL;
-			$this->protocol->sendCommand("GET VERSION ".$version->getId());
-			/*
-			 * I opted against having Restore implement TransferListener; 
-			 * I prefer to be sure to get a clean slate on each restore.
-			 */
-			$restoreListener = new RestoreListener($filepath);
-			$this->protocol->getRaw($restoreListener);
-			chown($filepath, $version->getOwner());
-			chgrp($filepath, $version->getGroup());
-			touch($filepath, $version->getMtime());
-			##echo $filepath." missing, would restored".PHP_EOL;
-			$this->restored++;
-			$this->size += $version->getSize();
-			return;
-		}
-		$mtime = filemtime($filepath);
-		if($mtime==$version->getMtime()) {
-			$this->ignored++;
-			#echo $filepath." is equal, would ignore.".PHP_EOL;
-		}
+		if(file_exists($filepath)) {
+			if(filemtime($filepath)<$version->getMtime() && $this->queryReplaceOlder($filepath)=="s") {
+				$this->ignored++;
+				return;
+			}
 
-		if($mtime>$version->getMtime()) {
-			$this->ignored++;
-			#echo $filepath." is newer, would ignore.".PHP_EOL;
-		}
+			if(filemtime($filepath)==$version->getMtime() && $this->queryReplaceEqual($filepath)=="s") {
+				$this->ignored++;
+				return;
+			}
 
-		if(filemtime($filepath)<$version->getMtime()) {
-			$this->ignored++;
-			#echo $filepath." is older, would prompt.".PHP_EOL;
+			if(filemtime($filepath)>$version->getMtime() && $this->queryReplaceNewer($filepath)=="s") {
+				$this->ignored++;
+				return;
+			}
+			
 		}
-
+		echo "Restore file to ".$filepath.PHP_EOL;
+		$this->protocol->sendCommand("GET VERSION ".$version->getId());
+		/*
+		 * I opted against having Restore implement TransferListener; 
+		 * I prefer to be sure to get a clean slate on each restore.
+		 */
+		$restoreListener = new RestoreListener($filepath);
+		$this->protocol->getRaw($restoreListener);
+		chown($filepath, $version->getOwner());
+		chgrp($filepath, $version->getGroup());
+		touch($filepath, $version->getMtime());
+		##echo $filepath." missing, would restored".PHP_EOL;
+		$this->restored++;
+		$this->size += $version->getSize();
+	return;
 	}
 	
 	private function restoreHierarchy() {
