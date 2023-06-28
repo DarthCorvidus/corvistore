@@ -17,6 +17,12 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		$this->queue->addListener($signal, $this);
 		$address = '127.0.0.1';
 		$port = 4096;
+		$this->socket = stream_socket_server("tcp://0.0.0.0:4096", $errno, $errstr);
+		stream_set_blocking($this->socket, FALSE);
+		if (!$this->socket) {
+			throw new Exception($errstr);
+		}
+		/*
 		if (($this->socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
 			throw new RuntimeException(sprintf("Socket creation failed: %s", socket_strerror(socket_last_error())));
 		}
@@ -28,6 +34,8 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		if (@socket_listen($this->socket, 5) === false) {
 			throw new RuntimeException(sprintf("Socket listen with %s:%d failed: %s", $address, $port, socket_strerror(socket_last_error())));
 		}
+		 * 
+		 */
 	}
 	
 	function onSignal(int $signal, array $info) {
@@ -64,15 +72,24 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 			$read[] = $this->socket;
 			$write = NULL;
 			$except = NULL;
-			if(@socket_select($read, $write, $except, $tv_sec = 5) < 1) {
-				$error = socket_last_error($this->socket);
-				if($error!==0) {
-					echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
-				}
+			/**
+			 * This is a bit sucky. The SIGCHLD sent by Process breaks
+			 * stream_select early, which is keen on telling everyone.
+			 * So either silence it or use pcntl_sigprocmask to shield it,
+			 * which results in a short pause when the client disconnects.
+			 */
+			//pcntl_sigprocmask(SIG_BLOCK, array(SIGCHLD));
+			if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
+				//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
+				#$error = socket_last_error($this->socket);
+				#if($error!==0) {
+				#	echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
+				#}
 				continue;
 			}
+			//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
 			echo "A new connection has occurred.".PHP_EOL;
-			if (($msgsock = socket_accept($this->socket)) === false) {
+			if (($msgsock = stream_socket_accept($this->socket)) === false) {
 				echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
 				break;
 			} else {
@@ -85,7 +102,7 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	public function onEnd(Process $process) {
 		$id = $process->getRunner()->getId();
 		echo "Thread for client ".$id." closed.".PHP_EOL;
-		socket_close($this->clients[$id]);
+		fclose($this->clients[$id]);
 		Signal::get()->clearHandler($process);
 		Signal::get()->clearHandler($process->getRunner()->getQueue());
 		unset($this->clients[$id]);

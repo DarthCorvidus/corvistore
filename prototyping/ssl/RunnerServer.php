@@ -36,14 +36,14 @@ class RunnerServer implements Runner, MessageListener {
 			$read[] = $this->conn;
 			$write = NULL;
 			$except = NULL;
-			if(@socket_select($read, $write, $except, $tv_sec = 5) < 1) {
-				if(socket_last_error($this->conn)!==0) {
-					echo "socket_select() failed: ".socket_strerror(socket_last_error($this->conn)).PHP_EOL;
-				}
+			if(stream_select($read, $write, $except, $tv_sec = 5) < 1) {
+				#if(socket_last_error($this->conn)!==0) {
+				#	echo "socket_select() failed: ".socket_strerror(socket_last_error($this->conn)).PHP_EOL;
+				#}
 				continue;
 			}
-			if(false === ($buf = socket_read($this->conn, 2048, PHP_NORMAL_READ))) {
-				echo "socket_read() failed: ".socket_strerror(socket_last_error($this->conn)).PHP_EOL;
+			if(false === ($buf = fgets($this->conn))) {
+				throw new Exception("fread failed");
 				return;
 			}
 			if(!$buf = trim($buf)) {
@@ -51,11 +51,11 @@ class RunnerServer implements Runner, MessageListener {
 			}
 			if($buf == 'quit') {
 				echo $this->clientId." requested end of connection".PHP_EOL;
-				socket_close($this->conn);
+				fclose($this->conn);
 				return;
 			}
 			$talkback = sprintf("Client %d said %s", $this->clientId, $buf).PHP_EOL;
-			socket_write($this->conn, $talkback, strlen($talkback));
+			fwrite($this->conn, $talkback, strlen($talkback));
 		} while(true);
 	}
 }
