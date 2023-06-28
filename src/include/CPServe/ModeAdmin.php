@@ -2,8 +2,10 @@
 class ModeAdmin implements \Net\ProtocolListener {
 	private $pdo;
 	private $quit = FALSE;
-	function __construct(EPDO $pdo) {
+	private $user;
+	function __construct(EPDO $pdo, string $conjoined) {
 		$this->pdo = $pdo;
+		$this->user = User::authenticate($this->pdo, $conjoined);
 	}
 	public function onServerMessage(string $message) {
 	}

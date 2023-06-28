@@ -42,8 +42,18 @@ class RunnerServer implements Runner, MessageListener {
 		if(!in_array(strtoupper($exp[0]), array("NODE", "ADMIN", "QUIT", "TEST"))) {
 			$this->write("CP001E: Select mode NODE, ADMIN or end connection QUIT".PHP_EOL);		
 		}
-		if(strtoupper($exp[0])=="ADMIN") {
-			$this->mode = new ModeAdmin($this->pdo);
+		if($this->mode == NULL and strtoupper($exp[0])=="ADMIN") {
+			try {
+				$this->mode = new ModeAdmin($this->pdo, $exp[1]);
+				// echoing the conjoined string has to be removed here & with
+				// NODE, but it is ok for debugging.
+				echo sprintf("Client %d identified as ADMIN %s", $this->clientId, $exp[1]).PHP_EOL;
+			} catch (Exception $e) {
+				echo $e->getMessage();
+				$this->write($e->getMessage());
+				socket_close($this->conn);
+				exit(0);
+			}
 			return;
 		}
 		if(strtoupper($exp[0])=="NODE" and !isset($exp[1])) {
@@ -63,11 +73,11 @@ class RunnerServer implements Runner, MessageListener {
 			return;
 		}
 
-		if($this->mode==NULL and strtoupper($trimmed)=="ADMIN") {
-			$this->mode = new ModeAdmin($this->pdo);
-			echo sprintf("Client %d identified as 'ADMIN'", $this->clientId).PHP_EOL;
-			return;
-		}
+		#if($this->mode==NULL and strtoupper($trimmed)=="ADMIN") {
+		#	$this->mode = new ModeAdmin($this->pdo);
+		#	echo sprintf("Client %d identified as 'ADMIN'", $this->clientId).PHP_EOL;
+		#	return;
+		#}
 		if($this->mode==NULL and strtoupper($trimmed)=="TEST") {
 			$this->mode = new ModeTest($this->clientId);
 			echo sprintf("Client %d identified as 'TEST'", $this->clientId).PHP_EOL;
@@ -139,6 +149,7 @@ class RunnerServer implements Runner, MessageListener {
 	public function run() {
 		$this->runInitial();
 		$protocol = new \Net\Protocol($this->conn);
+		$protocol->sendOK();
 		$protocol->addProtocolListener($this->mode);
 		$protocol->listen();
 		socket_close($this->conn);

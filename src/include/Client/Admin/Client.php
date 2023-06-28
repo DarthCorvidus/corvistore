@@ -18,9 +18,13 @@ class Client {
 		if($result===FALSE) {
 			exit(255);
 		}
-		socket_write($socket, "admin ".$this->config->getNode()."\n");
+		echo "Username: ";
+		$user = trim(fgets(STDIN));
+		echo "Password: ";
+		$password = trim(fgets(STDIN));
+		socket_write($socket, "admin ".$user.":".$password."\n");
 		$this->protocol = new \Net\Protocol($socket);
-
+		$this->protocol->getOK();
 	}
 	
 	function run() {

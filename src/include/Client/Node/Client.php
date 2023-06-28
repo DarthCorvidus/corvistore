@@ -39,6 +39,7 @@ class Client {
 		}
 		socket_write($socket, "node ".$this->config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
 		$protocol = new \Net\Protocol($socket);
+		$protocol->getOK();
 
 		
 		if($this->argv[1]=="backup") {
