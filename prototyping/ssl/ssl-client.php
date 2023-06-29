@@ -2,8 +2,19 @@
 <?php
 class Client {
 	private $socket;
-	function __construct() {
-		$this->socket = stream_socket_client("tcp://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN);
+	function __construct($server) {
+		$context = stream_context_create();
+		stream_context_set_option($context, 'ssl', 'local_ca', __DIR__."/ca.crt");
+		#stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
+		stream_context_set_option($context, 'ssl', 'verify_peer', true);
+
+		$this->socket = stream_socket_client("desktop02.telton.de:4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT, $context);
+		if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT )) {
+			exit();
+		}
+		if($this->socket===FALSE) {
+			exit(255);
+		}
 		stream_set_blocking($this->socket, TRUE);
 	}
 	
@@ -23,5 +34,15 @@ class Client {
 	}
 }
 
-$client = new Client();
+if(empty($argv[1])) {
+	echo "Please suppy host name.".PHP_EOL;
+	exit();
+}
+
+if(!file_exists(__DIR__."/ca.crt")) {
+	echo "Root certificate ".__DIR__."/ca.crt not found".PHP_EOL;
+	exit();
+}
+
+$client = new Client($argv[1]);
 $client->run();

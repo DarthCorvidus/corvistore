@@ -32,6 +32,10 @@ class RunnerServer implements Runner, MessageListener {
 	
 	public function run() {
 		echo "Start loop for client ".$this->clientId.PHP_EOL;
+		if (! stream_socket_enable_crypto ($this->conn, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT )) {
+			exit();
+		}
+
 		do {
 			$read[] = $this->conn;
 			$write = NULL;

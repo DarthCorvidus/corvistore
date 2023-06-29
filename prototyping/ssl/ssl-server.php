@@ -17,7 +17,17 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		$this->queue->addListener($signal, $this);
 		$address = '127.0.0.1';
 		$port = 4096;
-		$this->socket = stream_socket_server("tcp://0.0.0.0:4096", $errno, $errstr);
+		$context = stream_context_create();
+		
+		
+		stream_context_set_option($context, 'ssl', 'local_cert', __DIR__."/server.crt");
+		stream_context_set_option($context, 'ssl', 'local_pk', __DIR__."/server.key");
+		stream_context_set_option($context, 'ssl', 'local_ca', __DIR__."/ca.crt");
+		#stream_context_set_option($context, 'ssl', 'passphrase', "");
+		#stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
+		stream_context_set_option($context, 'ssl', 'verify_peer', false);
+		
+		$this->socket = stream_socket_server("ssl://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context);
 		stream_set_blocking($this->socket, FALSE);
 		if (!$this->socket) {
 			throw new Exception($errstr);
@@ -116,6 +126,15 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	}
 }
 
+$certfiles[] = __DIR__."/server.crt";
+$certfiles[] = __DIR__."/server.key";
+$certfiles[] = __DIR__."/ca.crt";
+
+foreach($certfiles as $key => $value) {
+	if(!file_exists($value)) {
+		echo "Necessary certificate/key file ".$value." does not exist.".PHP_EOL;
+	}
+}
 
 $server = new Server();
 $server->run();
