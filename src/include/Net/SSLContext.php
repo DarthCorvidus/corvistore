@@ -66,13 +66,13 @@ class SSLContext {
 		$context = stream_context_create();
 		stream_context_set_option($context, 'ssl', 'local_cert', $this->cert);
 		stream_context_set_option($context, 'ssl', 'local_pk', $this->key);
-		stream_context_set_option($context, 'ssl', 'local_ca', $this->ca);
+		stream_context_set_option($context, 'ssl', 'cafile', $this->ca);
 	return $context;
 	}
 	
 	public function getContextClient() {
 		$context = stream_context_create();
-		stream_context_set_option($context, 'ssl', 'local_ca', $this->ca);
+		stream_context_set_option($context, 'ssl', 'cafile', $this->ca);
 	return $context;
 	}
 }
