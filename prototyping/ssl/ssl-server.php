@@ -27,7 +27,13 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		#stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
 		stream_context_set_option($context, 'ssl', 'verify_peer', false);
 		
-		$this->socket = stream_socket_server("ssl://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context);
+		$context = new Net\SSLContext();
+		$context->setCAFile(__DIR__."/ca.crt");
+		$context->setPrivateKeyFile(__DIR__."/server.key");
+		$context->setCertificateFile(__DIR__."/server.crt");
+		
+		
+		$this->socket = stream_socket_server("ssl://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
 		stream_set_blocking($this->socket, FALSE);
 		if (!$this->socket) {
 			throw new Exception($errstr);

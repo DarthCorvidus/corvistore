@@ -1,14 +1,18 @@
 #!/usr/bin/php
 <?php
+include __DIR__."/../../vendor/autoload.php";
 class Client {
 	private $socket;
 	function __construct($server) {
 		$context = stream_context_create();
-		stream_context_set_option($context, 'ssl', 'local_ca', __DIR__."/ca.crt");
-		#stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
-		stream_context_set_option($context, 'ssl', 'verify_peer', true);
+		#stream_context_set_option($context, 'ssl', 'local_ca', __DIR__."/ca.crt");
+		##stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
+		#stream_context_set_option($context, 'ssl', 'verify_peer', true);
 
-		$this->socket = stream_socket_client("desktop02.telton.de:4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT, $context);
+		$context = new Net\SSLContext();
+		$context->setCAFile(__DIR__."/ca.crt");
+		
+		$this->socket = stream_socket_client("desktop02.telton.de:4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT, $context->getContextClient());
 		if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT )) {
 			exit();
 		}
