@@ -16,10 +16,13 @@ class CPServe implements ProcessListener, MessageListener, SignalHandler {
 		$this->queue->addListener($signal, $this);
 		$address = '0.0.0.0';
 		$port = 4096;
-		$this->socket = @stream_socket_server($address.":".$port, $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
-		#stream_set_blocking($this->socket, TRUE);
-		#stream_set_read_buffer($this->socket, 0);
-		#stream_set_write_buffer($this->socket, 0);
+
+		$context = new Net\SSLContext();
+		$context->setCAFile("/etc/crow-protect/ca.crt");
+		$context->setPrivateKeyFile("/etc/crow-protect/server.key");
+		$context->setCertificateFile("/etc/crow-protect/server.crt");
+
+		$this->socket = @stream_socket_server("ssl://".$address.":".$port, $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
 		if($this->socket == FALSE) {
 			throw new RuntimeException("Unable to bind to ".$address.":".$port.":".$errstr);
 		}
@@ -66,10 +69,12 @@ class CPServe implements ProcessListener, MessageListener, SignalHandler {
 				continue;
 			}
 			echo "A new connection has occurred.".PHP_EOL;
-			if (($msgsock = stream_socket_accept($this->socket)) === false) {
-				echo "stream_socket_accept failed".PHP_EOL;
+			if (($msgsock = @stream_socket_accept($this->socket)) === false) {
+				echo "stream_socket_accept failed for new client.".PHP_EOL;
+				print_r(error_get_last());
 				#echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
-				break;
+				#break;
+				continue;
 			} else {
 				echo "New connection has been accepted.".PHP_EOL;
 				$this->onConnect($msgsock);

@@ -14,7 +14,11 @@ class Test implements \Net\TransferListener {
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
-		$this->socket = stream_socket_client($config->getHost().":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
+
+		$context = new \Net\SSLContext();
+		$context->setCAFile("/etc/crow-protect/ca.crt");
+
+		$this->socket = stream_socket_client("ssl://".$this->config->getHost().":4096", $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $context->getContextClient());
 		fwrite($this->socket, "test\n");
 		#stream_set_blocking($this->socket, TRUE);
 		$this->protocol = new \Net\Protocol($this->socket);
