@@ -34,7 +34,7 @@ class RunnerServer implements Runner, MessageListener {
 	}
 	
 	private function write($message) {
-		socket_write($this->conn, $message, strlen($message));
+		fwrite($this->conn, $message, strlen($message));
 	}
 	
 	private function authenticate($trimmed) {
@@ -51,7 +51,7 @@ class RunnerServer implements Runner, MessageListener {
 			} catch (Exception $e) {
 				echo $e->getMessage();
 				$this->write($e->getMessage());
-				socket_close($this->conn);
+				fclose($this->conn);
 				exit(0);
 			}
 			return;
@@ -67,7 +67,7 @@ class RunnerServer implements Runner, MessageListener {
 				echo sprintf("Client %d identified as NODE %s", $this->clientId, $exp[1]).PHP_EOL;
 			} catch (Exception $e) {
 				$this->write($e->getMessage());
-				socket_close($this->conn);
+				fclose($this->conn);
 				exit(0);
 			}
 			return;
@@ -92,13 +92,13 @@ class RunnerServer implements Runner, MessageListener {
 			$read[] = $this->conn;
 			$write = NULL;
 			$except = NULL;
-			if(@socket_select($read, $write, $except, $tv_sec = 5) < 1) {
-				if(socket_last_error($this->conn)!==0) {
-					echo "socket_select() failed: ".socket_strerror(socket_last_error($this->conn)).PHP_EOL;
-				}
-				continue;
-			}
-			if(false === ($buf = socket_read($this->conn, 2048, PHP_NORMAL_READ))) {
+			#if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
+				#if(socket_last_error($this->conn)!==0) {
+				#	echo "socket_select() failed: ".socket_strerror(socket_last_error($this->conn)).PHP_EOL;
+				#}
+			#	continue;
+			#}
+			if(false === ($buf = fgets($this->conn))) {
 				echo "socket_read() failed: ".socket_strerror(socket_last_error($this->conn)).PHP_EOL;
 				return;
 			}
@@ -114,7 +114,7 @@ class RunnerServer implements Runner, MessageListener {
 
 			if($this->mode==NULL and strtoupper($trimmed)=="QUIT") {
 				echo $this->clientId." requested end of connection".PHP_EOL;
-				socket_close($this->conn);
+				fclose($this->conn);
 				return;
 			}
 			
@@ -152,6 +152,6 @@ class RunnerServer implements Runner, MessageListener {
 		$protocol->sendOK();
 		$protocol->addProtocolListener($this->mode);
 		$protocol->listen();
-		socket_close($this->conn);
+		fclose($this->conn);
 	}
 }

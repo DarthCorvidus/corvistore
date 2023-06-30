@@ -10,7 +10,6 @@ namespace Node;
 class Client {
 	private $pdo;
 	private $config;
-	private $password;
 	function __construct($argv) {
 	$this->config = new \Client\Config("/etc/crow-protect/client.yml");
 		$this->argv = $argv;
@@ -32,12 +31,15 @@ class Client {
 			$backup->run();
 			return;
 		}
-		
-		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		if(@socket_connect($socket, $this->config->getHost(), 4096)===FALSE) {
-			throw new \RuntimeException(sprintf("Socket connect with %s:%d failed: %s", $this->config->getHost(), 4096, socket_strerror(socket_last_error())));	
+		/*
+		 * I don't want PHP to throw E_WARNings around, so I use @ to silence
+		 * it and do proper error handling afterwards.
+		 */
+		$socket = @stream_socket_client($this->config->getHost().":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
+		if($socket===FALSE) {
+			throw new \RuntimeException("Unable to connect to ".$this->config->getHost().":4096: ".$errstr.".");
 		}
-		socket_write($socket, "node ".$this->config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
+		fwrite($socket, "node ".$this->config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
 		$protocol = new \Net\Protocol($socket);
 		$protocol->getOK();
 

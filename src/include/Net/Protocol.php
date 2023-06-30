@@ -16,17 +16,24 @@ class Protocol {
 	}
 	
 	private function read(int $amount): string {
+	/*
+		 * streams do not have an equivalent of socket_recv with MSG_WAITALL,
+		 * so the problem of fread ending one byte prematurely reappeared. So
+		 * we have to implement it manually.
+		 */
 		$read = "";
-		#\plibv4\profiler\Profiler::startTimer("read");
-		socket_recv($this->socket, $read, $amount, MSG_WAITALL);
-		#\plibv4\profiler\Profiler::endTimer("read");
+		while(strlen($read)<$amount) {
+			$read .= fread($this->socket, $amount-strlen($read));
+		}
 	return $read;
 	}
 
 	private function write(string $data) {
-		#\plibv4\profiler\Profiler::startTimer("write");
-		socket_write($this->socket, $data);
-		#\plibv4\profiler\Profiler::endTimer("write");
+		$amount = strlen($data);
+		$written = 0;
+		while($written<$amount) {
+			$written += fwrite($this->socket, $data, $amount-$written);
+		}
 	}
 	
 	function addProtocolListener(\Net\ProtocolListener $listener) {
@@ -236,10 +243,10 @@ class Protocol {
 			$read[] = $this->socket;
 			$write = NULL;
 			$except = NULL;
-			if(@socket_select($read, $write, $except, $tv_sec = 5) < 1) {
-				if(socket_last_error($this->socket)!==0) {
-					echo "socket_select() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
-				}
+			if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
+				#if(socket_last_error($this->socket)!==0) {
+				#	echo "socket_select() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
+				#}
 				continue;
 			}
 			$init = \IntVal::uint8()->getValue($this->read(1));

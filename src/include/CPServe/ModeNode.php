@@ -10,7 +10,6 @@ class ModeNode implements \Net\ProtocolListener {
 		$this->node = Node::authenticate($this->pdo, $node);
 		$this->catalog = new Catalog($this->pdo, $this->node);
 		$this->partition = $this->node->getPolicy()->getPartition();
-		#$this->conn = $conn;
 	}
 	
 	public function onCommand(string $command, \Net\Protocol $protocol) {
@@ -150,6 +149,6 @@ class ModeNode implements \Net\ProtocolListener {
 	}
 	
 	public function onQuit() {
-		
+
 	}
 }

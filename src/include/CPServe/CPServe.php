@@ -16,22 +16,18 @@ class CPServe implements ProcessListener, MessageListener, SignalHandler {
 		$this->queue->addListener($signal, $this);
 		$address = '0.0.0.0';
 		$port = 4096;
-		if (($this->socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
-			throw new RuntimeException(sprintf("Socket creation failed: %s", socket_strerror(socket_last_error())));
-		}
-
-		if (@socket_bind($this->socket, $address, $port) === false) {
-			throw new RuntimeException(sprintf("Socket bind with %s:%d failed: %s", $address, $port, socket_strerror(socket_last_error())));
-		}
-
-		if (@socket_listen($this->socket, 5) === false) {
-			throw new RuntimeException(sprintf("Socket listen with %s:%d failed: %s", $address, $port, socket_strerror(socket_last_error())));
+		$this->socket = @stream_socket_server($address.":".$port, $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
+		#stream_set_blocking($this->socket, TRUE);
+		#stream_set_read_buffer($this->socket, 0);
+		#stream_set_write_buffer($this->socket, 0);
+		if($this->socket == FALSE) {
+			throw new RuntimeException("Unable to bind to ".$address.":".$port.":".$errstr);
 		}
 	}
 	
 	function onSignal(int $signal, array $info) {
 		if($signal==SIGINT or $signal==SIGTERM) {
-			socket_close($this->socket);
+			fclose($this->socket);
 			echo "Exiting.".PHP_EOL;
 			exit();
 		}
@@ -61,16 +57,18 @@ class CPServe implements ProcessListener, MessageListener, SignalHandler {
 			$read[] = $this->socket;
 			$write = NULL;
 			$except = NULL;
-			if(@socket_select($read, $write, $except, $tv_sec = 5) < 1) {
-				$error = socket_last_error($this->socket);
-				if($error!==0) {
-					echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
-				}
+			if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
+				#$error = socket_last_error($this->socket);
+				#echo $error.PHP_EOL;
+				#if($error!==0) {
+				#	echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
+				#}
 				continue;
 			}
 			echo "A new connection has occurred.".PHP_EOL;
-			if (($msgsock = socket_accept($this->socket)) === false) {
-				echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
+			if (($msgsock = stream_socket_accept($this->socket)) === false) {
+				echo "stream_socket_accept failed".PHP_EOL;
+				#echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
 				break;
 			} else {
 				echo "New connection has been accepted.".PHP_EOL;
@@ -82,7 +80,7 @@ class CPServe implements ProcessListener, MessageListener, SignalHandler {
 	public function onEnd(Process $process) {
 		$id = $process->getRunner()->getId();
 		echo "Thread for client ".$id." closed.".PHP_EOL;
-		socket_close($this->clients[$id]);
+		fclose($this->clients[$id]);
 		Signal::get()->clearHandler($process);
 		Signal::get()->clearHandler($process->getRunner()->getQueue());
 		unset($this->clients[$id]);

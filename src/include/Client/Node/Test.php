@@ -14,9 +14,9 @@ class Test implements \Net\TransferListener {
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
-		$this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		socket_connect($this->socket, $config->getHost(), 4096);
-		socket_write($this->socket, "test\n");
+		$this->socket = stream_socket_client($config->getHost().":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
+		fwrite($this->socket, "test\n");
+		#stream_set_blocking($this->socket, TRUE);
 		$this->protocol = new \Net\Protocol($this->socket);
 		#$this->inex = new InEx();
 		#$this->inex->addInclude("/boot/");
@@ -66,7 +66,7 @@ class Test implements \Net\TransferListener {
 		#socket_write($this->socket, \IntVal::uint32LE()->putValue($serlen));
 		#socket_write($this->socket, $serialize);
 		#echo "Quitting...";
-		
+		$this->protocol->getOK();
 		echo "Requesting OK from server: ".PHP_EOL;
 		$this->protocol->sendCommand("SEND OK");
 		$this->protocol->getOK();
