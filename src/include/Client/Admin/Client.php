@@ -13,16 +13,15 @@ class Client {
 	function __construct($argv) {
 		$this->config = new \Client\Config("/etc/crow-protect/client.yml");
 		$this->argv = $argv;
-		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-		$result = socket_connect($socket, $this->config->getHost(), 4096);
-		if($result===FALSE) {
-			exit(255);
+		$socket = @stream_socket_client($this->config->getHost().":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
+		if($socket===FALSE) {
+			throw new \RuntimeException("Unable to connect to ".$this->config->getHost().":4096: ".$errstr.".");
 		}
 		echo "Username: ";
 		$user = trim(fgets(STDIN));
 		echo "Password: ";
 		$password = trim(fgets(STDIN));
-		socket_write($socket, "admin ".$user.":".$password."\n");
+		fwrite($socket, "admin ".$user.":".$password."\n");
 		$this->protocol = new \Net\Protocol($socket);
 		$this->protocol->getOK();
 	}
