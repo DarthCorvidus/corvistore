@@ -13,7 +13,11 @@ class Client {
 	function __construct($argv) {
 		$this->config = new \Client\Config("/etc/crow-protect/client.yml");
 		$this->argv = $argv;
-		$socket = @stream_socket_client($this->config->getHost().":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
+		$context = new \Net\SSLContext();
+		$context->setCAFile("/etc/crow-protect/ca.crt");
+		$socket = stream_socket_client("ssl://".$this->config->getHost().":4096", $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $context->getContextClient());
+
+		#$socket = @stream_socket_client($this->config->getHost().":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
 		if($socket===FALSE) {
 			throw new \RuntimeException("Unable to connect to ".$this->config->getHost().":4096: ".$errstr.".");
 		}
