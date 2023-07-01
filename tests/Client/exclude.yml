@@ -1,8 +1,0 @@
-## YAML Template.
----
-host: backup.example.com
-node: test01
-exclude:
-    - /virtual/
-    - /storage/
-    - /var/lib/crow-protect/

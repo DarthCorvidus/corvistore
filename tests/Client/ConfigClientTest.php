@@ -4,14 +4,14 @@ use PHPUnit\Framework\TestCase;
 use Client\Config;
 class ConfigClientTest extends TestCase {
 	function testConstruct() {
-		$config = new Config(__DIR__."/include.yml");
+		$config = new Config(__DIR__."/include.conf");
 		$this->assertInstanceOf(Config::class, $config);
 	}
 	
 	function testConstructBogus() {
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage("Client configuration at ".__DIR__."/squid.yml not available.");
-		new Config(__DIR__."/squid.yml");
+		$this->expectExceptionMessage("Client configuration at ".__DIR__."/squid.conf not available.");
+		new Config(__DIR__."/squid.conf");
 	}
 	
 	function testConstructDir() {
@@ -21,7 +21,7 @@ class ConfigClientTest extends TestCase {
 	}
 	
 	function testGetNode() {
-		$config = new Config(__DIR__."/include.yml");
+		$config = new Config(__DIR__."/include.conf");
 		$this->assertEquals("test01", $config->getNode());
 	}
 	
@@ -29,30 +29,30 @@ class ConfigClientTest extends TestCase {
 		$expected[] = "/virtual/";
 		$expected[] = "/storage/";
 		$expected[] = "/var/lib/crow-protect/";
-		$config = new Config(__DIR__."/exclude.yml");
+		$config = new Config(__DIR__."/exclude.conf");
 		$this->assertEquals($expected, $config->getExclude());
 	}
 	
 	function testGetInclude() {
 		$expected[] = "/home/user/";
-		$config = new Config(__DIR__."/include.yml");
+		$config = new Config(__DIR__."/include.conf");
 		$this->assertEquals($expected, $config->getInclude());
 	}
 	
 	function testGetInExExclude() {
-		$config = new Config(__DIR__."/exclude.yml");
+		$config = new Config(__DIR__."/exclude.conf");
 		$this->assertEquals(TRUE, $config->getInEx()->isValid("/home"));
 		$this->assertEquals(FALSE, $config->getInEx()->isValid("/storage"));
 	}
 	
 	function testGetInExInclude() {
-		$config = new Config(__DIR__."/include.yml");
+		$config = new Config(__DIR__."/include.conf");
 		$this->assertEquals(TRUE, $config->getInEx()->isValid("/home/user"));
 		$this->assertEquals(FALSE, $config->getInEx()->isValid("/storage"));
 	}
 	
 	function testGetHost() {
-		$config = new Config(__DIR__."/include.yml");
+		$config = new Config(__DIR__."/include.conf");
 		$this->assertEquals("backup.example.com", $config->getHost());
 	}
 

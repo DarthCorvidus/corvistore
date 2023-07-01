@@ -11,7 +11,7 @@ class Client {
 	private $pdo;
 	private $config;
 	function __construct($argv) {
-	$this->config = new \Client\Config("/etc/crow-protect/client.yml");
+	$this->config = new \Client\Config("/etc/crow-protect/client.conf");
 		$this->argv = $argv;
 		if(!isset($this->argv[1]) or !in_array($this->argv[1], array("restore", "backup", "report", "test"))) {
 			throw new \Exception("Please select operation mode: restore, backup, report, test");

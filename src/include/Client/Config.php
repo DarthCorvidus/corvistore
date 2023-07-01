@@ -15,8 +15,8 @@ class Config implements \ImportModel {
 		if(!is_file($path)) {
 			throw new \RuntimeException("Client configuration at ".$path." not a file.");
 		}
-		$yaml = yaml_parse_file($path);
-		$this->import = new \Import($yaml, $this);
+		$conf = \ConfFile::fromFile($path);
+		$this->import = new \Import($conf, $this);
 		$this->values = $this->import->getArray();
 	}
 

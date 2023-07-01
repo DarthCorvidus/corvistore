@@ -11,7 +11,7 @@ class Client {
 	private $config;
 	private $protocol;
 	function __construct($argv) {
-		$this->config = new \Client\Config("/etc/crow-protect/client.yml");
+		$this->config = new \Client\Config("/etc/crow-protect/client.conf");
 		$this->argv = $argv;
 		$context = new \Net\SSLContext();
 		$context->setCAFile("/etc/crow-protect/ca.crt");
