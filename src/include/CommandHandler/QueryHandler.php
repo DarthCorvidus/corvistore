@@ -29,6 +29,12 @@ class QueryHandler {
 	return $table->getString();
 	}
 	
+	function getNodeList(): string {
+		$result = array();
+		$model = new NodeList($this->pdo);
+		$table = new TerminalTable($model);
+	return $table->getString();
+	}
 	
 	
 	function getResult(): string  {
@@ -37,6 +43,10 @@ class QueryHandler {
 		}
 		if($this->command->getObject()=="partition") {
 			return $this->getPartitionList();
+		}
+		
+		if($this->command->getObject()=="node") {
+			return $this->getNodeList();
 		}
 		throw new Exception("query ".$this->command->getObject()." is not a valid query.");
 	}
