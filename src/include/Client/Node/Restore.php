@@ -34,6 +34,9 @@ class Restore {
 	}
 	
 	private function queryReplace(&$keep, $reason) {
+		if($this->argv->getSkip()) {
+			return "s";
+		}
 		if($keep != NULL) {
 			return $keep;
 		}

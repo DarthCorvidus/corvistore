@@ -25,4 +25,8 @@ class ArgvRestore {
 	function getTimestamp(): string {
 		return $this->argv->getValue("date")." ".$this->argv->getValue("time");
 	}
+	
+	function getSkip(): bool {
+		return $this->argv->getBoolean("skip");
+	}
 }

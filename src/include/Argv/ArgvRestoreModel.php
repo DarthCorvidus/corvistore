@@ -8,6 +8,7 @@ class ArgvRestoreModel implements ArgvModel {
 	private $posNames = array();
 	private $positional = array();
 	private $named = array();
+	private $boolean = array();
 	public function __construct() {
 		$this->positional[0] = UserValue::asMandatory();
 		$this->positional[1] = UserValue::asOptional();
@@ -25,6 +26,7 @@ class ArgvRestoreModel implements ArgvModel {
 		$this->named["time"]->setValidate(new ValidateTime(ValidateTime::DAY));
 		$this->named["time"]->setDefault("23:59:59");
 		
+		$this->boolean = array("skip");
 	}
 
 	public function getArgNames(): array {
@@ -32,7 +34,7 @@ class ArgvRestoreModel implements ArgvModel {
 	}
 
 	public function getBoolean(): array {
-		return array();
+		return $this->boolean;
 	}
 
 	public function getNamedArg(string $name): \UserValue {
