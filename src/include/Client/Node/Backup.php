@@ -1,6 +1,6 @@
 <?php
 namespace Node;
-class Backup {
+class Backup implements \SignalHandler {
 	private $config;
 	private $argv;
 	private $inex;
@@ -22,11 +22,23 @@ class Backup {
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
 		$this->protocol = $protocol;
+		$handler = \Signal::get();
+		$handler->addSignalHandler(SIGINT, $this);
+		$handler->addSignalHandler(SIGTERM, $this);
 		#$this->inex = new InEx();
 		#$this->inex->addInclude("/boot/");
 		#$this->inex->addInclude("/tmp/");
 		#$this->inex->addInclude("/var/log/");
 		#$this->inex->addInclude("/home/hm/kernel/");
+	}
+	
+	function onSignal(int $signal, array $info) {
+		if($signal==SIGINT or $signal==SIGTERM) {
+			$this->protocol->sendCommand("QUIT");
+			echo "Exit after signal.".PHP_EOL;
+			$this->displayResult();
+			exit();
+		}
 	}
 	
 	private function fileowner($filename) {
@@ -87,6 +99,7 @@ class Backup {
 		$diff = $catalogEntries->getDiff($files);
 		// Add new files (did not exist before).
 		for($i=0;$i<$diff->getNew()->getCount();$i++) {
+			pcntl_signal_dispatch();
 			$file = $diff->getNew()->getEntry($i);
 			// Skip files for now.
 			#if($file->getType()!= \Catalog::TYPE_DIR) {
@@ -120,6 +133,7 @@ class Backup {
 		}
 		// Add changed files.
 		for($i=0;$i<$diff->getChanged()->getCount();$i++) {
+			pcntl_signal_dispatch();
 			$file = $diff->getChanged()->getEntry($i);
 			echo "Updating ".$file->getPath().PHP_EOL;
 			$this->protocol->sendCommand("UPDATE FILE");
@@ -141,6 +155,7 @@ class Backup {
 		
 		// Mark files as deleted.
 		for($i=0;$i<$diff->getDeleted()->getCount();$i++) {
+			pcntl_signal_dispatch();
 			$catalogEntry = $diff->getDeleted()->getEntry($i);
 			echo "Deleting ".$catalogEntry->getName().PHP_EOL;
 			$this->protocol->sendCommand("DELETE ENTRY");
@@ -151,6 +166,7 @@ class Backup {
 		
 		$directories = $files->getDirectories();
 		for($i=0;$i<$directories->getCount();$i++) {
+			pcntl_signal_dispatch();
 			$dir = $directories->getEntry($i);
 			if($catalogEntries->hasName($dir->getBasename())) {
 				$parent = $catalogEntries->getByName($dir->getBasename());
@@ -159,17 +175,20 @@ class Backup {
 		}
 	}
 	
-		
-	function run() {
-		$start = hrtime();
-		$this->recurseFiles("/", 0);
-		$this->protocol->sendCommand("QUIT");
-		$end = hrtime();
-		$elapsed = $end[0]-$start[0];
+	private function displayResult() {
 		echo "Processed:    ".number_format($this->processed).PHP_EOL;
 		echo "Directories:  ".$this->directories.PHP_EOL;
 		echo "Files:        ".$this->files.PHP_EOL;
 		echo "Transferred:  ".number_format($this->transferred, 0).PHP_EOL;
+	}
+		
+	function run() {
+		#$start = hrtime();
+		$this->recurseFiles("/", 0);
+		$this->protocol->sendCommand("QUIT");
+		$this->displayResult();
+		#$end = hrtime();
+		#$elapsed = $end[0]-$start[0];
 		/*
 		$stored = $this->pdo->result("select sum(dvs_size) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ? AND dvs_stored = ?", array($this->node->getId(), 1));
 		echo "Occupancy:    ".number_format($stored, 0).PHP_EOL;
