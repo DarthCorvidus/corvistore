@@ -57,6 +57,7 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		do {
 			pcntl_signal_dispatch();
 			#Any activity on the main socket will spawn a new process.
+			$read = array();
 			$read[] = $this->socket;
 			$write = NULL;
 			$except = NULL;
