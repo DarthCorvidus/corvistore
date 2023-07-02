@@ -23,31 +23,40 @@ class Shared {
 		return $_SERVER["HOME"];
 	}
 	
+	static function getInstancePath(): string {
+		return self::getHomePath()."/cpinst";
+	}
+	
 	static function getDatabasePath() {
-		return self::getHomePath()."/cpinst/database/";
+		return self::getInstancePath()."/database";
+	}
+
+	static function getDatabaseFile() {
+		return self::getDatabasePath()."/crow-protect.sqlite";
 	}
 
 	static function getSSLPath() {
-		return self::getHomePath()."/cpinst/ssl/";
+		return self::getInstancePath()."/ssl";
 	}
 	
 	static function getSSLAuthorityFile() {
-		return self::getSSLPath()."ca.crt";
+		return self::getSSLPath()."/ca.crt";
 	}
 
 	static function getSSLServerCertificate() {
-		return self::getSSLPath()."server.crt";
+		return self::getSSLPath()."/server.crt";
 	}
 
 	static function getSSLServerKey() {
-		return self::getSSLPath()."server.key";
+		return self::getSSLPath()."/server.key";
 	}
 	
 	static function getEPDO(): EPDO {
-		if(!file_exists(self::getDatabasePath())) {
-			throw new RuntimeException("database path does not exist");
+		echo self::getDatabaseFile().PHP_EOL;
+		if(!file_exists(self::getDatabaseFile())) {
+			throw new RuntimeException("database file ".self::getDatabaseFile()." does not exist");
 		}
-		$pdo = new EPDO("sqlite:".self::getDatabasePath()."crow-protect.sqlite", "", "");
+		$pdo = new EPDO("sqlite:".self::getDatabaseFile(), "", "");
 		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	return $pdo;
 	}
