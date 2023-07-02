@@ -1,6 +1,7 @@
 <?php
 class CPServe {
 	private $pdo;
+	private $arg;
 	function __construct(array $argv) {
 		$user = posix_getuid();
 		$group = posix_getgid();
@@ -8,7 +9,6 @@ class CPServe {
 			throw new RuntimeException("cpserve.php is not supposed to run as root.");
 		}
 		$this->arg = new ArgvServe($argv);
-		$this->pdo = Shared::getEPDO();
 	}
 
 	function runCommand() {
@@ -31,6 +31,12 @@ class CPServe {
 	}
 
 	function run() {
+		if($this->arg->hasInit()) {
+			$init = new Init($this->arg);
+			$init->run();
+		return;
+		}
+		$this->pdo = Shared::getEPDO();
 		if($this->arg->hasRun()) {
 			$this->runCommand();
 			return;
