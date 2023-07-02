@@ -6,14 +6,17 @@ class CPModelNode extends CPModelGeneric {
 		if($mode == self::MODE_DEFINE) {
 			$policy = UserValue::asMandatory();
 			$this->addParamUserValue("policy", $policy);
+			$password = UserValue::asMandatory();
+			$this->addParamUserValue("password", $password);
 		} 
+		
 		if($mode == self::MODE_UPDATE) {
 			$policy = UserValue::asOptional();
 			$this->addParamUserValue("policy", $policy);
+			$password = UserValue::asOptional();
+			$this->addParamUserValue("password", $password);
 		}
 	
-		$password = UserValue::asOptional();
-		$this->addParamUserValue("password", $password);
 		$name = UserValue::asMandatory();
 		$name->setValidate(new ValidateMinMaxString(3, 15));
 		$this->addPositionalUserValue($name);

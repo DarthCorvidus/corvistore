@@ -22,6 +22,8 @@ class Node {
 		$node->pdo = $pdo;
 		$node->name = $commandParser->getPositional(0);
 		$node->policy = Policy::fromName($pdo, $commandParser->getParam("policy"));
+		$node->salt = sha1(random_bytes(256));
+		$node->password = sha1($commandParser->getParam("password").$node->salt);
 		$node->create();
 	}
 	
@@ -59,6 +61,8 @@ class Node {
 		$new = array();
 		$new["dnd_name"] = $this->name;
 		$new["dpo_id"] = Policy::fromId($this->pdo, $this->policy->getId())->getId();
+		$new["dnd_salt"] = $this->salt;
+		$new["dnd_password"] = $this->password;
 		$this->pdo->create("d_node", $new);
 	}
 	
