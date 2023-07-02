@@ -38,9 +38,7 @@ class TestHelper {
 	}
 	
 	static function getEPDO(): EPDO {
-		$shared = new Shared();
-		$shared->useSQLite(__DIR__."/test.sqlite");
-		return $shared->getEPDO();
+	return Shared::getCustomSQLite(__DIR__."/test.sqlite");
 	}
 	
 	static function resetStorage() {

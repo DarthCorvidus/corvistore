@@ -8,17 +8,32 @@
  * @author Claus-Christoph Küthe
  */
 class Shared {
-	private $pdo;
 	function __construct() {
 		;
 	}
 	
-	function useSQLite(string $path) {
-		$this->pdo = new EPDO("sqlite:".$path, "", "");
-		$this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	static function getCustomSQLite(string $path) {
+		Assert::fileExists($path);
+		$pdo = new EPDO("sqlite:".$path, "", "");
+		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	return $pdo;
 	}
 	
-	function getEPDO(): EPDO  {
-		return $this->pdo;
+	static function getHomePath(): string {
+		return $_SERVER["HOME"];
 	}
+	
+	static function getDatabasePath() {
+		return self::getHomePath()."/crow-protect/database/";
+	}
+	
+	static function getEPDO(): EPDO {
+		if(!file_exists(self::getDatabasePath())) {
+			throw new RuntimeException("database path does not exist");
+		}
+		$pdo = new EPDO("sqlite:".self::getDatabasePath()."crow-protect.sqlite", "", "");
+		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	return $pdo;
+	}
+	
 }

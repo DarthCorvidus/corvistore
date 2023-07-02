@@ -6,10 +6,7 @@ class RunnerServer implements Runner, MessageListener {
 	private $mode;
 	private $pdo;
 	function __construct($conn, int $clientId) {
-		$databasePath = "/var/lib/crow-protect/crow-protect.sqlite";
-		$shared = new Shared();
-		$shared->useSQLite($databasePath);
-		$this->pdo = $shared->getEPDO();
+		$this->pdo = Shared::getCustomSQLite("/var/lib/crow-protect/crow-protect.sqlite");
 		$this->conn = $conn;
 		$this->clientId = $clientId;
 		$this->queue = new SysVQueue(ftok(__DIR__, "a"));

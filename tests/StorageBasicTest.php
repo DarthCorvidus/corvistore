@@ -74,18 +74,14 @@ class StorageBasicTest extends TestCase {
 	}
 	
 	function testGetPathForIdFile() {
-		$shared = new Shared();
-		$shared->useSQLite(__DIR__."/test.sqlite");
-		$pdo = $shared->getEPDO();
+		$pdo = TestHelper::getEPDO();
 		$storage = StorageBasic::fromName(TestHelper::getEPDO(), "backup-main01");
 		$target = __DIR__."/storage/basic01/00/00/21/d0/10/14/16/a8.cp";
 		$this->assertEquals($target, $storage->getPathForIdFile(37177506666152));
 	}
 
 	function testGetPathForIdLocation() {
-		$shared = new Shared();
-		$shared->useSQLite(__DIR__."/test.sqlite");
-		$pdo = $shared->getEPDO();
+		$pdo = TestHelper::getEPDO();
 		$storage = StorageBasic::fromName(TestHelper::getEPDO(), "backup-main01");
 		$target = __DIR__."/storage/basic01/00/00/21/d0/10/14/16/";
 		$this->assertEquals($target, $storage->getPathForIdLocation(37177506666152));
