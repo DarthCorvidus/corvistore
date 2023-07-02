@@ -36,7 +36,7 @@ if($arg->hasRunFile()) {
 }
 
 try {
-	$adm = new CPServe($shared->getEPDO(), $argv);
+	$adm = new Server($shared->getEPDO(), $argv);
 	$adm->run();
 } catch (RuntimeException $e) {
 	echo $e->getMessage().PHP_EOL;

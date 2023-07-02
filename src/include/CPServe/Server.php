@@ -1,5 +1,5 @@
 <?php
-class CPServe implements ProcessListener, MessageListener, SignalHandler {
+class Server implements ProcessListener, MessageListener, SignalHandler {
 	private $socket;
 	private $clients = array();
 	private $queue;
