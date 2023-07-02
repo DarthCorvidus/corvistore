@@ -70,6 +70,9 @@ class StorageBasic extends Storage implements \Net\TransferListener {
 		$param[] = 1;
 		$result = $this->pdo->result("select nvb_id from n_version2basic where dst_id = ? and dvs_id = ? and nvb_stored = ? limit 1", $param);
 		$path = $this->getPathForIdFile($result);
+		if(!is_readable($path)) {
+			throw new RuntimeException("Unable to read ".$path);
+		}
 		$size = filesize($path);
 		$handle = fopen($path, "r");
 		$protocol->sendRaw($size, $handle);
