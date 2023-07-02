@@ -18,9 +18,9 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		$port = 4096;
 
 		$context = new Net\SSLContext();
-		$context->setCAFile("/etc/crow-protect/ca.crt");
-		$context->setPrivateKeyFile("/etc/crow-protect/server.key");
-		$context->setCertificateFile("/etc/crow-protect/server.crt");
+		$context->setCAFile(Shared::getSSLAuthorityFile());
+		$context->setPrivateKeyFile(Shared::getSSLServerKey());
+		$context->setCertificateFile(Shared::getSSLServerCertificate());
 
 		$this->socket = @stream_socket_server("ssl://".$address.":".$port, $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
 		if($this->socket == FALSE) {

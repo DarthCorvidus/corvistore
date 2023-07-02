@@ -129,7 +129,12 @@ class ModeNode implements \Net\ProtocolListener {
 		 */
 		if($command[0]=="GET" and $command[1]=="VERSION") {
 			$storage = Storage::fromId($this->pdo, $this->partition->getStorageId());
-			$storage->sendFile($protocol, $command[2]);
+			try {
+				$storage->sendFile($protocol, $command[2]);
+			} catch (RuntimeException $e) {
+				$protocol->sendError($e->getMessage());
+				throw $e;
+			}
 		return;
 		}
 		

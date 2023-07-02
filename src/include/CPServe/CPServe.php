@@ -2,17 +2,13 @@
 class CPServe {
 	private $pdo;
 	function __construct(array $argv) {
-		#$databasePath = "/var/lib/crow-protect/crow-protect.sqlite";
-		#$shared = new Shared();
-		#$shared->useSQLite($databasePath);
+		$user = posix_getuid();
+		$group = posix_getgid();
+		if($user===0 or $group===0) {
+			throw new RuntimeException("cpserve.php is not supposed to run as root.");
+		}
 		$this->arg = new ArgvServe($argv);
-		$this->pdo = Shared::getCustomSQLite("/var/lib/crow-protect/crow-protect.sqlite");
-		#$processID = posix_getpid();
-		#$user = posix_getuid();
-		#$group = posix_getgid();
-		#if($user===0 or $group===0) {
-		#	throw new RuntimeException("cpserve.php is not supposed to run as root.");
-		#}
+		$this->pdo = Shared::getEPDO();
 	}
 
 	function runCommand() {

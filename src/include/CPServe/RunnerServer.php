@@ -6,7 +6,8 @@ class RunnerServer implements Runner, MessageListener {
 	private $mode;
 	private $pdo;
 	function __construct($conn, int $clientId) {
-		$this->pdo = Shared::getCustomSQLite("/var/lib/crow-protect/crow-protect.sqlite");
+		// Database connections need to be refreshed after forking.
+		$this->pdo = Shared::getEPDO();
 		$this->conn = $conn;
 		$this->clientId = $clientId;
 		$this->queue = new SysVQueue(ftok(__DIR__, "a"));
