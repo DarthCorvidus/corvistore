@@ -19,7 +19,7 @@ class ArgvServeModel implements ArgvModel {
 	}
 
 	public function getBoolean(): array {
-		return array();
+		return array("init");
 	}
 
 	public function getNamedArg(string $name): \UserValue {

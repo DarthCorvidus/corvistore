@@ -26,5 +26,8 @@ class ArgvServe {
 	function getRunFile(): string {
 		return $this->argv->getValue("run-file");
 	}
-
+	
+	function hasInit(): bool {
+		return $this->argv->getBoolean("init");
+	}
 }
