@@ -24,7 +24,23 @@ class Shared {
 	}
 	
 	static function getDatabasePath() {
-		return self::getHomePath()."/crow-protect/database/";
+		return self::getHomePath()."/cpinst/database/";
+	}
+
+	static function getSSLPath() {
+		return self::getHomePath()."/cpinst/ssl/";
+	}
+	
+	static function getSSLAuthorityFile() {
+		return self::getSSLPath()."ca.crt";
+	}
+
+	static function getSSLServerCertificate() {
+		return self::getSSLPath()."server.crt";
+	}
+
+	static function getSSLServerKey() {
+		return self::getSSLPath()."server.key";
 	}
 	
 	static function getEPDO(): EPDO {
@@ -35,5 +51,4 @@ class Shared {
 		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	return $pdo;
 	}
-	
 }
