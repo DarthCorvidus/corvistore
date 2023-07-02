@@ -28,6 +28,10 @@ class ArgvServe {
 	}
 	
 	function hasInit(): bool {
-		return $this->argv->getBoolean("init");
+		return $this->argv->hasValue("init");
+	}
+	
+	function getInit(): string {
+		return $this->argv->getValue("init");
 	}
 }

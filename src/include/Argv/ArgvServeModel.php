@@ -12,6 +12,7 @@ class ArgvServeModel implements ArgvModel {
 		$this->named["run"] = UserValue::asOptional();
 		$this->named["run-file"] = UserValue::asOptional();
 		$this->named["run-file"]->setValidate(new ValidatePath(ValidatePath::FILE));
+		$this->named["init"] = UserValue::asOptional();
 	}
 
 	public function getArgNames(): array {
@@ -19,7 +20,7 @@ class ArgvServeModel implements ArgvModel {
 	}
 
 	public function getBoolean(): array {
-		return array("init");
+		return array();
 	}
 
 	public function getNamedArg(string $name): \UserValue {
