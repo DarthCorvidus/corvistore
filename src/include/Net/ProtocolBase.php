@@ -29,7 +29,7 @@ class ProtocolBase {
 	function sendString(int $type, string $string) {
 		$trlen = strlen($string);
 		$type = \IntVal::uint8()->putValue($type);
-		$length = \IntVal::uint16LE()->putValue($trlen);
+		$length = \IntVal::uint32LE()->putValue($trlen);
 		$send = $type.$length.$string;
 		$rest = strlen($send);
 		$array = array();
@@ -61,17 +61,21 @@ class ProtocolBase {
 			throw new ProtocolMismatchException("Protocol mismatch: expected ".$type.", got ".$readType);
 		}
 		
-		$length = \IntVal::uint16LE()->getValue($first[1].$first[2]);
+		$length = \IntVal::uint32LE()->getValue($first[1].$first[2].$first[3].$first[4]);
 		$result = "";
-		if($length<$this->readLength) {
-			$result = substr($first, 3, $length);
+		/*
+		 * If the whole message fits into the first block (minus header length),
+		 * we can quit early.
+		 */
+		if($length<$this->readLength-5) {
+			$result = substr($first, 5, $length);
 			if($readType==self::ERROR) {
 				throw new ProtocolErrorException($result);
 			}
-			return substr($first, 3, $length);
+			return substr($first, 5, $length);
 		}
-		$result = substr($first, 3, $length);
-		$rest = ($length+3)-$this->readLength;
+		$result .= substr($first, 5, $length);
+		$rest = ($length+5)-$this->readLength;
 		while($rest>$this->readLength) {
 			$result .= $this->read($this->readLength);
 			$rest -= $this->readLength;
