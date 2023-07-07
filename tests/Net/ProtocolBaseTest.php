@@ -151,8 +151,20 @@ class ProtocolBaseTest extends TestCase {
 		fclose($read);
 		$this->assertEquals($array, $compare);
 		#$proto->sendString(ProtocolBase::MESSAGE, "AB");
-		
 	}
 	
-
+	function testSendSerialize() {
+		$filename = __DIR__."/example/test.bin";
+		$file = new File($filename);
+		$socket = fopen($filename, "w");
+		$proto = new ProtocolBase($socket, 16, 16);
+		$proto->sendSerializePHP($file);
+		fclose($socket);
+		
+		$socket = fopen($filename, "r");
+		$proto = new ProtocolBase($socket, 16, 16);
+		$unserialized = $proto->getSerializedPHP($file);
+		fclose($socket);
+		$this->assertInstanceOf(File::class, $unserialized);
+	}
 }

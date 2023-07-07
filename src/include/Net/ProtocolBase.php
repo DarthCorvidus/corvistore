@@ -8,8 +8,7 @@ class ProtocolBase {
 	const MESSAGE = 2;
 	const FILE = 3;
 	const COMMAND = 3;
-	const SERIALIZED_OBJ = 4;
-	const SERIALIZED_ARRAY = 5;
+	const SERIALIZE_PHP = 4;
 	const ERROR = 255;
 	function __construct($socket, $readLength = 1024, $writeLength = 1024) {
 		$this->socket = $socket;
@@ -88,4 +87,15 @@ class ProtocolBase {
 		}
 	return $result;
 	}
+	
+	function sendSerializePHP($serialize) {
+		$serialized = serialize($serialize);
+		$this->sendString(self::SERIALIZE_PHP, $serialized);
+	}
+	
+	function getSerializedPHP() {
+		$unserialized = unserialize($this->getString(self::SERIALIZE_PHP));
+	return $unserialized;
+	}
+	
 }
