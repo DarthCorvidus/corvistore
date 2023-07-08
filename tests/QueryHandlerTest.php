@@ -6,8 +6,15 @@ class QueryHandlerTest extends TestCase {
 	function __construct() {
 		parent::__construct();
 	}
+
 	static function setUpBeforeClass() {
-		TestHelper::resetDatabase();
+		TestHelper::createDatabase();
+		TestHelper::createStorage();
+	}
+
+	static function tearDownAfterClass() {
+		TestHelper::deleteDatabase();
+		TestHelper::deleteStorage();
 	}
 	
 	function testInvalidQuery() {

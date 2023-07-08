@@ -8,11 +8,15 @@ class FileTest extends TestCase {
 	}
 	
 	static function setUpBeforeClass() {
-		TestHelper::resetDatabase();
+		TestHelper::createDatabase();
 		TestHelper::initServer();
-		TestHelper::resetStorage();
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createText("/readme.txt", "Testing test file");
+	}
+	
+	static function tearDownAfterClass() {
+		TestHelper::deleteDatabase();
+		TestHelper::deleteStorage();
 	}
 	
 	function setUp() {

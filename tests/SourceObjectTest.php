@@ -9,10 +9,14 @@ class SourceObjectTest extends TestCase {
 	
 	static function setUpBeforeClass() {
 		file_put_contents(self::getExamplePath(), "Crow Protect - Data Storage Solution");
-		TestHelper::resetDatabase();
+		TestHelper::createDatabase();
 		TestHelper::initServer();
 	}
 	
+	static function tearDownAfterClass() {
+		TestHelper::deleteDatabase();
+		TestHelper::deleteStorage();
+	}	
 	function setUp() {
 		$this->node = Node::fromName(TestHelper::getEPDO(), "test01");
 	}

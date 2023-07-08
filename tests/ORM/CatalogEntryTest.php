@@ -7,7 +7,8 @@ class CatalogEntryTest extends TestCase {
 		$this->now = time();
 	}
 	static function setUpBeforeClass() {
-		TestHelper::resetDatabase();
+		TestHelper::createDatabase();
+		TestHelper::createStorage();
 		$cpadm = new CPAdm(TestHelper::getEPDO(), array());
 		$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/../storage/basic01/"));
 		$cpadm->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
@@ -15,6 +16,11 @@ class CatalogEntryTest extends TestCase {
 		$cpadm->handleCommand(new CommandParser("define node test01 policy=forever password=secret"));
 		$cpadm->handleCommand(new CommandParser("define node test02 policy=forever password=secret"));
 		$cpadm->handleCommand(new CommandParser("define node test03 policy=forever password=secret"));
+	}
+	
+	static function tearDownAfterClass() {
+		TestHelper::deleteDatabase();
+		TestHelper::deleteStorage();
 	}
 
 	function testFromArray() {

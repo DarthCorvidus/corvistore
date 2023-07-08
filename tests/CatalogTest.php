@@ -18,9 +18,14 @@ class CatalogTest extends TestCase {
 	}
 	
 	function setUp() {
-		TestHelper::resetDatabase();
+		TestHelper::createDatabase();
 		$this->mockup->clear();
 		TestHelper::initServer();
+	}
+	
+	function tearDown() {
+		TestHelper::deleteDatabase();
+		TestHelper::deleteStorage();
 	}
 	
 	function testConstruct() {

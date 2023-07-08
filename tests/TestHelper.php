@@ -19,13 +19,17 @@ class TestHelper {
 	return $database;
 	}
 	
-	static function resetDatabase() {
+	static function createDatabase() {
 		$database = __DIR__."/test.sqlite";
 		$template = __DIR__."/../default-sqlite.sql";
 		if(file_exists($database)) {
-			unlink($database);
+			throw new Exception("Database already exists");
 		}
 		exec("cat ". escapeshellarg($template)." | sqlite3 ". escapeshellarg($database));
+	}
+	
+	static function deleteDatabase() {
+		unlink(__DIR__."/test.sqlite");
 	}
 	
 	static function resetSerial() {
@@ -41,18 +45,25 @@ class TestHelper {
 	return Shared::getCustomSQLite(__DIR__."/test.sqlite");
 	}
 	
-	static function resetStorage() {
+	static function createStorage() {
+		$storage = array("basic01", "basic02", "basic03");
+		foreach($storage as $value) {
+			mkdir(__DIR__."/storage/".$value);
+		}
+	}
+	
+	static function deleteStorage() {
 		$storage = array("basic01", "basic02", "basic03");
 		foreach($storage as $value) {
 			$storagePath = __DIR__."/storage/".$value;
 			if(file_exists($storagePath)) {
 				exec("rm ".escapeshellarg($storagePath)." -r");
 			}
-			mkdir(__DIR__."/storage/".$value);
 		}
 	}
 	
 	static function initServer() {
+		self::createStorage();
 		$cpadm = new CPAdm(TestHelper::getEPDO(), array());
 		$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/storage/basic01/"));
 		$cpadm->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));

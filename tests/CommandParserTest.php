@@ -2,6 +2,14 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class CommandParserTest extends TestCase {
+	static function setUpBeforeClass() {
+		mkdir(__DIR__."/storage/basic01");
+	}
+
+	static function tearDownAfterClass() {
+		rmdir(__DIR__."/storage/basic01");
+	}
+	
 	public function testSplitSimple() {
 		$split = CommandParser::split("define storage backup-main type=directory location=/storage/backup-main/");
 		$target = array();

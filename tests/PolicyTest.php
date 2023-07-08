@@ -3,8 +3,15 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class PolicyTest extends TestCase {
 	static function setUpBeforeClass() {
-		TestHelper::resetDatabase();
+		TestHelper::createDatabase();
+		TestHelper::createStorage();
 	}
+
+	static function tearDownAfterClass() {
+		TestHelper::deleteDatabase();
+		TestHelper::deleteStorage();
+	}
+
 	function testDefine() {
 		Storage::define(TestHelper::getEPDO(), new CommandParser("define storage basic01 type=basic location=".__DIR__."/storage/basic01"));
 		Storage::define(TestHelper::getEPDO(), new CommandParser("define storage basic02 type=basic location=".__DIR__."/storage/basic01"));

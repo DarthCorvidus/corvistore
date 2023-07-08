@@ -10,9 +10,15 @@ class VersionsTest extends TestCase {
 	}
 
 	function setUp() {
-		TestHelper::resetDatabase();
+		TestHelper::createDatabase();
 		$this->mockup->clear();
 		TestHelper::initServer();
+	}
+
+	function tearDown() {
+		TestHelper::deleteDatabase();
+		$this->mockup->clear();
+		TestHelper::deleteStorage();
 	}
 	
 	function testConstruct() {

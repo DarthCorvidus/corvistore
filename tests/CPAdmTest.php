@@ -2,6 +2,15 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class CPAdmTest extends TestCase {
+	public function setUp() {
+		TestHelper::createDatabase();
+		TestHelper::createStorage();
+	}
+	
+	public function tearDown() {
+		TestHelper::deleteDatabase();
+		TestHelper::deleteStorage();
+	}
 	public function testConstruct() {
 		$adm = new CPAdm(TestHelper::getEPDO(), array());
 		$this->assertInstanceOf(CPAdm::class, $adm);

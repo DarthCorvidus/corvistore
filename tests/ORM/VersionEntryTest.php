@@ -7,7 +7,8 @@ class VersionEntryTest extends TestCase {
 		$this->now = time();
 	}
 	static function setUpBeforeClass() {
-		TestHelper::resetDatabase();
+		TestHelper::createDatabase();
+		TestHelper::createStorage();
 		$cpadm = new CPAdm(TestHelper::getEPDO(), array());
 		$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/../storage/basic01/"));
 		$cpadm->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
@@ -18,6 +19,11 @@ class VersionEntryTest extends TestCase {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->clear();
 		$mockup->createRandom("/image.bin", 10);
+	}
+	
+	static function tearDownAfterClass() {
+		TestHelper::deleteDatabase();
+		TestHelper::deleteStorage();
 	}
 	
 	function testFromArray() {

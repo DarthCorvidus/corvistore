@@ -7,8 +7,13 @@ class DefineHandlerTest extends TestCase {
 	}
 	
 	function setUp() {
-		TestHelper::resetDatabase();
-		TestHelper::resetStorage();
+		TestHelper::createDatabase();
+		TestHelper::createStorage();
+	}
+	
+	function tearDown() {
+		TestHelper::deleteStorage();
+		TestHelper::deleteDatabase();
 	}
 
 	function testInvalidDefine() {
