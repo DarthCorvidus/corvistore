@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "37a6a6d865e84f0eddfde6f1e338850e",
+    "content-hash": "1554116ee792cd6b49b3148e094752ee",
     "packages": [
         {
             "name": "plibv4/argv",
@@ -1976,5 +1976,8 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
+    "platform-overrides": {
+        "php": "7.3"
+    },
     "plugin-api-version": "2.1.0"
 }

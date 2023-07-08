@@ -90,5 +90,10 @@
 	"scripts": {
 		"test": "./vendor/bin/phpunit --bootstrap  tests/autoload-composer.php tests/",
 		"testdox": "./vendor/bin/phpunit --bootstrap tests/autoload-composer.php --testdox --colors=always tests/"
+	},
+	"config": {
+		"platform": {
+			"php": "7.3"
+		}
 	}
 }
