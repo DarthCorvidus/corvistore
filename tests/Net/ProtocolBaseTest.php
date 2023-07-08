@@ -11,7 +11,7 @@ class ProtocolBaseTest extends TestCase {
 		if(file_exists(__DIR__."/example/test.bin")) {
 			unlink(__DIR__."/example/test.bin");
 		}
-		#unlink(__DIR__."/example/small.bin");
+		unlink(__DIR__."/example/small.bin");
 		rmdir(__DIR__."/example");
 	}
 
@@ -199,8 +199,21 @@ class ProtocolBaseTest extends TestCase {
 		$this->assertInstanceOf(File::class, $unserialized);
 	}
 	
-	#function testSendVerySmallFile() {
-	#	$sampleString = "Hello World."
-	#	file_put_contents(__DIR__."/example/small.bin", ex)
-	#}
+	function testSendVerySmallFile() {
+		$sampleString = "Hello World.";
+		file_put_contents(__DIR__."/example/small.bin", $sampleString);
+		$file = new File(__DIR__."/example/small.bin");
+		
+		$sender = new \Net\FileSender($file);
+		$filename = __DIR__."/example/test.bin";
+		$socket = fopen($filename, "w");
+		$proto = new ProtocolBase($socket);
+		$proto->sendStream($sender);
+		fclose($socket);
+		
+		$padded = file_get_contents(__DIR__."/example/test.bin");
+		$this->assertEquals(chr(ProtocolBase::FILE).chr(12)."\0\0\0\0\0\0\0", substr($padded, 0, 9));
+		$this->assertEquals("Hello World.", substr($padded, 9, 12));
+		$this->assertEquals(1024, strlen($padded));
+	}
 }

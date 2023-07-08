@@ -117,13 +117,18 @@ class ProtocolBase {
 
 	function sendStream(StreamSender $sender) {
 		$size = $sender->getSize();
+		$sender->onStart();
 		$header = \IntVal::uint8()->putValue(self::FILE);
-		$header .= \IntVal::uint64LE()->putValue($ize);
-
-		if($size+strlen($header)<$this->writeLength) {
+		$header .= \IntVal::uint64LE()->putValue($size);
+		
+		//Data which is shorter & equal the write length can be sent at once.
+		if($size+strlen($header)<=$this->writeLength) {
 			$send = $header;
-			$send += $sender->getData($size);
-			$this->write($send.random_bytes($this->writeLength-($size+9)));
+			$send .= $sender->getData($size);
+			echo "Sending [".$send."]".PHP_EOL;
+			$this->write(self::padRandom($send, $this->writeLength));
+			$sender->onEnd();
+		return;
 		}
 	}
 }
