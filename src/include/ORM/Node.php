@@ -16,7 +16,7 @@ class Node {
 	private function __construct() {
 		;
 	}
-	static function define(EPDO $pdo, CommandParser $commandParser) {
+	static function define(EPDO $pdo, CommandParser $commandParser): Node {
 		$commandParser->import(new CPModelNode($pdo, CPModelNode::MODE_DEFINE));
 		$node = new Node();
 		$node->pdo = $pdo;
@@ -25,6 +25,7 @@ class Node {
 		$node->salt = sha1(random_bytes(256));
 		$node->password = sha1($commandParser->getParam("password").$node->salt);
 		$node->create();
+	return $node;
 	}
 	
 	static function update(EPDO $pdo, CommandParser $command): string {

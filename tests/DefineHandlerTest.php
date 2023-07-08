@@ -72,7 +72,13 @@ class DefineHandlerTest extends TestCase {
 
 		$define = new DefineHandler(TestHelper::getEPDO(), new CommandParser("define node test01 policy=keepv10d5month password=secret"));
 		$define->run();
-		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1", "dnd_password" => NULL, "dnd_salt" => NULL);
+		/*
+		 * This somehow defeats the intention of the test, as Node::fromName may
+		 * fail and cause to fail the test early. However, I need to get
+		 * the password hash and salt, as the salt is non-deterministic.
+		 */
+		$node = Node::fromName(TestHelper::getEPDO(), "test01");
+		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1", "dnd_password" => $node->getPassword(), "dnd_salt" => $node->getSalt());
 		$this->assertEquals($target, TestHelper::dumpTable(TestHelper::getEPDO(), "d_node", "dnd_id"));
 
 	}

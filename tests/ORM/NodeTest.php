@@ -16,12 +16,12 @@ class NodeTest extends TestCase {
 		$cpadmin->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
 		$cpadmin->handleCommand(new CommandParser("define policy forever partition=backup-main"));
 		$cpadmin->handleCommand(new CommandParser("define policy month retexists=31 retdeleted=15 partition=backup-main"));
-		Node::define(TestHelper::getEPDO(), new CommandParser("define node test01 policy=forever password=secret"));
-		Node::define(TestHelper::getEPDO(), new CommandParser("define node test02 policy=forever password=secret"));
-		Node::define(TestHelper::getEPDO(), new CommandParser("define node test03 policy=month password=secret"));
-		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1", "dnd_password" => NULL, "dnd_salt" => NULL);
-		$target[1] = array("dnd_id" => "2", "dnd_name"=>"test02", "dpo_id"=>"1", "dnd_password" => NULL, "dnd_salt" => NULL);
-		$target[2] = array("dnd_id" => "3", "dnd_name"=>"test03", "dpo_id"=>"2", "dnd_password" => NULL, "dnd_salt" => NULL);
+		$node1 = Node::define(TestHelper::getEPDO(), new CommandParser("define node test01 policy=forever password=secret"));
+		$node2 = Node::define(TestHelper::getEPDO(), new CommandParser("define node test02 policy=forever password=secret"));
+		$node3 = Node::define(TestHelper::getEPDO(), new CommandParser("define node test03 policy=month password=secret"));
+		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1", "dnd_password" => $node1->getPassword(), "dnd_salt" => $node1->getSalt());
+		$target[1] = array("dnd_id" => "2", "dnd_name"=>"test02", "dpo_id"=>"1", "dnd_password" => $node2->getPassword(), "dnd_salt" => $node2->getSalt());
+		$target[2] = array("dnd_id" => "3", "dnd_name"=>"test03", "dpo_id"=>"2", "dnd_password" => $node3->getPassword(), "dnd_salt" => $node3->getSalt());
 		$this->assertEquals($target, TestHelper::dumpTable(TestHelper::getEPDO(), "d_node", "dnd_id"));
 	}
 	

@@ -12,9 +12,9 @@ class CatalogEntryTest extends TestCase {
 		$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/../storage/basic01/"));
 		$cpadm->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
 		$cpadm->handleCommand(new CommandParser("define policy forever partition=backup-main"));
-		$cpadm->handleCommand(new CommandParser("define node test01 policy=forever"));
-		$cpadm->handleCommand(new CommandParser("define node test02 policy=forever"));
-		$cpadm->handleCommand(new CommandParser("define node test03 policy=forever"));
+		$cpadm->handleCommand(new CommandParser("define node test01 policy=forever password=secret"));
+		$cpadm->handleCommand(new CommandParser("define node test02 policy=forever password=secret"));
+		$cpadm->handleCommand(new CommandParser("define node test03 policy=forever password=secret"));
 	}
 
 	function testFromArray() {
