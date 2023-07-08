@@ -5,7 +5,6 @@ use PHPUnit\Framework\TestCase;
 class SourceObjectTest extends TestCase {
 	function __construct() {
 		parent::__construct();
-		$this->now = mktime();
 	}
 	
 	static function setUpBeforeClass() {

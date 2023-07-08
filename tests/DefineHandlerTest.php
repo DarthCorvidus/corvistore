@@ -4,7 +4,6 @@ use PHPUnit\Framework\TestCase;
 class DefineHandlerTest extends TestCase {
 	function __construct() {
 		parent::__construct();
-		$this->now = mktime();
 	}
 	
 	function setUp() {

@@ -5,7 +5,6 @@ use PHPUnit\Framework\TestCase;
 class FileObjectTest extends TestCase {
 	function __construct() {
 		parent::__construct();
-		$this->now = mktime();
 	}
 	static function setUpBeforeClass() {
 		file_put_contents(self::getExamplePath(), "Crow Protect - Data Storage Solution");

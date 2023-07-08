@@ -64,7 +64,7 @@ class Catalog {
 		$version["dvs_group"] = $file->getGroup();
 		$version["dvs_type"] = Catalog::TYPE_DIR;
 		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
-		$version["dvs_created_epoch"] = mktime();
+		$version["dvs_created_epoch"] = time();
 		$version["dvs_permissions"] = $file->getPerms();
 		// Directories are always 'stored'.
 		$version["dvs_stored"] = 1;
@@ -88,7 +88,7 @@ class Catalog {
 		$version["dvs_size"] = $file->getSize();
 		$version["dvs_type"] = Catalog::TYPE_FILE;
 		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
-		$version["dvs_created_epoch"] = mktime();
+		$version["dvs_created_epoch"] = time();
 		$version["dvs_permissions"] = $file->getPerms();
 		$version["dvs_stored"] = 0;
 		$version["dvs_id"] = $this->pdo->create("d_version", $version);
@@ -110,7 +110,7 @@ class Catalog {
 		}
 		$version["dvs_type"] = $file->getType();
 		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
-		$version["dvs_created_epoch"] = mktime();
+		$version["dvs_created_epoch"] = time();
 		$version["dvs_permissions"] = $file->getPerms();
 		
 		$version["dvs_id"] = $this->pdo->create("d_version", $version);
@@ -123,7 +123,7 @@ class Catalog {
 		$version["dvs_stored"] = 1;
 		$version["dvs_type"] = self::TYPE_DELETED;
 		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
-		$version["dvs_created_epoch"] = mktime();
+		$version["dvs_created_epoch"] = time();
 		$version["dvs_id"] = $this->pdo->create("d_version", $version);
 		$entry->addVersion($version);
 	return $entry;

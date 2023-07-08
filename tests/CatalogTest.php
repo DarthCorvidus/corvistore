@@ -5,7 +5,7 @@ class CatalogTest extends TestCase {
 	private $mockup;
 	function __construct() {
 		parent::__construct();
-		$this->now = mktime();
+		$this->now = time();
 		$this->mockup = new MockupFiles("/tmp/crow-protect/");
 	}
 	static function setUpBeforeClass() {

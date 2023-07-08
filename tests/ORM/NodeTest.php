@@ -4,7 +4,6 @@ use PHPUnit\Framework\TestCase;
 class NodeTest extends TestCase {
 	function __construct() {
 		parent::__construct();
-		$this->now = mktime();
 	}
 	static function setUpBeforeClass() {
 		TestHelper::resetDatabase();
