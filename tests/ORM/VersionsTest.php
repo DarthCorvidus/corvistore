@@ -5,7 +5,7 @@ class VersionsTest extends TestCase {
 	private $mockup;
 	function __construct() {
 		parent::__construct();
-		$this->now = mktime();
+		$this->now = time();
 		$this->mockup = new MockupFiles("/tmp/crow-protect/");
 	}
 
@@ -23,7 +23,7 @@ class VersionsTest extends TestCase {
 	 * Test to add a version, but not store it (mark it as stored)
 	 */
 	function testAddVersion() {
-		$time = mktime();
+		$time = time();
 		$array = array();
 		$array["dvs_id"] = 27;
 		$array["dvs_type"] = Catalog::TYPE_DELETED;
@@ -40,7 +40,7 @@ class VersionsTest extends TestCase {
 	function testGetCount() {
 		$versions = new Versions();
 		
-		$time = mktime();
+		$time = time();
 		$dir = array();
 		$dir["dvs_id"] = 27;
 		$dir["dvs_type"] = Catalog::TYPE_DIR;
@@ -81,7 +81,7 @@ class VersionsTest extends TestCase {
 	function testGetEntry() {
 		$versions = new Versions();
 		
-		$time = mktime();
+		$time = time();
 		$dir = array();
 		$dir["dvs_id"] = 27;
 		$dir["dvs_type"] = Catalog::TYPE_DIR;
@@ -122,7 +122,7 @@ class VersionsTest extends TestCase {
 	function testGetLatest() {
 		$versions = new Versions();
 		
-		$time = mktime();
+		$time = time();
 		$dir = array();
 		$dir["dvs_id"] = 27;
 		$dir["dvs_type"] = Catalog::TYPE_DIR;
@@ -162,7 +162,7 @@ class VersionsTest extends TestCase {
 	function testToBinary() {
 		$versions = new Versions();
 		
-		$time = mktime();
+		$time = time();
 		$dir = array();
 		$dir["dvs_id"] = 27;
 		$dir["dvs_type"] = Catalog::TYPE_DIR;
@@ -204,7 +204,7 @@ class VersionsTest extends TestCase {
 	function testFromBinary() {
 		$versions = new Versions();
 		
-		$time = mktime();
+		$time = time();
 		$dir = array();
 		$dir["dvs_id"] = 27;
 		$dir["dvs_type"] = Catalog::TYPE_DIR;

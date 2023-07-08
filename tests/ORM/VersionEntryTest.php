@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 class VersionEntryTest extends TestCase {
 	function __construct() {
 		parent::__construct();
-		$this->now = mktime();
+		$this->now = time();
 	}
 	static function setUpBeforeClass() {
 		TestHelper::resetDatabase();
@@ -21,7 +21,7 @@ class VersionEntryTest extends TestCase {
 	}
 	
 	function testFromArray() {
-		$time = mktime();
+		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
 		$example["dvs_type"] = Catalog::TYPE_FILE;
@@ -51,7 +51,7 @@ class VersionEntryTest extends TestCase {
 	}
 	
 	function testFromId() {
-		$time = mktime();
+		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
 		$example["dvs_atime"] = "11021";
@@ -69,7 +69,7 @@ class VersionEntryTest extends TestCase {
 	}
 	
 	function testToBinary() {
-		$time = mktime();
+		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
 		$example["dvs_type"] = Catalog::TYPE_FILE;
@@ -91,7 +91,7 @@ class VersionEntryTest extends TestCase {
 	}
 	
 	function testFromBinary() {
-		$time = mktime();
+		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
 		$example["dvs_type"] = Catalog::TYPE_FILE;

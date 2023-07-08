@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 class CatalogEntryTest extends TestCase {
 	function __construct() {
 		parent::__construct();
-		$this->now = mktime();
+		$this->now = time();
 	}
 	static function setUpBeforeClass() {
 		TestHelper::resetDatabase();
