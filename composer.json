@@ -79,8 +79,15 @@
 		"plibv4/process": "dev-main",
 		"plibv4/binary": "dev-main",
 		"plibv4/profiler": "dev-main"
+		
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^7"
 	},
 	"autoload": {
         "classmap": ["src/include/"]
-    }
+    },
+	"scripts": {
+		"test": "./vendor/bin/phpunit --bootstrap  tests/autoload-composer.php tests/"
+	}
 }
