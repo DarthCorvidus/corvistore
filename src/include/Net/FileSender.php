@@ -16,8 +16,12 @@ namespace Net;
 class FileSender implements StreamSender {
 	private $file;
 	private $handle;
+	private $size;
+	private $left;
 	public function __construct(\File $file) {
 		$this->file = $file;
+		$this->size = $file->getSize();
+		$this->left = $this->size;
 	}
 	public function getData(int $amount): string {
 		if(!is_resource($this->handle)) {
@@ -28,11 +32,12 @@ class FileSender implements StreamSender {
 		if($len!=$amount) {
 			throw new \RuntimeException("Unable to read expected amount from ".$this->file->getPath().", expected ".$amount.", got ".$len);
 		}
+		$this->left = $this->left - $amount;
 	return $read;
 	}
 
 	public function getLeft(): int {
-		
+		return $this->left;
 	}
 
 	public function getSize(): int {
@@ -41,7 +46,7 @@ class FileSender implements StreamSender {
 	}
 
 	public function onCancel() {
-		
+		fclose($this->handle);
 	}
 
 	public function onEnd() {
