@@ -11,6 +11,7 @@ class ProtocolBaseTest extends TestCase {
 		if(file_exists(__DIR__."/example/test.bin")) {
 			unlink(__DIR__."/example/test.bin");
 		}
+		#unlink(__DIR__."/example/small.bin");
 		rmdir(__DIR__."/example");
 	}
 
@@ -20,6 +21,25 @@ class ProtocolBaseTest extends TestCase {
 		$this->assertInstanceOf(ProtocolBase::class, $proto);
 		fclose($socket);
 	}
+	
+	function testPadRandomShorter() {
+		$padded = ProtocolBase::padRandom("Hello!", 256);
+		$this->assertEquals(256, strlen($padded));
+		$this->assertEquals("Hello!", substr($padded, 0, 6));
+	}
+
+	function testPadRandomEqual() {
+		$padded = ProtocolBase::padRandom("Equality", 8);
+		$this->assertEquals(8, strlen($padded));
+		$this->assertEquals("Equality", $padded);
+	}
+
+	function testPadRandomLonger() {
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage("padlength 8 shorter than strlen 24");
+		$padded = ProtocolBase::padRandom("This string is too long.", 8);
+	}
+	
 	
 	function testSendString() {
 		$filename = __DIR__."/example/test.bin";
@@ -178,4 +198,9 @@ class ProtocolBaseTest extends TestCase {
 		fclose($socket);
 		$this->assertInstanceOf(File::class, $unserialized);
 	}
+	
+	#function testSendVerySmallFile() {
+	#	$sampleString = "Hello World."
+	#	file_put_contents(__DIR__."/example/small.bin", ex)
+	#}
 }

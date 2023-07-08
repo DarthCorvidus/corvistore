@@ -15,6 +15,23 @@ class ProtocolBase {
 		$this->readLength = $readLength;
 		$this->writeLength = $writeLength;
 	}
+
+	static function padRandom(string $string, $padlength): string {
+		$len = strlen($string);
+		if($len==$padlength) {
+			return $string;
+		}
+		if($len<$padlength) {
+			return $string.random_bytes($padlength-$len);
+		}
+		/*
+		 * Throw exception here, as a longer pad length should not happen in the
+		 * context of ProtocolBase.
+		 */
+		if($len>$padlength) {
+			throw new \RuntimeException("padlength ".$padlength." shorter than strlen ".$len);
+		}
+	}
 	
 	private function read(): string {
 		$read = fread($this->socket, $this->readLength);
@@ -97,5 +114,16 @@ class ProtocolBase {
 		$unserialized = unserialize($this->getString(self::SERIALIZE_PHP));
 	return $unserialized;
 	}
-	
+
+	function sendStream(StreamSender $sender) {
+		$size = $sender->getSize();
+		$header = \IntVal::uint8()->putValue(self::FILE);
+		$header .= \IntVal::uint64LE()->putValue($ize);
+
+		if($size+strlen($header)<$this->writeLength) {
+			$send = $header;
+			$send += $sender->getData($size);
+			$this->write($send.random_bytes($this->writeLength-($size+9)));
+		}
+	}
 }
