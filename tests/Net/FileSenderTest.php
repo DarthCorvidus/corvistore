@@ -3,8 +3,22 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\FileSender;
 class FileSenderTest extends TestCase {
-	function setUp() {
+	static function setUpBeforeClass() {
+		mkdir(__DIR__."/example");
 		file_put_contents(__DIR__."/example/FileReader.bin", random_bytes(27389));
+	}
+	
+	function setUp() {
+		if(!file_exists(__DIR__."/example/FileReader.bin")) {
+			file_put_contents(__DIR__."/example/FileReader.bin", random_bytes(27389));
+		}
+	}
+	
+	static function tearDownAfterClass() {
+		if(file_exists(__DIR__."/example/FileReader.bin")) {
+			unlink(__DIR__."/example/FileReader.bin");
+		}
+		rmdir(__DIR__."/example");
 	}
 			
 	function testConstruct() {

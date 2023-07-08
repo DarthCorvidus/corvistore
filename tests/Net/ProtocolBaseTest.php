@@ -3,6 +3,17 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\ProtocolBase;
 class ProtocolBaseTest extends TestCase {
+	static function setUpBeforeClass() {
+		mkdir(__DIR__."/example");
+	}
+	
+	static function tearDownAfterClass() {
+		if(file_exists(__DIR__."/example/test.bin")) {
+			unlink(__DIR__."/example/test.bin");
+		}
+		rmdir(__DIR__."/example");
+	}
+
 	function testConstruct() {
 		$socket = fopen(__DIR__."/example/test.bin", "w");
 		$proto = new ProtocolBase($socket, 16, 16);
