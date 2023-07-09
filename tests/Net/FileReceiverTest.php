@@ -15,6 +15,12 @@ class FileReceiverTest extends TestCase {
 		}
 	}
 
+	function tearDown() {
+		if(file_exists(self::getTarget())) {
+			unlink(self::getTarget());
+		}
+	}
+
 	static function getSource(): string {
 		return __DIR__."/example/source.bin";
 	}
@@ -80,4 +86,29 @@ class FileReceiverTest extends TestCase {
 		$receiver->receiveData(random_bytes(self::FILESIZE+1));
 		$receiver->onRecvEnd();
 	}
+	
+	function testWriteInvalid() {
+		$source = file_get_contents(self::getSource());
+		$receiver = new FileReceiver(self::getTarget());
+		$receiver->setRecvSize(filesize(self::getSource()));
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage("Resource for ".self::getTarget()." not available.");
+		$receiver->receiveData(substr($source, 0, 1024));
+		$receiver->onRecvEnd();
+	}
+	
+	function testNoReplace() {
+		file_put_contents(self::getTarget(), "Test");
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage("file ".self::getTarget()." already exists.");
+		$receiver = new FileReceiver(self::getTarget());
+	}
+	
+	function testNoTarget() {
+		file_put_contents(self::getTarget(), "Test");
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage("target directory ".__DIR__."/example02 does not exist.");
+		$receiver = new FileReceiver(__DIR__."/example02/test.bin");
+	}
+
 }

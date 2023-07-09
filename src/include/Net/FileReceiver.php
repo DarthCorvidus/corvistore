@@ -11,9 +11,18 @@ class FileReceiver implements StreamReceiver {
 	private $size;
 	private $left;
 	function __construct(string $filename) {
+		if(file_exists($filename)) {
+			throw new \InvalidArgumentException("file ".$filename." already exists.");
+		}
+		if(!is_dir(dirname($filename))) {
+			throw new \InvalidArgumentException("target directory ".dirname($filename)." does not exist.");
+		}
 		$this->filename = $filename;
 	}
 	public function receiveData(string $data) {
+		if(!is_resource($this->handle)) {
+			throw new \RuntimeException("Resource for ".$this->filename." not available.");
+		}
 		$len = strlen($data);
 		$diff = $this->left - $len;
 		if($diff < 0) {
@@ -30,6 +39,7 @@ class FileReceiver implements StreamReceiver {
 
 	public function setRecvSize(int $size) {
 		$this->size = $size;
+		$this->left = $size;
 	}
 	
 	public function getRecvSize(): int {
@@ -46,7 +56,6 @@ class FileReceiver implements StreamReceiver {
 	}
 
 	public function onRecvStart() {
-		$this->left = $this->size;
 		$this->handle = fopen($this->filename, "w");
 	}
 
