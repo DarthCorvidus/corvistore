@@ -29,66 +29,66 @@ class FileSenderTest extends TestCase {
 	
 	function testGetSize() {
 		$sender = new FileSender(new File(__DIR__."/example/FileReader.bin"));
-		$this->assertEquals(self::FILESIZE, $sender->getSize());
+		$this->assertEquals(self::FILESIZE, $sender->getSendSize());
 	}
 	
 	function testStartStop() {
 		$sender = new FileSender(new File(__DIR__."/example/FileReader.bin"));
-		$this->assertEquals(NULL, $sender->onStart());
-		$this->assertEquals(NULL, $sender->onEnd());
+		$this->assertEquals(NULL, $sender->onSendStart());
+		$this->assertEquals(NULL, $sender->onSendEnd());
 	}
 	
 	function testRead() {
 		$sender = new FileSender(new File(__DIR__."/example/FileReader.bin"));
-		$sender->onStart();
+		$sender->onSendStart();
 		$rest = 27389;
 		$total = 27389;
 		$i=0;
 		$contents = "";
 		while($rest>4096) {
-			$load = $sender->getData(4096);
+			$load = $sender->getSendData(4096);
 			$contents .= $load;
 			$this->assertEquals($load, file_get_contents(__DIR__."/example/FileReader.bin", FALSE, NULL, $i*4096, 4096));
 			$rest -= 4096;
 			$i++;
 		}
 		$load = file_get_contents(__DIR__."/example/FileReader.bin", FALSE, NULL, $i*4096, $rest);
-		$this->assertEquals($load, $sender->getData($rest));
+		$this->assertEquals($load, $sender->getSendData($rest));
 		
-		$sender->onEnd();
+		$sender->onSendEnd();
 	}
 	
 	function testRemoveBeforeStart() {
 		$sender = new FileSender(new File(__DIR__."/example/FileReader.bin"));
 		unlink(__DIR__."/example/FileReader.bin");
 		$this->expectException(RuntimeException::class);
-		$sender->onStart();
+		$sender->onSendStart();
 		
 	}
 	
 	function testRemoveBeforeRead() {
 		$sender = new FileSender(new File(__DIR__."/example/FileReader.bin"));
-		$sender->onStart();
-		$sender->onEnd();
+		$sender->onSendStart();
+		$sender->onSendEnd();
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("Resource for ".__DIR__."/example/FileReader.bin went away.");
-		$sender->getData(4096);
+		$sender->getSendData(4096);
 	}
 	
 	function testReadTooMuch() {
 		$sender = new FileSender(new File(__DIR__."/example/FileReader.bin"));
-		$sender->onStart();
+		$sender->onSendStart();
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("Unable to read expected amount from ".__DIR__."/example/FileReader.bin, expected 27400, got 27389");
-		$sender->getData(27400);
-		$sender->onEnd();
+		$sender->getSendData(27400);
+		$sender->onSendEnd();
 	}
 	
 	function testGetLeft() {
 		$sender = new FileSender(new File(__DIR__."/example/FileReader.bin"));
-		$sender->onStart();
-		$sender->getData(4096);
-		$this->assertEquals(self::FILESIZE-4096, $sender->getLeft());
+		$sender->onSendStart();
+		$sender->getSendData(4096);
+		$this->assertEquals(self::FILESIZE-4096, $sender->getSendLeft());
 	}
 
 }

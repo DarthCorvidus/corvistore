@@ -23,7 +23,7 @@ class FileSender implements StreamSender {
 		$this->size = $file->getSize();
 		$this->left = $this->size;
 	}
-	public function getData(int $amount): string {
+	public function getSendData(int $amount): string {
 		if(!is_resource($this->handle)) {
 			throw new \RuntimeException("Resource for ".$this->file->getPath()." went away.");
 		}
@@ -36,24 +36,24 @@ class FileSender implements StreamSender {
 	return $read;
 	}
 
-	public function getLeft(): int {
+	public function getSendLeft(): int {
 		return $this->left;
 	}
 
-	public function getSize(): int {
+	public function getSendSize(): int {
 		$this->file->reload();
 	return $this->file->getSize();
 	}
 
-	public function onCancel() {
+	public function onSendCancel() {
 		fclose($this->handle);
 	}
 
-	public function onEnd() {
+	public function onSendEnd() {
 		fclose($this->handle);
 	}
 
-	public function onStart() {
+	public function onSendStart() {
 		$this->handle = @fopen($this->file->getPath(), "r");
 		if($this->handle===FALSE) {
 			throw new \RuntimeException("unable to open ".$this->file->getPath()." for read.");
