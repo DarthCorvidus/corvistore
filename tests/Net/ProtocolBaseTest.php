@@ -8,15 +8,27 @@ class ProtocolBaseTest extends TestCase {
 	}
 	
 	static function tearDownAfterClass() {
-		if(file_exists(__DIR__."/example/test.bin")) {
-			unlink(__DIR__."/example/test.bin");
+		$possible = array("send.bin", "received.bin", "proto.bin");
+		foreach($possible as $value) {
+			if(file_exists(__DIR__."/example/".$value)) {
+				unlink(__DIR__."/example/".$value);
+			}
 		}
-		unlink(__DIR__."/example/small.bin");
 		rmdir(__DIR__."/example");
+	}
+	
+	function tearDown() {
+		$possible = array("send.bin", "received.bin", "proto.bin");
+		foreach($possible as $value) {
+			if(file_exists(__DIR__."/example/".$value)) {
+				unlink(__DIR__."/example/".$value);
+			}
+		}
+		clearstatcache();
 	}
 
 	function testConstruct() {
-		$socket = fopen(__DIR__."/example/test.bin", "w");
+		$socket = fopen(__DIR__."/example/proto.bin", "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$this->assertInstanceOf(ProtocolBase::class, $proto);
 		fclose($socket);
@@ -42,8 +54,8 @@ class ProtocolBaseTest extends TestCase {
 	
 	
 	function testSendString() {
-		$filename = __DIR__."/example/test.bin";
-		$socket = fopen(__DIR__."/example/test.bin", "w");
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendString(ProtocolBase::MESSAGE, "Hello.");
 		$this->assertEquals(16, ftell($socket));
@@ -51,7 +63,7 @@ class ProtocolBaseTest extends TestCase {
 	}
 	
 	function testSendStringTwo() {
-		$filename = __DIR__."/example/test.bin";
+		$filename = __DIR__."/example/proto.bin";
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendString(ProtocolBase::MESSAGE, "This is less than 32.");
@@ -60,7 +72,7 @@ class ProtocolBaseTest extends TestCase {
 	}
 	
 	function testSendStringMore() {
-		$filename = __DIR__."/example/test.bin";
+		$filename = __DIR__."/example/proto.bin";
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendString(ProtocolBase::MESSAGE, "This is a good deal of words which say little of value, but are more than 16 or 32 bytes.");
@@ -69,8 +81,8 @@ class ProtocolBaseTest extends TestCase {
 	}
 	
 	function testReceiveString() {
-		$filename = __DIR__."/example/test.bin";
-		$socket = fopen(__DIR__."/example/test.bin", "w");
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendString(ProtocolBase::MESSAGE, "Hello.");
 		fclose($socket);
@@ -81,8 +93,8 @@ class ProtocolBaseTest extends TestCase {
 	}
 
 	function testReceiveTwo() {
-		$filename = __DIR__."/example/test.bin";
-		$socket = fopen(__DIR__."/example/test.bin", "w");
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendString(ProtocolBase::MESSAGE, "This is less than 32.");
 		fclose($socket);
@@ -94,7 +106,7 @@ class ProtocolBaseTest extends TestCase {
 	}
 
 	function testReceiveStringMore() {
-		$filename = __DIR__."/example/test.bin";
+		$filename = __DIR__."/example/proto.bin";
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendString(ProtocolBase::MESSAGE, "This is a good deal of words which say little of value, but are more than 16 or 32 bytes.");
@@ -108,7 +120,7 @@ class ProtocolBaseTest extends TestCase {
 	}
 	
 	function testSendTypeMismatch() {
-		$filename = __DIR__."/example/test.bin";
+		$filename = __DIR__."/example/proto.bin";
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendString(ProtocolBase::COMMAND, "This is a good deal of words which say little of value, but are more than 16 or 32 bytes.");
@@ -124,7 +136,7 @@ class ProtocolBaseTest extends TestCase {
 	}
 
 	function testReceiveError() {
-		$filename = __DIR__."/example/test.bin";
+		$filename = __DIR__."/example/proto.bin";
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendString(ProtocolBase::ERROR, "Out of memory");
@@ -140,7 +152,7 @@ class ProtocolBaseTest extends TestCase {
 	}
 	
 	function testReceiveLongError() {
-		$filename = __DIR__."/example/test.bin";
+		$filename = __DIR__."/example/proto.bin";
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendString(ProtocolBase::ERROR, "Well, you should not have done that. Really not. Now I am not only out of memory, but sad too.");
@@ -164,7 +176,7 @@ class ProtocolBaseTest extends TestCase {
 		for($i=0;$i<strlen($msg); $i++) {
 			$array[] = substr($msg, 0, $i+1);
 		}
-		$filename = __DIR__."/example/test.bin";
+		$filename = __DIR__."/example/proto.bin";
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		foreach($array as $value) {
@@ -185,8 +197,9 @@ class ProtocolBaseTest extends TestCase {
 	}
 	
 	function testSendSerialize() {
-		$filename = __DIR__."/example/test.bin";
-		$file = new File($filename);
+		$filename = __DIR__."/example/proto.bin";
+		file_put_contents(__DIR__."/example/send.bin", "This is a small example file.");
+		$file = new File(__DIR__."/example/send.bin");
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendSerializePHP($file);
@@ -201,19 +214,40 @@ class ProtocolBaseTest extends TestCase {
 	
 	function testSendVerySmallFile() {
 		$sampleString = "Hello World.";
-		file_put_contents(__DIR__."/example/small.bin", $sampleString);
-		$file = new File(__DIR__."/example/small.bin");
+		file_put_contents(__DIR__."/example/send.bin", $sampleString);
+		$file = new File(__DIR__."/example/send.bin");
 		
 		$sender = new \Net\FileSender($file);
-		$filename = __DIR__."/example/test.bin";
+		$filename = __DIR__."/example/proto.bin";
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket);
 		$proto->sendStream($sender);
 		fclose($socket);
 		
-		$padded = file_get_contents(__DIR__."/example/test.bin");
+		$padded = file_get_contents(__DIR__."/example/proto.bin");
 		$this->assertEquals(chr(ProtocolBase::FILE).chr(12)."\0\0\0\0\0\0\0", substr($padded, 0, 9));
 		$this->assertEquals("Hello World.", substr($padded, 9, 12));
 		$this->assertEquals(1024, strlen($padded));
+	}
+	
+	function testReceiveVerySmallFile() {
+		$sampleString = "Hello World.";
+		file_put_contents(__DIR__."/example/send.bin", $sampleString);
+		$file = new File(__DIR__."/example/send.bin");
+		
+		$sender = new \Net\FileSender($file);
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
+		$proto = new ProtocolBase($socket);
+		$proto->sendStream($sender);
+		fclose($socket);
+		$receiver = new \Net\FileReceiver(__DIR__."/example/received.bin");
+		$socket = fopen($filename, "r");
+		$proto = new ProtocolBase($socket);
+		$proto->receiveStream($receiver);
+		fclose($socket);
+		#$received = file_get_contents(__DIR__."/received.bin");
+		$this->assertEquals(12, filesize(__DIR__."/example/received.bin"));
+		$this->assertEquals($sampleString, file_get_contents(__DIR__."/example/received.bin"));
 	}
 }

@@ -130,4 +130,21 @@ class ProtocolBase {
 		return;
 		}
 	}
+	
+	function receiveStream(StreamReceiver $receiver) {
+		$first = $this->read();
+		$type = \IntVal::uint8()->getValue($first[0]);
+		
+		if($type != self::FILE && $type != self::ERROR) {
+			throw new ProtocolMismatchException("Protocol mismatch: expected ProtocolBase::FILE, got ".$type);
+		}
+		$size = \IntVal::uint64LE()->getValue(substr($first, 1, 8));
+		$receiver->setRecvSize($size);
+		$receiver->onRecvStart();
+		if($size+9<=$this->readLength) {
+			$receiver->receiveData(substr($first, 9, $size));
+			$receiver->onRecvEnd();
+		return;
+		}
+	}
 }
