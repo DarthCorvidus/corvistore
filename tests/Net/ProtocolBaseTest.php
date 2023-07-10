@@ -3,6 +3,7 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\ProtocolBase;
 class ProtocolBaseTest extends TestCase {
+	const FILESIZE = 27389;
 	static function setUpBeforeClass() {
 		mkdir(__DIR__."/example");
 	}
@@ -233,9 +234,10 @@ class ProtocolBaseTest extends TestCase {
 	function testReceiveVerySmallFile() {
 		$sampleString = "Hello World.";
 		file_put_contents(__DIR__."/example/send.bin", $sampleString);
+
 		$file = new File(__DIR__."/example/send.bin");
-		
 		$sender = new \Net\FileSender($file);
+
 		$filename = __DIR__."/example/proto.bin";
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket);
@@ -249,5 +251,25 @@ class ProtocolBaseTest extends TestCase {
 		#$received = file_get_contents(__DIR__."/received.bin");
 		$this->assertEquals(12, filesize(__DIR__."/example/received.bin"));
 		$this->assertEquals($sampleString, file_get_contents(__DIR__."/example/received.bin"));
+	}
+	
+	function testSendLargerFile() {
+		$contents = random_bytes(self::FILESIZE);
+		file_put_contents(__DIR__."/example/send.bin", $contents);
+		$file = new File(__DIR__."/example/send.bin");
+		
+		$sender = new \Net\FileSender($file);
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
+		$proto = new ProtocolBase($socket);
+		$proto->sendStream($sender);
+		fclose($socket);
+		
+		$paddedSize = ceil(self::FILESIZE/1024)*1024;
+		$padded = file_get_contents(__DIR__."/example/proto.bin");
+		$this->assertEquals(chr(ProtocolBase::FILE).chr(0xfd).chr(0x6a)."\0\0\0\0\0\0", substr($padded, 0, 9));
+		// If this test fails, there will be a *big* mess in the output. Like, a 27389*2 character mess ;-)
+		$this->assertEquals($contents, substr($padded, 9, self::FILESIZE));
+		$this->assertEquals($paddedSize, strlen($padded));
 	}
 }

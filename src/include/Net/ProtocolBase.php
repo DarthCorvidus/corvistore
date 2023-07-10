@@ -129,6 +129,22 @@ class ProtocolBase {
 			$sender->onSendEnd();
 		return;
 		}
+		$i = 0;
+		while($sender->getSendLeft()>$this->writeLength) {
+			if($i==0) {
+				$send = $header.$sender->getSendData($this->writeLength-9);
+				$this->write($send);
+				$i++;
+			continue;
+			}
+			$send = $sender->getSendData($this->writeLength);
+			$this->write($send);
+			$i++;
+		}
+		if($sender->getSendLeft()!=0) {
+			$this->write(self::padRandom($sender->getSendData($sender->getSendLeft()), $this->writeLength));
+		}
+		$sender->onSendEnd();
 	}
 	
 	function receiveStream(StreamReceiver $receiver) {
