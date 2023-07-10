@@ -162,5 +162,14 @@ class ProtocolBase {
 			$receiver->onRecvEnd();
 		return;
 		}
+		$receiver->receiveData(substr($first, 9, $size));
+		while($receiver->getRecvLeft()>$this->writeLength) {
+			$receiver->receiveData($this->read($this->readLength));
+		}
+		if($receiver->getRecvLeft()>0) {
+			$padded = $this->read($this->readLength);
+			$receiver->receiveData(substr($padded, 0, $receiver->getRecvLeft()));
+		}
+		$receiver->onRecvEnd();
 	}
 }

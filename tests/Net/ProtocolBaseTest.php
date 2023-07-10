@@ -272,4 +272,27 @@ class ProtocolBaseTest extends TestCase {
 		$this->assertEquals($contents, substr($padded, 9, self::FILESIZE));
 		$this->assertEquals($paddedSize, strlen($padded));
 	}
+	
+	function testReceiveLargerFile() {
+		$contents = random_bytes(self::FILESIZE);
+		file_put_contents(__DIR__."/example/send.bin", $contents);
+		$file = new File(__DIR__."/example/send.bin");
+
+		$sender = new \Net\FileSender($file);
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
+		$proto = new ProtocolBase($socket);
+		$proto->sendStream($sender);
+		fclose($socket);
+
+		$receiver = new \Net\FileReceiver(__DIR__."/example/received.bin");
+		$socket = fopen($filename, "r");
+		$proto = new ProtocolBase($socket);
+		$proto->receiveStream($receiver);
+		fclose($socket);
+
+		$this->assertEquals(self::FILESIZE, filesize(__DIR__."/example/received.bin"));
+		$this->assertEquals($contents, file_get_contents(__DIR__."/example/received.bin"));
+	}
+
 }
