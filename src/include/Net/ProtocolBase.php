@@ -9,6 +9,13 @@ class ProtocolBase {
 	const FILE = 3;
 	const COMMAND = 3;
 	const SERIALIZE_PHP = 4;
+	// File changed during transfer
+	const ERROR_CHANGED = 128;
+	// Unable to write
+	const ERROR_UTW = 129;
+	// Unable to read
+	const ERROR_UTR = 130;
+	// general error
 	const ERROR = 255;
 	function __construct($socket, $readLength = 1024, $writeLength = 1024) {
 		$this->socket = $socket;
@@ -116,19 +123,19 @@ class ProtocolBase {
 	}
 
 	function sendStream(StreamSender $sender) {
-		$size = $sender->getSendSize();
-		$sender->onSendStart();
-		$header = \IntVal::uint8()->putValue(self::FILE);
-		$header .= \IntVal::uint64LE()->putValue($size);
-		
-		//Data which is shorter & equal the write length can be sent at once.
-		if($size+strlen($header)<=$this->writeLength) {
-			$send = $header;
-			$send .= $sender->getSendData($size);
-			$this->write(self::padRandom($send, $this->writeLength));
-			$sender->onSendEnd();
-		return;
-		}
+			$size = $sender->getSendSize();
+			$sender->onSendStart();
+			$header = \IntVal::uint8()->putValue(self::FILE);
+			$header .= \IntVal::uint64LE()->putValue($size);
+
+			//Data which is shorter & equal the write length can be sent at once.
+			if($size+strlen($header)<=$this->writeLength) {
+				$send = $header;
+				$send .= $sender->getSendData($size);
+				$this->write(self::padRandom($send, $this->writeLength));
+				$sender->onSendEnd();
+			return;
+			}
 		$i = 0;
 		while($sender->getSendLeft()>$this->writeLength) {
 			if($i==0) {
@@ -141,10 +148,10 @@ class ProtocolBase {
 			$this->write($send);
 			$i++;
 		}
-		if($sender->getSendLeft()!=0) {
-			$this->write(self::padRandom($sender->getSendData($sender->getSendLeft()), $this->writeLength));
-		}
-		$sender->onSendEnd();
+			if($sender->getSendLeft()!=0) {
+				$this->write(self::padRandom($sender->getSendData($sender->getSendLeft()), $this->writeLength));
+			}
+			$sender->onSendEnd();
 	}
 	
 	function receiveStream(StreamReceiver $receiver) {

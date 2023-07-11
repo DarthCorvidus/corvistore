@@ -294,5 +294,30 @@ class ProtocolBaseTest extends TestCase {
 		$this->assertEquals(self::FILESIZE, filesize(__DIR__."/example/received.bin"));
 		$this->assertEquals($contents, file_get_contents(__DIR__."/example/received.bin"));
 	}
+	/*
+	function testReceiveUTR() {
+		$contents = random_bytes(self::FILESIZE);
+		file_put_contents(__DIR__."/example/send.bin", $contents);
+		$file = new File(__DIR__."/example/send.bin");
 
+		$sender = new \Net\FileSender($file);
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
+		$proto = new ProtocolBase($socket);
+		unlink(__DIR__."/example/send.bin");
+		$proto->sendStream($sender);
+		fclose($socket);
+		
+		$receiver = new \Net\FileReceiver(__DIR__."/example/received.bin");
+		$socket = fopen($filename, "r");
+		$this->expectException(\Exception::class);
+		$proto = new ProtocolBase($socket);
+		$proto->receiveStream($receiver);
+		fclose($socket);
+
+		$this->assertEquals(self::FILESIZE, filesize(__DIR__."/example/received.bin"));
+		$this->assertEquals($contents, file_get_contents(__DIR__."/example/received.bin"));
+	}
+	 * 
+	 */
 }
