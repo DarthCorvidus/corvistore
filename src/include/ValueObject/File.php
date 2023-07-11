@@ -21,7 +21,10 @@ class File {
 	
 	function reload() {
 		clearstatcache();
-		$stat = stat($this->path);
+		$stat = @stat($this->path);
+		if($stat===FALSE) {
+			throw new Exception("unable to stat ".$this->path);
+		}
 		$this->ctime = $stat["ctime"];
 		$this->atime = $stat["atime"];
 		$this->mtime = $stat["mtime"];
