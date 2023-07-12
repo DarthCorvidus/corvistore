@@ -27,12 +27,12 @@ class Init {
 	private function initSSL() {
 		$caData = array(
 			"countryName" => "DE",
-			"stateOrProvinceName" => "Baden-Wuerttemberg",
-			"localityName" => "Stuttgart",
+			"stateOrProvinceName" => "ACME Province",
+			"localityName" => "ACME Town",
 			"organizationName" => "ACME Inc.",
 			"organizationalUnitName" => "Development",
 			"commonName" => "ACME Certificate Authority",
-			"emailAddress" => "floss@vm01.telton.de"
+			"emailAddress" => "ca@".$this->arg->getInit(),
 		);
 
 		// Generate certificate
@@ -45,12 +45,12 @@ class Init {
 		openssl_pkey_export($caKey, $caKeyPem);
 		$clientData = array(
 			"countryName" => "DE",
-			"stateOrProvinceName" => "Baden-Wuerttemberg",
-			"localityName" => "Stuttgart",
+			"stateOrProvinceName" => "ACME Province",
+			"localityName" => "ACME Town",
 			"organizationName" => "ACME Server Certificate",
 			"organizationalUnitName" => "Development",
 			"commonName" => $this->arg->getInit(),
-			"emailAddress" => "floss@vm01.telton.de"
+			"emailAddress" => "backup@".$this->arg->getInit()
 		);
 		$serverKey = openssl_pkey_new();
 		#$SSLcnf = array(
