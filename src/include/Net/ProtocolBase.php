@@ -117,7 +117,7 @@ class ProtocolBase {
 	}
 
 	function getCommand(): string {
-		$this->getString(self::COMMAND);
+		return $this->getString(self::COMMAND);
 	}
 
 	function sendMessage(string $message) {
@@ -125,7 +125,7 @@ class ProtocolBase {
 	}
 
 	function getMessage(): string {
-		$this->getString(self::MESSAGE);
+		return $this->getString(self::MESSAGE);
 	}
 	
 	function sendSerializePHP($serialize) {
