@@ -127,6 +127,10 @@ class ProtocolBase {
 	function getMessage(): string {
 		return $this->getString(self::MESSAGE);
 	}
+
+	function sendError(string $error) {
+		$this->sendString(self::ERROR, $error);
+	}
 	
 	function sendSerializePHP($serialize) {
 		$serialized = serialize($serialize);
