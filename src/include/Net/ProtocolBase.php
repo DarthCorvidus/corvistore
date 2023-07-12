@@ -22,7 +22,7 @@ class ProtocolBase {
 		$this->readLength = $readLength;
 		$this->writeLength = $writeLength;
 	}
-
+	
 	static function padRandom(string $string, $padlength): string {
 		$len = strlen($string);
 		if($len==$padlength) {
@@ -37,6 +37,19 @@ class ProtocolBase {
 		 */
 		if($len>$padlength) {
 			throw new \RuntimeException("padlength ".$padlength." shorter than strlen ".$len);
+		}
+	}
+
+	function sendOK() {
+		$this->write(\IntVal::uint8()->putValue(self::OK).random_bytes($this->writeLength-2).\IntVal::uint8()->putValue(self::OK));
+	}
+	
+	function getOK() {
+		$result = $this->read();
+		$type1 = \IntVal::uint8()->getValue($result[0]);
+		$type2 = \IntVal::uint8()->getValue($result[$this->readLength-1]);
+		if($type1!=self::OK or $type2!=self::OK) {
+			throw new \Net\ProtocolMismatchException("expected ProtocolBase::OK, got ".$type1."/".$type2);
 		}
 	}
 	

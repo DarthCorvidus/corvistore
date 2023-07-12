@@ -294,6 +294,49 @@ class ProtocolBaseTest extends TestCase {
 		$this->assertEquals(self::FILESIZE, filesize(__DIR__."/example/received.bin"));
 		$this->assertEquals($contents, file_get_contents(__DIR__."/example/received.bin"));
 	}
+	
+	function testSendOk() {
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
+		$proto = new ProtocolBase($socket, 16, 16);
+		
+		$proto->sendOK();
+		fclose($socket);
+		
+		$proto = file_get_contents($filename);
+		$this->assertEquals(chr(ProtocolBase::OK), $proto[0]);
+		$this->assertEquals(chr(ProtocolBase::OK), $proto[15]);
+	}
+
+	function testReceiveOk() {
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
+		$proto = new ProtocolBase($socket, 16, 16);
+		
+		$proto->sendOK();
+		fclose($socket);
+		
+		$socket = fopen($filename, "r");
+		$proto = new ProtocolBase($socket, 16, 16);
+		$this->assertEquals(NULL, $proto->getOK());
+		fclose($socket);
+	}
+	
+	function testReceiveOkError() {
+		$filename = __DIR__."/example/proto.bin";
+		$socket = fopen($filename, "w");
+		$proto = new ProtocolBase($socket, 16, 16);
+		
+		$proto->sendMessage("Not ok");
+		fclose($socket);
+		$socket = fopen($filename, "r");
+		$proto = new ProtocolBase($socket, 16, 16);
+		$this->expectException(\Net\ProtocolMismatchException::class);
+		$proto->getOK();
+		fclose($socket);
+	}
+	
+	
 	/*
 	function testReceiveUTR() {
 		$contents = random_bytes(self::FILESIZE);
