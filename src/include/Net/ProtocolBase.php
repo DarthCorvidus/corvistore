@@ -111,6 +111,22 @@ class ProtocolBase {
 		}
 	return $result;
 	}
+
+	function sendCommand(string $command) {
+		$this->sendString(self::COMMAND, $command);
+	}
+
+	function getCommand(): string {
+		$this->getString(self::COMMAND);
+	}
+
+	function sendMessage(string $message) {
+		$this->sendString(self::MESSAGE, $message);
+	}
+
+	function getMessage(): string {
+		$this->getString(self::MESSAGE);
+	}
 	
 	function sendSerializePHP($serialize) {
 		$serialized = serialize($serialize);
