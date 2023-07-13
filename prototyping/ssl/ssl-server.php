@@ -34,7 +34,7 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		
 		
 		$this->socket = stream_socket_server("ssl://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
-		stream_set_blocking($this->socket, FALSE);
+		stream_set_blocking($this->socket, TRUE);
 		if (!$this->socket) {
 			throw new Exception($errstr);
 		}
@@ -104,7 +104,7 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 				continue;
 			}
 			//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
-			echo "A new connection has occurred.".PHP_EOL;
+				echo "A new connection has occurred.".PHP_EOL;
 			if (($msgsock = stream_socket_accept($this->socket)) === false) {
 				echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
 				break;
