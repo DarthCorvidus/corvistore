@@ -68,6 +68,15 @@ class RunnerServer implements Runner, MessageListener {
 				fclose($this->conn);
 				return;
 			}
+			
+			if($command=="count") {
+				for($i=0;$i<25;$i++) {
+					$this->protocol->sendMessage("Count ".$i);
+					sleep(1);
+				}
+			continue;
+			}
+			
 			if($command=="status") {
 				$this->protocol->sendMessage("Connected as client ".$this->clientId);
 			continue;

@@ -35,6 +35,11 @@ class Client {
 			if($input=="sleep") {
 				echo $this->protocol->getMessage().PHP_EOL;
 			}
+			if($input=="count") {
+				for($i=0;$i<24;$i++) {
+					echo $this->protocol->getMessage().PHP_EOL;
+				}
+			}
 			if($input=="quit") {
 				fclose($this->socket);
 				break;
