@@ -3,6 +3,7 @@
 include __DIR__."/../../vendor/autoload.php";
 class Client {
 	private $socket;
+	private $protocol;
 	function __construct($server) {
 		$context = stream_context_create();
 		#stream_context_set_option($context, 'ssl', 'local_ca', __DIR__."/ca.crt");
@@ -20,16 +21,20 @@ class Client {
 			exit(255);
 		}
 		stream_set_blocking($this->socket, TRUE);
+		$this->protocol = new \Net\ProtocolBase($this->socket);
 	}
 	
 	function run() {
+		echo $this->protocol->getMessage().PHP_EOL;
 		while(TRUE) {
 			echo "> ";
 			$input = trim(fgets(STDIN));
 			echo "Sending ".$input.PHP_EOL;
-			fwrite($this->socket, $input.PHP_EOL);
-			$answer = fgets($this->socket);
-			echo $answer.PHP_EOL;
+			$this->protocol->sendCommand($input);
+			echo $this->protocol->getMessage().PHP_EOL;
+			if($input=="sleep") {
+				echo $this->protocol->getMessage().PHP_EOL;
+			}
 			if($input=="quit") {
 				fclose($this->socket);
 				break;
