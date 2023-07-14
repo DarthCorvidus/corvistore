@@ -13,14 +13,15 @@ class Client {
 		$context = new Net\SSLContext();
 		$context->setCAFile(__DIR__."/ca.crt");
 		
-		$this->socket = stream_socket_client("ssl://".$server.":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT, $context->getContextClient());
-		#if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT )) {
-		#	exit();
-		#}
+		$this->socket = stream_socket_client("tcp://".$server.":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT, $context->getContextClient());
+		stream_set_blocking($this->socket, TRUE);	
+		if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT )) {
+			exit();
+		}
 		if($this->socket===FALSE) {
 			exit(255);
 		}
-		stream_set_blocking($this->socket, TRUE);
+		
 		$this->protocol = new \Net\ProtocolBase($this->socket);
 	}
 	

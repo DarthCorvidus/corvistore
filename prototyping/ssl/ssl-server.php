@@ -33,8 +33,12 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		$context->setCertificateFile(__DIR__."/server.crt");
 		
 		
-		$this->socket = stream_socket_server("ssl://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
+		$this->socket = stream_socket_server("tcp://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
 		stream_set_blocking($this->socket, TRUE);
+		#if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLS_SERVER )) {
+		#	exit();
+		#}
+
 		if (!$this->socket) {
 			throw new Exception($errstr);
 		}
@@ -107,9 +111,14 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 				echo "A new connection has occurred.".PHP_EOL;
 			if (($msgsock = stream_socket_accept($this->socket)) === false) {
 				echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
+				#stream_set_blocking($msgsock, TRUE);
 				break;
 			} else {
 				echo "New connection has been accepted.".PHP_EOL;
+				stream_set_blocking($msgsock, true);
+				if (! stream_socket_enable_crypto ($msgsock, true, STREAM_CRYPTO_METHOD_TLS_SERVER )) {
+					exit();
+				}
 				$this->onConnect($msgsock);
 			}
 		} while(TRUE);
