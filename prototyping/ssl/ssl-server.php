@@ -8,6 +8,8 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	private $queue;
 	private $ipcServer;
 	private $ipcClients = array();
+	private $clientCount = 0;
+	private $sslProtocol = array();
 	function __construct() {
 		set_time_limit(0);
 		ob_implicit_flush();
@@ -75,12 +77,12 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	}
 	
 	private function onConnect($msgsock) {
-		$this->clients[] = $msgsock;
-		$keys = array_keys($this->clients, $msgsock);
-		$runner = new RunnerServer($msgsock, $keys[0]);
-		$process = new Process($runner);
-		$process->addProcessListener($this);
-		$process->run();
+		$this->clients["ssl:".$this->clientCount] = $msgsock;
+		#$runner = new RunnerServer($this->clientCount);
+		#$process = new Process($runner);
+		#$process->addProcessListener($this);
+		#$process->run();
+		$this->clientCount++;
 	}
 	
 	function onMessage(\Message $message) {
@@ -96,7 +98,10 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		$read["mainServer"] = $this->socket;
 		$read["mainIPC"] = $this->ipcServer;
 		foreach($this->ipcClients as $key => $value) {
-			$read[] = $value;
+			$read[$key] = $value;
+		}
+		foreach($this->clients as $key => $value) {
+			$read[$key] = $value;
 		}
 		if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
 			//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
@@ -122,7 +127,14 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		if (! stream_socket_enable_crypto ($msgsock, true, STREAM_CRYPTO_METHOD_TLS_SERVER )) {
 			exit();
 		}
-		$this->onConnect($msgsock);
+		$this->clients["ssl:".$this->clientCount] = $msgsock;
+		#$runner = new RunnerServer($this->clientCount);
+		#$process = new Process($runner);
+		#$process->addProcessListener($this);
+		#$process->run();
+		$this->sslProtocol[$this->clientCount] = new \Net\ProtocolBase($msgsock);
+		$this->sslProtocol[$this->clientCount]->sendMessage("Connected as client ".$this->clientCount);
+		$this->clientCount++;
 	}
 	
 	private function newIpcClient() {
@@ -133,9 +145,9 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 			return;
 		}
 		stream_set_blocking($msgsock, TRUE);
-		// Dangerous assumption that there is no race condition here. Suffices
-		// in the current stage.
-		$this->ipcClients[] = $msgsock;
+		$clientId = IntVal::uint64LE()->getValue(fread($msgsock, 8));
+		$this->ipcClients["ipc:".$clientId] = $msgsock;
+		
 		echo "New IPC connection has been accepted.".PHP_EOL;
 	}
 	
@@ -176,8 +188,20 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 				if(in_array($key, array("mainServer", "mainIPC"), TRUE)) {
 					continue;
 				}
-				echo "Message from IPC: ";
-				echo fread($value, 16).PHP_EOL;
+				$exp = explode(":", $key);
+				if($exp[0]=="ssl") {
+					$command = $this->sslProtocol[$exp[1]]->getCommand();
+					echo "Client sent command [".$command."]".PHP_EOL;
+					$this->sslProtocol[$exp[1]]->sendMessage("You sent ".$command);
+					if($command=="quit") {
+						echo "Closing connection to ".$exp[1].PHP_EOL;
+						unset($this->sslProtocol[$exp[1]]);
+						unset($this->clients[$key]);
+					}
+					#fwrite($this->ipcClients[$key], $data);
+				}
+				#echo "Message from IPC ".$key.": ";
+				#echo fread($value, 16).PHP_EOL;
 			}
 		} while(TRUE);
 	}
