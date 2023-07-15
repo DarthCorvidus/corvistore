@@ -6,13 +6,15 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	private $socket;
 	private $clients = array();
 	private $queue;
+	private $ipcServer;
+	private $ipcClients = array();
 	function __construct() {
 		set_time_limit(0);
 		ob_implicit_flush();
 		pcntl_async_signals(true);
 		$signal = Signal::get();
-		$signal->addSignalHandler(SIGINT, $this);
-		$signal->addSignalHandler(SIGTERM, $this);
+		#$signal->addSignalHandler(SIGINT, $this);
+		#$signal->addSignalHandler(SIGTERM, $this);
 		$this->queue = new SysVQueue(ftok(__DIR__, "a"));
 		$this->queue->addListener($signal, $this);
 		$address = '127.0.0.1';
@@ -34,6 +36,12 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		
 		
 		$this->socket = stream_socket_server("tcp://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
+		if(file_exists("ssl-server.socket")) {
+			unlink("ssl-server.socket");
+		}
+		$this->ipcServer = stream_socket_server("unix://ssl-server.socket", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
+		stream_set_blocking($this->ipcServer, TRUE);
+		
 		stream_set_blocking($this->socket, TRUE);
 		#if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLS_SERVER )) {
 		#	exit();
@@ -86,6 +94,10 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	private function streamSelect(): array {
 		$read = array();
 		$read["mainServer"] = $this->socket;
+		$read["mainIPC"] = $this->ipcServer;
+		foreach($this->ipcClients as $key => $value) {
+			$read[] = $value;
+		}
 		if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
 			//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
 			#$error = socket_last_error($this->socket);
@@ -113,15 +125,25 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		$this->onConnect($msgsock);
 	}
 	
+	private function newIpcClient() {
+		echo "A new IPC connection has occurred.".PHP_EOL;
+		if (($msgsock = stream_socket_accept($this->ipcServer)) === false) {
+			echo "IPC: socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
+			#stream_set_blocking($msgsock, TRUE);
+			return;
+		}
+		stream_set_blocking($msgsock, TRUE);
+		// Dangerous assumption that there is no race condition here. Suffices
+		// in the current stage.
+		$this->ipcClients[] = $msgsock;
+		echo "New IPC connection has been accepted.".PHP_EOL;
+	}
+	
 	function run() {
 		$clients = array();
 		do {
-			pcntl_signal_dispatch();
+			#pcntl_signal_dispatch();
 			#Any activity on the main socket will spawn a new process.
-			$read = array();
-			$read["mainServer"] = $this->socket;
-			$write = NULL;
-			$except = NULL;
 			/**
 			 * This is a bit sucky. The SIGCHLD sent by Process breaks
 			 * stream_select early, which is keen on telling everyone.
@@ -141,8 +163,21 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 			if(empty($array)) {
 				continue;
 			}
+			
 			if(isset($array["mainServer"])) {
 				$this->newServerClient();
+			}
+			if(isset($array["mainIPC"])) {
+				$this->newIpcClient();
+			}
+			echo "Activity: ".PHP_EOL;
+			print_r($array);
+			foreach($array as $key => $value) {
+				if(in_array($key, array("mainServer", "mainIPC"), TRUE)) {
+					continue;
+				}
+				echo "Message from IPC: ";
+				echo fread($value, 16).PHP_EOL;
 			}
 		} while(TRUE);
 	}
@@ -151,9 +186,11 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		$id = $process->getRunner()->getId();
 		echo "Thread for client ".$id." closed.".PHP_EOL;
 		fclose($this->clients[$id]);
+		fclose($this->ipcClients[$id]);
 		Signal::get()->clearHandler($process);
 		Signal::get()->clearHandler($process->getRunner()->getQueue());
 		unset($this->clients[$id]);
+		unset($this->ipcClients[$id]);
 	}
 
 	public function onStart(Process $process) {
