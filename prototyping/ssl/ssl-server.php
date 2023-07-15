@@ -83,13 +83,43 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		}
 	}
 	
+	private function streamSelect(): array {
+		$read = array();
+		$read["mainServer"] = $this->socket;
+		if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
+			//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
+			#$error = socket_last_error($this->socket);
+			#if($error!==0) {
+			#	echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
+			#}
+			return array();
+		}
+	return $read;
+	}
+
+	private function newServerClient() {
+		//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
+		echo "A new connection has occurred.".PHP_EOL;
+		if (($msgsock = stream_socket_accept($this->socket)) === false) {
+			echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
+			#stream_set_blocking($msgsock, TRUE);
+			return;
+		}
+		echo "New connection has been accepted.".PHP_EOL;
+		stream_set_blocking($msgsock, true);
+		if (! stream_socket_enable_crypto ($msgsock, true, STREAM_CRYPTO_METHOD_TLS_SERVER )) {
+			exit();
+		}
+		$this->onConnect($msgsock);
+	}
+	
 	function run() {
 		$clients = array();
-
 		do {
 			pcntl_signal_dispatch();
 			#Any activity on the main socket will spawn a new process.
-			$read[] = $this->socket;
+			$read = array();
+			$read["mainServer"] = $this->socket;
 			$write = NULL;
 			$except = NULL;
 			/**
@@ -99,27 +129,20 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 			 * which results in a short pause when the client disconnects.
 			 */
 			//pcntl_sigprocmask(SIG_BLOCK, array(SIGCHLD));
-			if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
+			#if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
 				//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
 				#$error = socket_last_error($this->socket);
 				#if($error!==0) {
 				#	echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
 				#}
+				#continue;
+			#}
+			$array = $this->streamSelect();
+			if(empty($array)) {
 				continue;
 			}
-			//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
-				echo "A new connection has occurred.".PHP_EOL;
-			if (($msgsock = stream_socket_accept($this->socket)) === false) {
-				echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
-				#stream_set_blocking($msgsock, TRUE);
-				break;
-			} else {
-				echo "New connection has been accepted.".PHP_EOL;
-				stream_set_blocking($msgsock, true);
-				if (! stream_socket_enable_crypto ($msgsock, true, STREAM_CRYPTO_METHOD_TLS_SERVER )) {
-					exit();
-				}
-				$this->onConnect($msgsock);
+			if(isset($array["mainServer"])) {
+				$this->newServerClient();
 			}
 		} while(TRUE);
 	}
