@@ -115,7 +115,6 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	}
 
 	private function newServerClient() {
-		//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
 		echo "A new connection has occurred.".PHP_EOL;
 		if (($msgsock = stream_socket_accept($this->socket)) === false) {
 			echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
@@ -128,10 +127,10 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 			exit();
 		}
 		$this->clients["ssl:".$this->clientCount] = $msgsock;
-		#$runner = new RunnerServer($this->clientCount);
-		#$process = new Process($runner);
-		#$process->addProcessListener($this);
-		#$process->run();
+		$runner = new RunnerServer($this->clientCount);
+		$process = new Process($runner);
+		$process->addProcessListener($this);
+		$process->run();
 		$this->sslProtocol[$this->clientCount] = new \Net\ProtocolBase($msgsock);
 		$this->sslProtocol[$this->clientCount]->sendMessage("Connected as client ".$this->clientCount);
 		$this->clientCount++;
@@ -153,7 +152,9 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	
 	function run() {
 		$clients = array();
+		$i = 0;
 		do {
+			$i++;
 			#pcntl_signal_dispatch();
 			#Any activity on the main socket will spawn a new process.
 			/**
@@ -175,31 +176,56 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 			if(empty($array)) {
 				continue;
 			}
-			
+			#print_r($array);
 			if(isset($array["mainServer"])) {
 				$this->newServerClient();
 			}
 			if(isset($array["mainIPC"])) {
 				$this->newIpcClient();
 			}
-			echo "Activity: ".PHP_EOL;
-			print_r($array);
+			if($i == 50) {
+				#echo "Break after 50".PHP_EOL;
+				#break;
+			}
+			#echo "Activity: ".$i.PHP_EOL;
+			#print_r($array);
+			$k = 0;
 			foreach($array as $key => $value) {
 				if(in_array($key, array("mainServer", "mainIPC"), TRUE)) {
 					continue;
 				}
 				$exp = explode(":", $key);
 				if($exp[0]=="ssl") {
-					$command = $this->sslProtocol[$exp[1]]->getCommand();
-					echo "Client sent command [".$command."]".PHP_EOL;
-					$this->sslProtocol[$exp[1]]->sendMessage("You sent ".$command);
+					if(!isset($this->clients[$key])) {
+						echo "SSL connection for ".$key." went away.".PHP_EOL;
+						continue;
+					}
+					#echo "Reading SSL for ".$key.PHP_EOL;
+					$data = fread($this->clients[$key], 1024);
+					if($data===FALSE) {
+						echo "Could not read from ".$key.PHP_EOL;
+					}
+					if(!isset($this->ipcClients["ipc:".$exp[1]])) {
+						echo "IPC for client ".$exp[1]." went away".PHP_EOL;
+						continue;
+					}
+					fwrite($this->ipcClients["ipc:".$exp[1]], $data);
+					/*'
 					if($command=="quit") {
 						echo "Closing connection to ".$exp[1].PHP_EOL;
 						unset($this->sslProtocol[$exp[1]]);
 						unset($this->clients[$key]);
+						unset($this->ipcClients[$key]);
 					}
 					#fwrite($this->ipcClients[$key], $data);
+					 * 
+					 */
 				}
+				if($exp[0]=="ipc") {
+					$data = fread($this->ipcClients[$key], 1024);
+					fwrite($this->clients["ssl:".$exp[1]], $data, 1024);
+				}
+				$k++;
 				#echo "Message from IPC ".$key.": ";
 				#echo fread($value, 16).PHP_EOL;
 			}
@@ -207,14 +233,17 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	}
 
 	public function onEnd(Process $process) {
+		#print_r($this->clients);
 		$id = $process->getRunner()->getId();
+		echo "Cleaning up for ".$id.PHP_EOL;
 		echo "Thread for client ".$id." closed.".PHP_EOL;
-		fclose($this->clients[$id]);
-		fclose($this->ipcClients[$id]);
+		echo "(I lied. I did nothing).".PHP_EOL;
+		#fclose($this->clients["ssl:".$id]);
+		#fclose($this->ipcClients["ipc:".$id]);
 		Signal::get()->clearHandler($process);
 		Signal::get()->clearHandler($process->getRunner()->getQueue());
-		unset($this->clients[$id]);
-		unset($this->ipcClients[$id]);
+		unset($this->clients["ssl:".$id]);
+		unset($this->ipcClients["ipc:".$id]);
 	}
 
 	public function onStart(Process $process) {

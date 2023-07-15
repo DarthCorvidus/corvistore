@@ -1,15 +1,17 @@
 <?php
 class RunnerServer implements Runner, MessageListener {
-	private $conn;
 	private $clientId;
 	private $queue;
 	private $protocol;
-	function __construct($conn, int $clientId) {
-		$this->conn = $conn;
+	private $ipcClient;
+	function __construct(int $clientId) {
 		$this->clientId = $clientId;
 		$this->queue = new SysVQueue(ftok(__DIR__, "a"));
 		$this->queue->addListener(Signal::get(), $this);
-		$this->protocol = new \Net\ProtocolBase($this->conn);
+		$this->ipcClient = stream_socket_client("unix://ssl-server.socket", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
+		stream_set_blocking($this->ipcClient, TRUE);
+		fwrite($this->ipcClient, IntVal::uint64SE()->putValue($clientId));
+		$this->protocol = new \Net\ProtocolBase($this->ipcClient);
 	}
 	
 	function getQueue(): SysVQueue {
@@ -25,11 +27,11 @@ class RunnerServer implements Runner, MessageListener {
 	}
 	
 	public function getConnection() {
-		return $this->conn;
+		return $this->ipcClient;
 	}
 	
 	private function write($message) {
-		socket_write($this->conn, $message, strlen($message));
+		socket_write($this->ipcClient, $message, strlen($message));
 	}
 	
 	public function run() {
@@ -41,7 +43,7 @@ class RunnerServer implements Runner, MessageListener {
 
 		do {
 			$read = array();
-			$read[] = $this->conn;
+			$read[] = $this->ipcClient;
 			$write = NULL;
 			$except = NULL;
 			if(stream_select($read, $write, $except, $tv_sec = 5) < 1) {
@@ -51,6 +53,7 @@ class RunnerServer implements Runner, MessageListener {
 				continue;
 			}
 			$command = $this->protocol->getCommand();
+			echo $command.PHP_EOL;
 			$talkback = sprintf("Client %d sent %s", $this->clientId, $command);
 			echo $talkback.PHP_EOL;
 			if($command=="help") {
@@ -63,9 +66,7 @@ class RunnerServer implements Runner, MessageListener {
 			if($command=="quit") {
 				$this->protocol->sendMessage("Quitting.");
 				echo $this->clientId." requested end of connection".PHP_EOL;
-				
-				
-				fclose($this->conn);
+				fclose($this->ipcClient);
 				return;
 			}
 			

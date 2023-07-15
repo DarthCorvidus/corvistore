@@ -33,17 +33,14 @@ class Client {
 			echo "Sending ".$input.PHP_EOL;
 			$this->protocol->sendCommand($input);
 			echo $this->protocol->getMessage().PHP_EOL;
-			/*
-			if($input=="sleep") {
-				echo $this->protocol->getMessage().PHP_EOL;
-			}
+			#if($input=="sleep") {
+			#	echo $this->protocol->getMessage().PHP_EOL;
+			#}
 			if($input=="count") {
 				for($i=0;$i<24;$i++) {
 					echo $this->protocol->getMessage().PHP_EOL;
 				}
 			}
-			 * 
-			 */
 			if($input=="quit") {
 				fclose($this->socket);
 				break;
