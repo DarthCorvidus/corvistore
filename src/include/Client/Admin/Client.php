@@ -21,12 +21,11 @@ class Client {
 		if($socket===FALSE) {
 			throw new \RuntimeException("Unable to connect to ".$this->config->getHost().":4096: ".$errstr.".");
 		}
-		#echo "Username: ";
-		#$user = trim(fgets(STDIN));
-		#echo "Password: ";
-		#$password = trim(fgets(STDIN));
-		#fwrite($socket, "admin ".$user.":".$password."\n");
-		fwrite($socket, "admin marasek:squidlord\n");
+		echo "Username: ";
+		$user = trim(fgets(STDIN));
+		echo "Password: ";
+		$password = trim(fgets(STDIN));
+		fwrite($socket, "admin ".$user.":".$password."\n");
 		$this->protocol = new \Net\Protocol($socket);
 		$this->protocol->getOK();
 	}
