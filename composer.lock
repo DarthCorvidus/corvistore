@@ -243,12 +243,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-process",
-                "reference": "fe30b9904a07677d7d0a6f6a72601574d5af79e9"
+                "reference": "e9e2f1c98319385b83337ba03f6eb88039a37079"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-process/zipball/fe30b9904a07677d7d0a6f6a72601574d5af79e9",
-                "reference": "fe30b9904a07677d7d0a6f6a72601574d5af79e9",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-process/zipball/e9e2f1c98319385b83337ba03f6eb88039a37079",
+                "reference": "e9e2f1c98319385b83337ba03f6eb88039a37079",
                 "shasum": ""
             },
             "default-branch": true,
@@ -258,7 +258,7 @@
                     "src/"
                 ]
             },
-            "time": "2023-06-08T13:59:45+00:00"
+            "time": "2023-07-16T09:41:32+00:00"
         },
         {
             "name": "plibv4/profiler",
