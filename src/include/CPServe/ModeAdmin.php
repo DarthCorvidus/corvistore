@@ -16,6 +16,12 @@ class ModeAdmin implements \Net\ProtocolListener {
 
 	public function onCommand(string $cmd, \Net\Protocol $protocol) {
 		$command = new CommandParser($cmd);
+		if($command->getCommand()=="count" and $command->getObject()!="") {
+			for($i=0;$i<$command->getObject();$i++) {
+				$protocol->sendMessage($i);
+				sleep(1);
+			}
+		}
 		$handler = new CommandHandler($this->pdo, $command);
 		try {
 			$result = $handler->execute();

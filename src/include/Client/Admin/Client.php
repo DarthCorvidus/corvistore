@@ -21,11 +21,12 @@ class Client {
 		if($socket===FALSE) {
 			throw new \RuntimeException("Unable to connect to ".$this->config->getHost().":4096: ".$errstr.".");
 		}
-		echo "Username: ";
-		$user = trim(fgets(STDIN));
-		echo "Password: ";
-		$password = trim(fgets(STDIN));
-		fwrite($socket, "admin ".$user.":".$password."\n");
+		#echo "Username: ";
+		#$user = trim(fgets(STDIN));
+		#echo "Password: ";
+		#$password = trim(fgets(STDIN));
+		#fwrite($socket, "admin ".$user.":".$password."\n");
+		fwrite($socket, "admin marasek:squidlord\n");
 		$this->protocol = new \Net\Protocol($socket);
 		$this->protocol->getOK();
 	}
@@ -37,13 +38,21 @@ class Client {
 			if($input=="") {
 				continue;
 			}
-
+			$exp = explode(" ", $input);
+			if($exp[0]=="count" and isset($exp[1]) and $exp[1]>0) {
+				$this->protocol->sendCommand($input);
+				for($i=0;$i<$exp[1];$i++) {
+					echo $this->protocol->getMessage().PHP_EOL;
+				}
+			continue;
+			}
+			
 			if($input=="quit") {
 				$this->protocol->sendCommand("QUIT");
 				return;
 			}
 			$this->protocol->sendCommand($input);
-			echo $this->protocol->getMessage();
+			echo $this->protocol->getMessage().PHP_EOL;
 		}
 	}
 }
