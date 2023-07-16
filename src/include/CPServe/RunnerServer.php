@@ -5,6 +5,7 @@ class RunnerServer implements Runner, MessageListener {
 	private $queue;
 	private $mode;
 	private $pdo;
+	private $protocol;
 	function __construct($conn, int $clientId) {
 		// Database connections need to be refreshed after forking.
 		$this->pdo = Shared::getEPDO();
@@ -13,6 +14,7 @@ class RunnerServer implements Runner, MessageListener {
 		$this->queue = new SysVQueue(ftok(__DIR__, "a"));
 		$this->queue->addListener(Signal::get(), $this);
 		$this->mode = NULL;
+		$this->protocol = new \Net\ProtocolBase($this->conn);
 	}
 	
 	function getQueue(): SysVQueue {
@@ -85,71 +87,41 @@ class RunnerServer implements Runner, MessageListener {
 	}
 	
 	public function runInitial() {
-		echo "Start loop for client ".$this->clientId.PHP_EOL;
-		do {
-			$read[] = $this->conn;
-			$write = NULL;
-			$except = NULL;
-			#if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
-				#if(socket_last_error($this->conn)!==0) {
-				#	echo "socket_select() failed: ".socket_strerror(socket_last_error($this->conn)).PHP_EOL;
-				#}
-			#	continue;
-			#}
-			if(false === ($buf = fgets($this->conn))) {
-				echo "socket_read() failed: ".socket_strerror(socket_last_error($this->conn)).PHP_EOL;
-				return;
-			}
-			$trimmed = trim($buf);
-			echo "Client sent ".$trimmed.PHP_EOL;
-			/**
-			 * We select the mode here. NODE is a backup endpoint, CLIENT is an
-			 * administrative endpoint.
-			 */
-			if($trimmed=="") {
-				continue;
-			}
-
-			if($this->mode==NULL and strtoupper($trimmed)=="QUIT") {
-				echo $this->clientId." requested end of connection".PHP_EOL;
-				fclose($this->conn);
-				return;
-			}
-			
-			if($this->mode==NULL) {
-				$this->authenticate($trimmed);
-			}
-			
-			if($this->mode!=NULL) {
-				echo "Breaking initial loop.".PHP_EOL;
-				break;
-			}
-			
-			if($this->mode==NULL) {
-				continue;
-			}
-			
-			if($this->mode!=NULL) {
-				$this->mode->onServerMessage($trimmed);
-				if($this->mode->isQuit()) {
-					echo $this->clientId." requested end of connection".PHP_EOL;
-					socket_close($this->conn);
-					return;
-				}
-				continue;
-			}
-			$msg = sprintf("Unknown command: ".$buf);
-			$talkback = sprintf("Client %d said %s", $this->clientId, $buf).PHP_EOL;
-			socket_write($this->conn, $talkback, strlen($talkback));
-		} while(true);
 	}
 	
 	public function run() {
-		$this->runInitial();
-		$protocol = new \Net\Protocol($this->conn);
-		$protocol->sendOK();
-		$protocol->addProtocolListener($this->mode);
-		$protocol->listen();
-		fclose($this->conn);
+		#$this->runInitial();
+		#$protocol = new \Net\Protocol($this->conn);
+		#$protocol->sendOK();
+		#$protocol->addProtocolListener($this->mode);
+		#$protocol->listen();
+		#fclose($this->conn);
+		echo "Start loop for client ".$this->clientId.PHP_EOL;
+		$auth = $this->protocol->getMessage();
+		$explode = explode(" ", $auth);
+		try {
+			if($explode[0]=="admin") {
+				$mode = new ModeAdmin($this->pdo, $this->protocol, $explode[1]);
+				$mode->run();
+			}
+		} catch (InvalidArgumentException $e) {
+			$this->protocol->sendError($e->getMessage());
+		}
+		/*
+		while(true) {
+			$command = $this->protocol->getCommand();
+			$this->protocol->sendMessage("Sent: ".$command);
+			if($command=="count") {
+				for($i=0;$i<25;$i++) {
+					$this->protocol->sendMessage("Count ".$i);
+					sleep(1);
+				}
+			}
+			if($command=="quit") {
+				exit();
+			}
+		}
+		 * 
+		 */
 	}
 }

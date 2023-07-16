@@ -76,10 +76,9 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 				#echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
 				#break;
 				continue;
-			} else {
-				echo "New connection has been accepted.".PHP_EOL;
-				$this->onConnect($msgsock);
 			}
+			echo "New connection has been accepted.".PHP_EOL;
+			$this->onConnect($msgsock);
 		} while(TRUE);
 	}
 

@@ -25,33 +25,30 @@ class Client {
 		$user = trim(fgets(STDIN));
 		echo "Password: ";
 		$password = trim(fgets(STDIN));
-		fwrite($socket, "admin ".$user.":".$password."\n");
-		$this->protocol = new \Net\Protocol($socket);
+		$this->protocol = new \Net\ProtocolBase($socket);
+		$this->protocol->sendMessage("admin ".$user.":".$password);
 		$this->protocol->getOK();
 	}
 	
 	function run() {
 		while(TRUE) {
+			
 			$input = trim(readline("cpadm> "));
 			readline_add_history($input);
 			if($input=="") {
 				continue;
 			}
-			$exp = explode(" ", $input);
-			if($exp[0]=="count" and isset($exp[1]) and $exp[1]>0) {
-				$this->protocol->sendCommand($input);
-				for($i=0;$i<$exp[1];$i++) {
+			$this->protocol->sendCommand($input);
+			echo $this->protocol->getMessage().PHP_EOL;
+			if($input=="count") {
+				for($i=0;$i<25;$i++) {
 					echo $this->protocol->getMessage().PHP_EOL;
 				}
 			continue;
 			}
-			
 			if($input=="quit") {
-				$this->protocol->sendCommand("QUIT");
-				return;
+				exit();
 			}
-			$this->protocol->sendCommand($input);
-			echo $this->protocol->getMessage().PHP_EOL;
 		}
 	}
 }
