@@ -2,14 +2,13 @@
 <?php
 include __DIR__."/../../vendor/autoload.php";
 include __DIR__."/RunnerServer.php";
+include __DIR__."/RunnerSSL.php";
 class Server implements ProcessListener, MessageListener, SignalHandler {
 	private $socket;
 	private $clients = array();
 	private $queue;
 	private $ipcServer;
 	private $ipcClients = array();
-	private $clientCount = 0;
-	private $sslProtocol = array();
 	function __construct() {
 		set_time_limit(0);
 		ob_implicit_flush();
@@ -22,36 +21,15 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 		$address = '127.0.0.1';
 		$port = 4096;
 		$context = stream_context_create();
-		
-		
-		stream_context_set_option($context, 'ssl', 'local_cert', __DIR__."/server.crt");
-		stream_context_set_option($context, 'ssl', 'local_pk', __DIR__."/server.key");
-		stream_context_set_option($context, 'ssl', 'local_ca', __DIR__."/ca.crt");
-		#stream_context_set_option($context, 'ssl', 'passphrase', "");
-		#stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
-		stream_context_set_option($context, 'ssl', 'verify_peer', false);
-		
-		$context = new Net\SSLContext();
-		$context->setCAFile(__DIR__."/ca.crt");
-		$context->setPrivateKeyFile(__DIR__."/server.key");
-		$context->setCertificateFile(__DIR__."/server.crt");
-		
-		
-		$this->socket = stream_socket_server("tcp://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
+
 		if(file_exists("ssl-server.socket")) {
 			unlink("ssl-server.socket");
 		}
 		$this->ipcServer = stream_socket_server("unix://ssl-server.socket", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
-		stream_set_blocking($this->ipcServer, TRUE);
-		
-		stream_set_blocking($this->socket, TRUE);
 		#if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLS_SERVER )) {
 		#	exit();
 		#}
 
-		if (!$this->socket) {
-			throw new Exception($errstr);
-		}
 		/*
 		if (($this->socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
 			throw new RuntimeException(sprintf("Socket creation failed: %s", socket_strerror(socket_last_error())));
@@ -151,83 +129,38 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	}
 	
 	function run() {
+		$runner = new RunnerSSL();
+		$sslProcess = new Process($runner);
+		$sslProcess->run();
 		$clients = array();
 		$i = 0;
 		do {
-			$i++;
-			#pcntl_signal_dispatch();
-			#Any activity on the main socket will spawn a new process.
-			/**
-			 * This is a bit sucky. The SIGCHLD sent by Process breaks
-			 * stream_select early, which is keen on telling everyone.
-			 * So either silence it or use pcntl_sigprocmask to shield it,
-			 * which results in a short pause when the client disconnects.
-			 */
-			//pcntl_sigprocmask(SIG_BLOCK, array(SIGCHLD));
-			#if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
+			$read = array();
+			$read["mainIPC"] = $this->ipcServer;
+			foreach($this->ipcClients as $key => $value) {
+				$read[$key] = $value;
+			}
+			if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
 				//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
 				#$error = socket_last_error($this->socket);
 				#if($error!==0) {
 				#	echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
 				#}
-				#continue;
-			#}
-			$array = $this->streamSelect();
-			if(empty($array)) {
 				continue;
 			}
-			#print_r($array);
-			if(isset($array["mainServer"])) {
-				$this->newServerClient();
-			}
-			if(isset($array["mainIPC"])) {
-				$this->newIpcClient();
-			}
-			if($i == 50) {
-				#echo "Break after 50".PHP_EOL;
-				#break;
-			}
-			#echo "Activity: ".$i.PHP_EOL;
-			#print_r($array);
-			$k = 0;
-			foreach($array as $key => $value) {
-				if(in_array($key, array("mainServer", "mainIPC"), TRUE)) {
-					continue;
+			if(isset($read["mainIPC"])) {
+				echo "A new IPC connection has occurred.".PHP_EOL;
+				if (($msgsock = stream_socket_accept($this->ipcServer)) === false) {
+					echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
+					#stream_set_blocking($msgsock, TRUE);
+					return;
 				}
-				$exp = explode(":", $key);
-				if($exp[0]=="ssl") {
-					if(!isset($this->clients[$key])) {
-						echo "SSL connection for ".$key." went away.".PHP_EOL;
-						continue;
-					}
-					#echo "Reading SSL for ".$key.PHP_EOL;
-					$data = fread($this->clients[$key], 1024);
-					if($data===FALSE) {
-						echo "Could not read from ".$key.PHP_EOL;
-					}
-					if(!isset($this->ipcClients["ipc:".$exp[1]])) {
-						echo "IPC for client ".$exp[1]." went away".PHP_EOL;
-						continue;
-					}
-					fwrite($this->ipcClients["ipc:".$exp[1]], $data);
-					/*'
-					if($command=="quit") {
-						echo "Closing connection to ".$exp[1].PHP_EOL;
-						unset($this->sslProtocol[$exp[1]]);
-						unset($this->clients[$key]);
-						unset($this->ipcClients[$key]);
-					}
-					#fwrite($this->ipcClients[$key], $data);
-					 * 
-					 */
-				}
-				if($exp[0]=="ipc") {
-					$data = fread($this->ipcClients[$key], 1024);
-					fwrite($this->clients["ssl:".$exp[1]], $data, 1024);
-				}
-				$k++;
-				#echo "Message from IPC ".$key.": ";
-				#echo fread($value, 16).PHP_EOL;
+				$clientId = IntVal::uint64LE()->getValue(fread($msgsock, 8));
+				echo "New connection for ".$clientId." has been accepted.".PHP_EOL;
+				$this->ipcClients[$clientId] = $msgsock;
+				$this->workers[$clientId] = new RunnerServer($msgsock, $clientId);
+				$this->workerProcess[$clientId] = new Process($this->workers[$clientId]);
+				$this->workerProcess[$clientId]->run();
 			}
 		} while(TRUE);
 	}

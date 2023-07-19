@@ -1,17 +1,11 @@
 <?php
 class RunnerServer implements Runner, MessageListener {
+	private $socket;
 	private $clientId;
-	private $queue;
-	private $protocol;
-	private $ipcClient;
-	function __construct(int $clientId) {
+	function __construct($msgsock, int $clientId) {
 		$this->clientId = $clientId;
-		$this->queue = new SysVQueue(ftok(__DIR__, "a"));
-		$this->queue->addListener(Signal::get(), $this);
-		$this->ipcClient = stream_socket_client("unix://ssl-server.socket", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
-		stream_set_blocking($this->ipcClient, TRUE);
-		fwrite($this->ipcClient, IntVal::uint64SE()->putValue($clientId));
-		$this->protocol = new \Net\ProtocolBase($this->ipcClient);
+		$this->socket = $msgsock;
+		$this->protocol = new \Net\ProtocolBase($msgsock);
 	}
 	
 	function getQueue(): SysVQueue {
@@ -35,15 +29,14 @@ class RunnerServer implements Runner, MessageListener {
 	}
 	
 	public function run() {
-		echo "Start loop for client ".$this->clientId.PHP_EOL;
-		$this->protocol->sendMessage("Connected as client ".$this->clientId);
+		echo "Start worker for client ".$this->clientId.PHP_EOL;
 		#if (! stream_socket_enable_crypto ($this->conn, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT )) {
 		#	exit();
 		#}
 
 		do {
 			$read = array();
-			$read[] = $this->ipcClient;
+			$read["main"] = $this->socket;
 			$write = NULL;
 			$except = NULL;
 			if(stream_select($read, $write, $except, $tv_sec = 5) < 1) {
@@ -52,43 +45,11 @@ class RunnerServer implements Runner, MessageListener {
 				#}
 				continue;
 			}
-			$command = $this->protocol->getCommand();
-			echo $command.PHP_EOL;
-			$talkback = sprintf("Client %d sent %s", $this->clientId, $command);
-			echo $talkback.PHP_EOL;
-			if($command=="help") {
-				$help = "status - get status information".PHP_EOL;
-				$help .= "sleep - sleep for 15 seconds";
-				$this->protocol->sendMessage($help);
-			continue;
+			if(!isset($read["main"])) {
+				continue;
 			}
-			
-			if($command=="quit") {
-				$this->protocol->sendMessage("Quitting.");
-				echo $this->clientId." requested end of connection".PHP_EOL;
-				fclose($this->ipcClient);
-				return;
-			}
-			
-			if($command=="count") {
-				for($i=0;$i<25;$i++) {
-					$this->protocol->sendMessage("Count ".$i);
-					sleep(1);
-				}
-			continue;
-			}
-			
-			if($command=="status") {
-				$this->protocol->sendMessage("Connected as client ".$this->clientId);
-			continue;
-			}
-			if($command=="sleep") {
-				$this->protocol->sendMessage("Sleeping for 15 seconds.");
-				sleep(15);
-				$this->protocol->sendMessage("Woke up after 15 seconds");
-			continue;
-			}
-			$this->protocol->sendMessage("You sent command: ".$command);
+			$command = trim(fgets($this->socket));
+			echo sprintf("Command via IPC from %d: %s", $this->clientId, $command).PHP_EOL;
 		} while(true);
 	}
 }
