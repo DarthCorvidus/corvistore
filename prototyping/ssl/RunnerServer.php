@@ -1,11 +1,14 @@
 <?php
-class RunnerServer implements Runner, MessageListener {
+class RunnerServer implements Runner, MessageListener, SignalHandler {
 	private $socket;
 	private $clientId;
 	function __construct($msgsock, int $clientId) {
 		$this->clientId = $clientId;
 		$this->socket = $msgsock;
 		$this->protocol = new \Net\ProtocolBase($msgsock);
+		$signal = Signal::get();
+		$signal->clearSignal(SIGTERM);
+		//$signal->addSignalHandler(SIGTERM, $this);
 	}
 	
 	function getQueue(): SysVQueue {
@@ -33,7 +36,6 @@ class RunnerServer implements Runner, MessageListener {
 		#if (! stream_socket_enable_crypto ($this->conn, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT )) {
 		#	exit();
 		#}
-
 		do {
 			$read = array();
 			$read["main"] = $this->socket;
@@ -49,7 +51,21 @@ class RunnerServer implements Runner, MessageListener {
 				continue;
 			}
 			$command = trim(fgets($this->socket));
+			if($command=="") {
+				continue;
+			}
 			echo sprintf("Command via IPC from %d: %s", $this->clientId, $command).PHP_EOL;
+			if($command=="quit") {
+				echo "Quitting worker (via command)...".PHP_EOL;
+				exit();
+			}
 		} while(true);
 	}
+
+	public function onSignal(int $signal, array $info) {
+		if($signal==SIGTERM) {
+			echo "Quitting worker (via signal)...";
+		}
+	}
+
 }

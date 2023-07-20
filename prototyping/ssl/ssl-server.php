@@ -131,6 +131,7 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	function run() {
 		$runner = new RunnerSSL();
 		$sslProcess = new Process($runner);
+		$sslProcess->addProcessListener($this);
 		$sslProcess->run();
 		$clients = array();
 		$i = 0;
@@ -160,23 +161,38 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 				$this->ipcClients[$clientId] = $msgsock;
 				$this->workers[$clientId] = new RunnerServer($msgsock, $clientId);
 				$this->workerProcess[$clientId] = new Process($this->workers[$clientId]);
+				$this->workerProcess[$clientId]->addProcessListener($this);
 				$this->workerProcess[$clientId]->run();
+				echo "Forked off worker process with pid ".$this->workerProcess[$clientId]->getPid().PHP_EOL;
 			}
 		} while(TRUE);
 	}
 
 	public function onEnd(Process $process) {
-		#print_r($this->clients);
-		$id = $process->getRunner()->getId();
-		echo "Cleaning up for ".$id.PHP_EOL;
-		echo "Thread for client ".$id." closed.".PHP_EOL;
-		echo "(I lied. I did nothing).".PHP_EOL;
-		#fclose($this->clients["ssl:".$id]);
-		#fclose($this->ipcClients["ipc:".$id]);
-		Signal::get()->clearHandler($process);
-		Signal::get()->clearHandler($process->getRunner()->getQueue());
-		unset($this->clients["ssl:".$id]);
-		unset($this->ipcClients["ipc:".$id]);
+		$name = $process->getRunnerName();
+		/*
+		 * If the SSL fork crashes, quit here, end the workers.
+		 */
+		if($name=="RunnerSSL") {
+			foreach($this->workerProcess as $key => $value) {
+				echo "Ending ".$value->getPid().PHP_EOL;
+				$value->sigTerm();
+			}
+			exit(0);
+		}
+		/*
+		 * If the client quits via "quit", quit is sent to the Worker via IPC,
+		 * which will end as well. Clean up here.
+		 */
+		if($name=="RunnerServer") {
+			echo "Removing worker".PHP_EOL;
+			$clientId = $process->getRunner()->getId();
+			unset($this->workers[$clientId]);
+			unset($this->workerProcess[$clientId]);
+			unset($this->ipcClients[$clientId]);
+			Signal::get()->clearHandler($process);
+			
+		}
 	}
 
 	public function onStart(Process $process) {
