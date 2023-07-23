@@ -39,6 +39,7 @@ class RunnerSSL implements Runner, StreamHubListener {
 		$this->socket = stream_socket_server("ssl://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
 		$this->hub->addServer("ssl", $this->socket);
 		$this->hub->addStreamHubListener("ssl", $this);
+		$this->hub->addStreamHubListener("ipc", $this);
 	}
 	
 	public function run() {
@@ -106,18 +107,21 @@ class RunnerSSL implements Runner, StreamHubListener {
 	public function onConnect(string $name, int $id, $newClient) {
 		$this->sslProtocol[$id] = new \Net\ProtocolBase($newClient);
 		$this->sslProtocol[$id]->sendMessage("Connected as client ".$id);
+		$ipcClient = stream_socket_client("unix://ssl-server.socket", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
+		$this->hub->addCustomStream("ipc", $id, $ipcClient);
 	}
 
 	public function onRead(string $name, int $id, $stream) {
-		$command = $this->sslProtocol[$id]->getCommand();
-		echo sprintf("Client %d sent message: %s", $id, $command).PHP_EOL;
-		if($command=="quit") {
-			$this->hub->close($name, $id);
+		if($name == "ssl") {
+			$forward = fread($stream, 1024);
+			fwrite($this->hub->getStream("ipc", $id), $forward);
+		return;
+		}
+		if($name == "ipc") {
+			$forward = fread($stream, 1024);
+			fwrite($this->hub->getStream("ssl", $id), $forward);
 		}
 		
-		if($command=="crash") {
-			throw new Exception("I was told to crash.");
-		}
 	}
 
 	public function onWrite(string $name, int $id, $stream) {

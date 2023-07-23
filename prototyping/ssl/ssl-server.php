@@ -5,6 +5,7 @@ include __DIR__."/RunnerWorker.php";
 include __DIR__."/RunnerSSL.php";
 class Server implements ProcessListener, SignalHandler, StreamHubListener {
 	private $hub;
+	private $ipcProtocol = array();
 	function __construct() {
 		set_time_limit(0);
 		ob_implicit_flush();
@@ -132,10 +133,14 @@ class Server implements ProcessListener, SignalHandler, StreamHubListener {
 
 	public function onConnect(string $name, int $id, $newClient) {
 		echo "New IPC connection.".PHP_EOL;
+		$this->ipcProtocol[$id] = new \Net\ProtocolBase($newClient);
 	}
 
 	public function onRead(string $name, int $id, $stream) {
-		
+		echo "New IPC activity: ".PHP_EOL;
+		$command = $this->ipcProtocol[$id]->getCommand();
+		echo $command.PHP_EOL;
+		$this->ipcProtocol[$id]->sendMessage("IPC message: received".$command);
 	}
 
 	public function onWrite(string $name, int $id, $stream) {
