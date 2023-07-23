@@ -7,7 +7,7 @@ class Client implements StreamHubListener {
 	private $hub;
 	function __construct($server) {
 		$this->hub = new StreamHub();
-		$this->hub->addCustomStream("input", STDIN);
+		$this->hub->addCustomStream("input", 0, STDIN);
 		$this->hub->addStreamHubListener("input", $this);
 		#$context = stream_context_create();
 		#stream_context_set_option($context, 'ssl', 'local_ca', __DIR__."/ca.crt");
@@ -26,7 +26,7 @@ class Client implements StreamHubListener {
 		if($this->socket===FALSE) {
 			exit(255);
 		}
-		$this->hub->addCustomStream("ssl", $this->socket);
+		$this->hub->addCustomStream("ssl", 0, $this->socket);
 		$this->hub->addStreamHubListener("ssl", $this);
 		$this->protocol = new \Net\ProtocolBase($this->socket);
 	}

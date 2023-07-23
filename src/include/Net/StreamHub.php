@@ -17,8 +17,8 @@ class StreamHub {
 		$this->counters[$name] = 0;
 	}
 	
-	function addCustomStream(string $name, $stream) {
-		$this->clients[$name.":0"] = $stream;
+	function addCustomStream(string $name, int $id, $stream) {
+		$this->clients[$name.":".$id] = $stream;
 	}
 	
 	function addStreamHubListener(string $name, StreamHubListener $listener) {
