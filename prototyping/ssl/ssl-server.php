@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 include __DIR__."/../../vendor/autoload.php";
-include __DIR__."/RunnerServer.php";
+include __DIR__."/RunnerWorker.php";
 include __DIR__."/RunnerSSL.php";
 class Server implements ProcessListener, MessageListener, SignalHandler {
 	private $socket;
