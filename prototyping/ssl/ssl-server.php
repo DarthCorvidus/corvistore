@@ -132,15 +132,22 @@ class Server implements ProcessListener, SignalHandler, StreamHubListener {
 	}
 
 	public function onConnect(string $name, int $id, $newClient) {
-		echo "New IPC connection.".PHP_EOL;
-		$this->ipcProtocol[$id] = new \Net\ProtocolBase($newClient);
+		echo "New IPC connection - forking off".PHP_EOL;
+		$this->hub->detach($name, $id);
+		$worker = new RunnerWorker($newClient, $id);
+		$process = new Process($worker);
+		$process->run();
+		
+		
+		#$this->ipcProtocol[$id] = new \Net\ProtocolBase($newClient);
 	}
 
 	public function onRead(string $name, int $id, $stream) {
-		echo "New IPC activity: ".PHP_EOL;
-		$command = $this->ipcProtocol[$id]->getCommand();
-		echo $command.PHP_EOL;
-		$this->ipcProtocol[$id]->sendMessage("IPC message: received".$command);
+		echo "This should not get called.".PHP_EOL;
+		#echo "New IPC activity: ".PHP_EOL;
+		#$command = $this->ipcProtocol[$id]->getCommand();
+		#echo $command.PHP_EOL;
+		#$this->ipcProtocol[$id]->sendMessage("IPC message: received".$command);
 	}
 
 	public function onWrite(string $name, int $id, $stream) {

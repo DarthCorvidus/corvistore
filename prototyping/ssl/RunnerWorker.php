@@ -1,13 +1,18 @@
 <?php
-class RunnerWorker implements Runner, MessageListener, SignalHandler {
+class RunnerWorker implements Runner, MessageListener, SignalHandler, StreamHubListener {
 	private $socket;
 	private $clientId;
+	private $hub;
+	private $protocol;
 	function __construct($msgsock, int $clientId) {
 		$this->clientId = $clientId;
 		$this->socket = $msgsock;
 		$this->protocol = new \Net\ProtocolBase($msgsock);
 		$signal = Signal::get();
 		$signal->clearSignal(SIGTERM);
+		$this->hub = new StreamHub();
+		$this->hub->addCustomStream("ipc", $clientId, $msgsock);
+		$this->hub->addStreamHubListener("ipc", $this);
 		//$signal->addSignalHandler(SIGTERM, $this);
 	}
 	
@@ -33,6 +38,9 @@ class RunnerWorker implements Runner, MessageListener, SignalHandler {
 	
 	public function run() {
 		echo "Start worker for client ".$this->clientId.PHP_EOL;
+		$this->hub->listen();
+	return;
+		
 		#if (! stream_socket_enable_crypto ($this->conn, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT )) {
 		#	exit();
 		#}
@@ -50,7 +58,7 @@ class RunnerWorker implements Runner, MessageListener, SignalHandler {
 			if(!isset($read["main"])) {
 				continue;
 			}
-			$command = trim(fgets($this->socket));
+			
 			if($command=="") {
 				continue;
 			}
@@ -66,6 +74,23 @@ class RunnerWorker implements Runner, MessageListener, SignalHandler {
 		if($signal==SIGTERM) {
 			echo "Quitting worker (via signal)...";
 		}
+	}
+
+	public function onConnect(string $name, int $id, $newClient) {
+		
+	}
+
+	public function onRead(string $name, int $id, $stream) {
+		$command = $this->protocol->getCommand();
+		$this->protocol->sendMessage("Command sent ". posix_getpid().": ".$command);
+		if($command=="quit") {
+			echo "Closing worker ".$id.", ".posix_getpid().PHP_EOL;
+			exit();
+		}
+	}
+
+	public function onWrite(string $name, int $id, $stream) {
+		
 	}
 
 }
