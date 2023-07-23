@@ -3,12 +3,8 @@
 include __DIR__."/../../vendor/autoload.php";
 include __DIR__."/RunnerWorker.php";
 include __DIR__."/RunnerSSL.php";
-class Server implements ProcessListener, SignalHandler {
-	private $socket;
-	private $clients = array();
-	private $queue;
-	private $ipcServer;
-	private $ipcClients = array();
+class Server implements ProcessListener, SignalHandler, StreamHubListener {
+	private $hub;
 	function __construct() {
 		set_time_limit(0);
 		ob_implicit_flush();
@@ -16,8 +12,6 @@ class Server implements ProcessListener, SignalHandler {
 		$signal = Signal::get();
 		#$signal->addSignalHandler(SIGINT, $this);
 		#$signal->addSignalHandler(SIGTERM, $this);
-		$this->queue = new SysVQueue(ftok(__DIR__, "a"));
-		$this->queue->addListener($signal, $this);
 		$address = '127.0.0.1';
 		$port = 4096;
 		$context = stream_context_create();
@@ -25,7 +19,10 @@ class Server implements ProcessListener, SignalHandler {
 		if(file_exists("ssl-server.socket")) {
 			unlink("ssl-server.socket");
 		}
-		$this->ipcServer = stream_socket_server("unix://ssl-server.socket", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
+		$ipcServer = stream_socket_server("unix://ssl-server.socket", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
+		$this->hub = new StreamHub();
+		$this->hub->addServer("ipc", $ipcServer);
+		$this->hub->addStreamHubListener("ipc", $this);
 	}
 	
 	function onSignal(int $signal, array $info) {
@@ -62,8 +59,8 @@ class Server implements ProcessListener, SignalHandler {
 		$sslProcess = new Process($runner);
 		$sslProcess->addProcessListener($this);
 		$sslProcess->run();
-		$clients = array();
-		$i = 0;
+		$this->hub->listen();
+		/*
 		do {
 			$read = array();
 			$read["mainIPC"] = $this->ipcServer;
@@ -95,6 +92,8 @@ class Server implements ProcessListener, SignalHandler {
 				echo "Forked off worker process with pid ".$this->workerProcess[$clientId]->getPid().PHP_EOL;
 			}
 		} while(TRUE);
+		 * 
+		 */
 	}
 
 	public function onEnd(Process $process) {
@@ -130,6 +129,19 @@ class Server implements ProcessListener, SignalHandler {
 			echo "Thread for client ".$id." spawned.".PHP_EOL;
 		}
 	}
+
+	public function onConnect(string $name, int $id, $newClient) {
+		echo "New IPC connection.".PHP_EOL;
+	}
+
+	public function onRead(string $name, int $id, $stream) {
+		
+	}
+
+	public function onWrite(string $name, int $id, $stream) {
+		
+	}
+
 }
 
 $certfiles[] = __DIR__."/server.crt";
