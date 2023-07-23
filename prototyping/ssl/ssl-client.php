@@ -9,10 +9,6 @@ class Client implements StreamHubListener {
 		$this->hub = new StreamHub();
 		$this->hub->addCustomStream("input", 0, STDIN);
 		$this->hub->addStreamHubListener("input", $this);
-		#$context = stream_context_create();
-		#stream_context_set_option($context, 'ssl', 'local_ca', __DIR__."/ca.crt");
-		##stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
-		#stream_context_set_option($context, 'ssl', 'verify_peer', true);
 
 		$context = new Net\SSLContext();
 		$context->setCAFile(__DIR__."/ca.crt");
@@ -31,34 +27,6 @@ class Client implements StreamHubListener {
 		$this->protocol = new \Net\ProtocolBase($this->socket);
 	}
 	
-	function run() {
-		$this->hub->listen();
-		
-		/*
-		echo $this->protocol->getMessage().PHP_EOL;
-		while(TRUE) {
-			echo "> ";
-			$input = trim(fgets(STDIN));
-			echo "Sending ".$input.PHP_EOL;
-			$this->protocol->sendCommand($input);
-			echo $this->protocol->getMessage().PHP_EOL;
-			#if($input=="sleep") {
-			#	echo $this->protocol->getMessage().PHP_EOL;
-			#}
-			if($input=="count") {
-				for($i=0;$i<24;$i++) {
-					echo $this->protocol->getMessage().PHP_EOL;
-				}
-			}
-			if($input=="quit") {
-				fclose($this->socket);
-				break;
-			}
-		}
-		 * 
-		 */
-	}
-
 	public function onRead(string $name, int $id, $stream) {
 		if($name=="input") {
 			$input = trim(fgets($stream));
@@ -85,6 +53,9 @@ class Client implements StreamHubListener {
 		
 	}
 
+	function run() {
+		$this->hub->listen();
+	}
 }
 
 if(empty($argv[1])) {

@@ -1,5 +1,5 @@
 <?php
-class RunnerServer implements Runner, MessageListener, SignalHandler {
+class RunnerWorker implements Runner, MessageListener, SignalHandler {
 	private $socket;
 	private $clientId;
 	function __construct($msgsock, int $clientId) {
