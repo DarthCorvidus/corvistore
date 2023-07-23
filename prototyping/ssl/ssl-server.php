@@ -3,7 +3,7 @@
 include __DIR__."/../../vendor/autoload.php";
 include __DIR__."/RunnerWorker.php";
 include __DIR__."/RunnerSSL.php";
-class Server implements ProcessListener, MessageListener, SignalHandler {
+class Server implements ProcessListener, SignalHandler {
 	private $socket;
 	private $clients = array();
 	private $queue;
@@ -26,24 +26,6 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 			unlink("ssl-server.socket");
 		}
 		$this->ipcServer = stream_socket_server("unix://ssl-server.socket", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
-		#if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLS_SERVER )) {
-		#	exit();
-		#}
-
-		/*
-		if (($this->socket = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
-			throw new RuntimeException(sprintf("Socket creation failed: %s", socket_strerror(socket_last_error())));
-		}
-
-		if (@socket_bind($this->socket, $address, $port) === false) {
-			throw new RuntimeException(sprintf("Socket bind with %s:%d failed: %s", $address, $port, socket_strerror(socket_last_error())));
-		}
-
-		if (@socket_listen($this->socket, 5) === false) {
-			throw new RuntimeException(sprintf("Socket listen with %s:%d failed: %s", $address, $port, socket_strerror(socket_last_error())));
-		}
-		 * 
-		 */
 	}
 	
 	function onSignal(int $signal, array $info) {
@@ -51,23 +33,6 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 			socket_close($this->socket);
 			echo "Exiting.".PHP_EOL;
 			exit();
-		}
-	}
-	
-	private function onConnect($msgsock) {
-		$this->clients["ssl:".$this->clientCount] = $msgsock;
-		#$runner = new RunnerServer($this->clientCount);
-		#$process = new Process($runner);
-		#$process->addProcessListener($this);
-		#$process->run();
-		$this->clientCount++;
-	}
-	
-	function onMessage(\Message $message) {
-		if($message->getMessage()=="status") {
-			$answer  = "";
-			$answer .= "Clients: ".count($this->clients).PHP_EOL;
-			$this->queue->sendHyperwave($answer, 1, $message->getSourcePID());
 		}
 	}
 	
@@ -92,42 +57,6 @@ class Server implements ProcessListener, MessageListener, SignalHandler {
 	return $read;
 	}
 
-	private function newServerClient() {
-		echo "A new connection has occurred.".PHP_EOL;
-		if (($msgsock = stream_socket_accept($this->socket)) === false) {
-			echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
-			#stream_set_blocking($msgsock, TRUE);
-			return;
-		}
-		echo "New connection has been accepted.".PHP_EOL;
-		stream_set_blocking($msgsock, true);
-		if (! stream_socket_enable_crypto ($msgsock, true, STREAM_CRYPTO_METHOD_TLS_SERVER )) {
-			exit();
-		}
-		$this->clients["ssl:".$this->clientCount] = $msgsock;
-		$runner = new RunnerServer($this->clientCount);
-		$process = new Process($runner);
-		$process->addProcessListener($this);
-		$process->run();
-		$this->sslProtocol[$this->clientCount] = new \Net\ProtocolBase($msgsock);
-		$this->sslProtocol[$this->clientCount]->sendMessage("Connected as client ".$this->clientCount);
-		$this->clientCount++;
-	}
-	
-	private function newIpcClient() {
-		echo "A new IPC connection has occurred.".PHP_EOL;
-		if (($msgsock = stream_socket_accept($this->ipcServer)) === false) {
-			echo "IPC: socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
-			#stream_set_blocking($msgsock, TRUE);
-			return;
-		}
-		stream_set_blocking($msgsock, TRUE);
-		$clientId = IntVal::uint64LE()->getValue(fread($msgsock, 8));
-		$this->ipcClients["ipc:".$clientId] = $msgsock;
-		
-		echo "New IPC connection has been accepted.".PHP_EOL;
-	}
-	
 	function run() {
 		$runner = new RunnerSSL();
 		$sslProcess = new Process($runner);
