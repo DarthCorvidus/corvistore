@@ -21,6 +21,10 @@ class StreamHub {
 		$this->clients[$name.":".$id] = $stream;
 	}
 	
+	function getStream(string $name, int $id) {
+		return $this->clients[$name.":".$id];
+	}
+	
 	function addStreamHubListener(string $name, StreamHubListener $listener) {
 		$this->streamHubListeners[$name] = $listener;
 	}
