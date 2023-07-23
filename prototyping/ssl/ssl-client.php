@@ -1,11 +1,15 @@
 #!/usr/bin/php
 <?php
 include __DIR__."/../../vendor/autoload.php";
-class Client {
+class Client implements StreamHubListener {
 	private $socket;
 	private $protocol;
+	private $hub;
 	function __construct($server) {
-		$context = stream_context_create();
+		$this->hub = new StreamHub();
+		$this->hub->addCustomStream("input", STDIN);
+		$this->hub->addStreamHubListener("input", $this);
+		#$context = stream_context_create();
 		#stream_context_set_option($context, 'ssl', 'local_ca', __DIR__."/ca.crt");
 		##stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
 		#stream_context_set_option($context, 'ssl', 'verify_peer', true);
@@ -18,14 +22,19 @@ class Client {
 		if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT )) {
 			exit();
 		}
+		stream_set_blocking($this->socket, FALSE);
 		if($this->socket===FALSE) {
 			exit(255);
 		}
-		
+		$this->hub->addCustomStream("ssl", $this->socket);
+		$this->hub->addStreamHubListener("ssl", $this);
 		$this->protocol = new \Net\ProtocolBase($this->socket);
 	}
 	
 	function run() {
+		$this->hub->listen();
+		
+		/*
 		echo $this->protocol->getMessage().PHP_EOL;
 		while(TRUE) {
 			echo "> ";
@@ -46,7 +55,32 @@ class Client {
 				break;
 			}
 		}
+		 * 
+		 */
 	}
+
+	public function onRead(string $name, int $id, $stream) {
+		if($name=="input") {
+			$input = trim(fgets($stream));
+			echo "User typed: ".$input.PHP_EOL;
+			$this->protocol->sendCommand($input);
+			if($input=="quit") {
+				$this->hub->close("ssl", 0);
+				exit();
+			}
+		}
+		
+		
+		if($name=="ssl") {
+			echo "Server sent: ".$this->protocol->getMessage().PHP_EOL;
+		}
+		
+	}
+
+	public function onWrite(string $name, int $id, $stream) {
+		
+	}
+
 }
 
 if(empty($argv[1])) {
