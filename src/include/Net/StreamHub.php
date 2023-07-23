@@ -8,6 +8,10 @@ class StreamHub {
 		;
 	}
 	
+	function detach($name, $id) {
+		unset($this->clients[$name.":".$id]);
+	}
+	
 	function addServer(string $name, $stream) {
 		$this->server[$name] = $stream;
 		$this->counters[$name] = 0;
@@ -23,6 +27,7 @@ class StreamHub {
 	
 	function close(string $name, int $id) {
 		fclose($this->clients[$name.":".$id]);
+		$this->detach($name, $id);
 	}
 	
 	function listen() {
