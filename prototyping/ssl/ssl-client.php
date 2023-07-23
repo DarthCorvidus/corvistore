@@ -81,6 +81,10 @@ class Client implements StreamHubListener {
 		
 	}
 
+	public function onConnect(string $name, int $id, $newClient) {
+		
+	}
+
 }
 
 if(empty($argv[1])) {

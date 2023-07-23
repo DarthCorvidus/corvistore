@@ -11,13 +11,16 @@
  *
  * @author hm
  */
-class RunnerSSL implements Runner  {
+class RunnerSSL implements Runner, StreamHubListener {
 	private $clientCount = 0;
 	private $sslProtocol = array();
 	private $sslClients = array();
 	private $ipcClients = array();
+	private $hub;
+	private $socket;
 	function __construct() {
 		echo "Forking off SSL server.".PHP_EOL;
+		$this->hub = new StreamHub();
 	}
 
 	private function init() {
@@ -34,10 +37,14 @@ class RunnerSSL implements Runner  {
 		$context->setPrivateKeyFile(__DIR__."/server.key");
 		$context->setCertificateFile(__DIR__."/server.crt");
 		$this->socket = stream_socket_server("ssl://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
-		var_dump($this->socket);
+		$this->hub->addServer("ssl", $this->socket);
+		$this->hub->addStreamHubListener("ssl", $this);
 	}
 	
 	public function run() {
+		$this->init();
+		$this->hub->listen();
+	return;
 		echo "Looking for connections";
 		$this->init();
 		do {
@@ -94,6 +101,27 @@ class RunnerSSL implements Runner  {
 				}
 			}
 		} while(TRUE);
+	}
+
+	public function onConnect(string $name, int $id, $newClient) {
+		$this->sslProtocol[$id] = new \Net\ProtocolBase($newClient);
+		$this->sslProtocol[$id]->sendMessage("Connected as client ".$id);
+	}
+
+	public function onRead(string $name, int $id, $stream) {
+		$command = $this->sslProtocol[$id]->getCommand();
+		echo sprintf("Client %d sent message: %s", $id, $command).PHP_EOL;
+		if($command=="quit") {
+			$this->hub->close($name, $id);
+		}
+		
+		if($command=="crash") {
+			throw new Exception("I was told to crash.");
+		}
+	}
+
+	public function onWrite(string $name, int $id, $stream) {
+		
 	}
 
 }
