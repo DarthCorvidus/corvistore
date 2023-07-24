@@ -7,6 +7,7 @@ class RunnerWorker implements Runner, MessageListener, SignalHandler, StreamHubL
 	function __construct($msgsock, int $clientId) {
 		$this->clientId = $clientId;
 		$this->socket = $msgsock;
+		stream_set_blocking($this->socket, FALSE);
 		$this->protocol = new \Net\ProtocolBase($msgsock);
 		$signal = Signal::get();
 		$signal->clearSignal(SIGTERM);
@@ -83,6 +84,14 @@ class RunnerWorker implements Runner, MessageListener, SignalHandler, StreamHubL
 	public function onRead(string $name, int $id, $stream) {
 		$command = $this->protocol->getCommand();
 		$this->protocol->sendMessage("Command sent ". posix_getpid().": ".$command);
+		if($command=="count") {
+			for($i=0;$i<10;$i++) {
+				$this->protocol->sendMessage("Count ".$i);
+				sleep(1);
+			}
+			$this->protocol->sendMessage("Done!");
+		return;
+		}
 		if($command=="quit") {
 			echo "Closing worker ".$id.", ".posix_getpid().PHP_EOL;
 			exit();
