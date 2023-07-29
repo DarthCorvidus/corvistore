@@ -95,6 +95,9 @@ class Client implements Net\HubClientListener {
 			echo "You typed: ".$data.PHP_EOL;
 			$this->input = $data;
 		}
+		if($name=="ssl") {
+			echo trim($data).PHP_EOL;
+		}
 		
 	}
 

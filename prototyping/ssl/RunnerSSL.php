@@ -18,6 +18,7 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 	private $ipcClients = array();
 	private $hub;
 	private $socket;
+	private $writeBuffer;
 	function __construct() {
 		echo "Forking off SSL server.".PHP_EOL;
 		$this->hub = new StreamHub();
@@ -105,6 +106,7 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 	}
 
 	public function onConnect(string $name, int $id, $newClient): \Net\HubClientListener {
+		$this->writeBuffer[$name.":".$id] = "";
 		return $this;
 		#$this->sslProtocol[$id] = new \Net\ProtocolBase($newClient);
 		#$this->sslProtocol[$id]->sendMessage("Connected as client ".$id);
@@ -114,7 +116,17 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 
 	public function onRead(string $name, int $id, string $data) {
 		if($name == "ssl") {
-			echo trim($data).PHP_EOL;
+			echo "Receive ".trim($data).PHP_EOL;
+			if(trim($data) == "status") {
+				$this->writeBuffer[$name.":".$id] = str_pad("Status: connection #".$id, $this->getPacketLength($name, $id));
+			return;
+			}
+			
+			if(trim($data) == "halt") {
+				echo "Halting SSL server on client ".$id." request.".PHP_EOL;
+				exit();
+			}
+			$this->writeBuffer[$name.":".$id] = str_pad("Unknown command '".trim($data)."'", $this->getPacketLength($name, $id));
 		}
 		#if($name == "ssl") {
 		#	$forward = fread($stream, 1024);
@@ -128,6 +140,9 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 	}
 
 	public function onWrite(string $name, int $id): string {
+		$value = $this->writeBuffer[$name.":".$id];
+		$this->writeBuffer[$name.":".$id] = "";
+	return $value;
 	}
 
 	public function getBinary(string $name, int $id): bool {
@@ -141,6 +156,9 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 	}
 
 	public function hasWrite(string $name, int $id): bool {
+		if($this->writeBuffer[$name.":".$id]!=="") {
+			return TRUE;
+		}
 		return false;
 	}
 
