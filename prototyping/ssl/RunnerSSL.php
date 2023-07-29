@@ -107,7 +107,11 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 
 	public function onConnect(string $name, int $id, $newClient): \Net\HubClientListener {
 		$this->writeBuffer[$name.":".$id] = "";
-		return $this;
+		$this->hub->addWriteBuffer($name, $id, str_pad("Welcome to Test SSL Server 1.0", $this->getPacketLength($name, $id)));
+		$this->hub->addWriteBuffer($name, $id, str_pad("(c) ACME Backup Software", $this->getPacketLength($name, $id)));
+		$connected = "Connected on ".date("Y-m-d H:i:s")." as client ".$id;
+		$this->hub->addWriteBuffer($name, $id, str_pad($connected, $this->getPacketLength($name, $id)));
+	return $this;
 		#$this->sslProtocol[$id] = new \Net\ProtocolBase($newClient);
 		#$this->sslProtocol[$id]->sendMessage("Connected as client ".$id);
 		#$ipcClient = stream_socket_client("unix://ssl-server.socket", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);

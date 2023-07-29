@@ -7,6 +7,7 @@ class StreamHub {
 	private $counters = array();
 	private $serverListeners = array();
 	private $zeroCounter = array();
+	private $clientBuffers = array();
 	function __construct() {
 		;
 	}
@@ -25,10 +26,15 @@ class StreamHub {
 		$this->clients[$name.":".$id] = $stream;
 		$this->clientListeners[$name.":".$id] = $listener;
 		$this->zeroCounter[$name.":".$id] = 0;
+		$this->clientBuffers[$name.":".$id] = array();
 	}
 	
 	function getStream(string $name, int $id) {
 		return $this->clients[$name.":".$id];
+	}
+	
+	function addWriteBuffer(string $name, int $id, string $data) {
+		$this->clientBuffers[$name.":".$id][] = $data;
 	}
 	
 	#function addStreamHubListener(string $name, StreamHubListener $listener) {
@@ -87,18 +93,18 @@ class StreamHub {
 		$exp = explode(":", $key);
 		$name = $exp[0];
 		$id = (int)$exp[1];
-		if(!$listener->hasWrite($name, $id)) {
+		if(!$listener->hasWrite($name, $id) and empty($this->clientBuffers[$key])) {
 			return;
 		}
+		$this->clientBuffers[$key][] = $listener->onWrite($name, $id);
 		if(!$listener->getBinary($name, $id)) {
-			$write = $listener->onWrite($name, $id);
+			$write = array_shift($this->clientBuffers[$key]);
 			fwrite($this->clients[$key], $listener->onWrite($name, $id).PHP_EOL);
 		}
 		if($listener->getBinary($name, $id)) {
-			$write = $listener->onWrite($name, $id);
+			$write = array_shift($this->clientBuffers[$key]);
 			fwrite($this->clients[$key], $write);
 		}
-		
 	}
 	
 	function listen() {
@@ -144,6 +150,10 @@ class StreamHub {
 				if(in_array($key, array_keys($this->server), TRUE)) {
 					continue;
 				}
+				/*
+				 * this is necessary, because the client listener could have
+				 * gone away as part of some read action.
+				 */
 				if(!isset($this->clientListeners[$key])) {
 					continue;
 				}
