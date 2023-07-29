@@ -6,6 +6,7 @@ class StreamHub {
 	private $clientListeners;
 	private $counters = array();
 	private $serverListeners = array();
+	private $zeroCounter = array();
 	function __construct() {
 		;
 	}
@@ -23,6 +24,7 @@ class StreamHub {
 	function addClientStream(string $name, int $id, $stream, \Net\HubClientListener $listener) {
 		$this->clients[$name.":".$id] = $stream;
 		$this->clientListeners[$name.":".$id] = $listener;
+		$this->zeroCounter[$name.":".$id] = 0;
 	}
 	
 	function getStream(string $name, int $id) {
@@ -47,10 +49,38 @@ class StreamHub {
 			$listener->onRead($name, $id, $data);
 		}
 		if($listener->getBinary($name, $id)) {
-			$data = fread($this->clients[$key], 1024);
-			$length = strlen($data);
-			$listener->onRead($name, $id, $data);
+			$this->readBinary($key, $listener);
 		}
+	}
+
+	private function readBinary(string $key, \Net\HubClientListener $listener) {
+		$exp = explode(":", $key);
+		$name = $exp[0];
+		$id = (int)$exp[1];
+		$data = fread($this->clients[$key], $listener->getPacketLength($name, $id));
+		$len = strlen($data);
+		/*
+		 * If a connection goes away, stream_select will trigger read() in a
+		 * very short succession. I don't know whether this check is feasible,
+		 * but it is a start: if the counter gets increased to 1000, end this
+		 * client.
+		 */
+		if($len===0 && $this->zeroCounter[$key]<1000) {
+			$this->zeroCounter[$key]++;
+			return;
+		}
+		if($len===0 && $this->zeroCounter[$key]==1000) {
+			echo "Connection ".$id." went away.".PHP_EOL;
+			fclose($this->clients[$key]);
+			unset($this->clients[$key]);
+			unset($this->clientListeners[$key]);
+			return;
+		}
+		/*
+		 * I cannot really be sure that I got all bytes as mandated by
+		 * HubClientListener::getPacketLength, but for now, this is sufficient.
+		 */
+		$listener->onRead($name, $id, $data);
 	}
 	
 	private function write(string $key, \Net\HubClientListener $listener) {
@@ -101,7 +131,7 @@ class StreamHub {
 					$this->clients[$key.":".$next] = $client;
 					$listener = $this->serverListeners[$key]->onConnect($key, $next, $client);
 					$this->clientListeners[$key.":".$next] = $listener;
-
+					$this->zeroCounter[$key.":".$next] = 0;
 					#$this->streamHubListeners[$key]->onConnect($key, $next, $client);
 					continue;
 				}
@@ -112,6 +142,9 @@ class StreamHub {
 			
 			foreach($write as $key => $value) {
 				if(in_array($key, array_keys($this->server), TRUE)) {
+					continue;
+				}
+				if(!isset($this->clientListeners[$key])) {
 					continue;
 				}
 				$this->write($key, $this->clientListeners[$key]);

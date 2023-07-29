@@ -137,7 +137,7 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 	}
 
 	public function getPacketLength(string $name, int $id): int {
-		
+		return 1024;
 	}
 
 	public function hasWrite(string $name, int $id): bool {
