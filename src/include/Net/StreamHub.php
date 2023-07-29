@@ -3,6 +3,7 @@ class StreamHub {
 	private $server = array();
 	private $clients = array();
 	private $streamHubListeners;
+	private $clientListeners;
 	private $counters = array();
 	function __construct() {
 		;
@@ -17,8 +18,9 @@ class StreamHub {
 		$this->counters[$name] = 0;
 	}
 	
-	function addCustomStream(string $name, int $id, $stream) {
+	function addClientStream(string $name, int $id, $stream, \Net\HubClientListener $listener) {
 		$this->clients[$name.":".$id] = $stream;
+		$this->clientListeners[$name.":".$id] = $listener;
 	}
 	
 	function getStream(string $name, int $id) {
@@ -32,6 +34,16 @@ class StreamHub {
 	function close(string $name, int $id) {
 		fclose($this->clients[$name.":".$id]);
 		$this->detach($name, $id);
+	}
+	
+	private function read(string $key, \Net\HubClientListener $listener) {
+		$exp = explode(":", $key);
+		$name = $exp[0];
+		$id = (int)$exp[1];
+		if(!$listener->getBinary($name, $id)) {
+			$data = trim(fgets($this->clients[$key]));
+			$listener->onRead($name, $id, $data);
+		}
 	}
 	
 	function listen() {
@@ -60,9 +72,9 @@ class StreamHub {
 					$this->streamHubListeners[$key]->onConnect($key, $next, $client);
 					continue;
 				}
+				$this->read($key, $this->clientListeners[$key]);
 				
-				$exp = explode(":", $key);
-				$this->streamHubListeners[$exp[0]]->onRead($exp[0], (int)$exp[1], $value);
+				#$this->streamHubListeners[$exp[0]]->onRead($exp[0], (int)$exp[1], $value);
 			}
 		}
 	}
