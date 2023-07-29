@@ -108,7 +108,11 @@ class Client implements Net\HubClientListener {
 			return $value;
 		}
 	}
-
+	
+	public function onDisconnect(string $name, int $id) {
+		echo "Lost connection to server.".PHP_EOL;
+		exit();
+	}
 }
 
 if(empty($argv[1])) {

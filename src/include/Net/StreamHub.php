@@ -70,10 +70,10 @@ class StreamHub {
 			return;
 		}
 		if($len===0 && $this->zeroCounter[$key]==1000) {
-			echo "Connection ".$id." went away.".PHP_EOL;
 			fclose($this->clients[$key]);
 			unset($this->clients[$key]);
 			unset($this->clientListeners[$key]);
+			$listener->onDisconnect($key, $id);
 			return;
 		}
 		/*

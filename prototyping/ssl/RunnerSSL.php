@@ -162,4 +162,8 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 		return false;
 	}
 
+	public function onDisconnect(string $name, int $id) {
+		echo "Client ".$id." disconnected.".PHP_EOL;
+		unset($this->writeBuffer[$name.":".$id]);
+	}
 }
