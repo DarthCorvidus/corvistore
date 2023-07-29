@@ -2,9 +2,10 @@
 class StreamHub {
 	private $server = array();
 	private $clients = array();
-	private $streamHubListeners;
+	private $streamHubListeners = array();
 	private $clientListeners;
 	private $counters = array();
+	private $serverListeners = array();
 	function __construct() {
 		;
 	}
@@ -13,9 +14,10 @@ class StreamHub {
 		unset($this->clients[$name.":".$id]);
 	}
 	
-	function addServer(string $name, $stream) {
+	function addServer(string $name, $stream, \Net\HubServerListener $listener) {
 		$this->server[$name] = $stream;
 		$this->counters[$name] = 0;
+		$this->serverListeners[$name] = $listener;
 	}
 	
 	function addClientStream(string $name, int $id, $stream, \Net\HubClientListener $listener) {
@@ -27,9 +29,9 @@ class StreamHub {
 		return $this->clients[$name.":".$id];
 	}
 	
-	function addStreamHubListener(string $name, StreamHubListener $listener) {
-		$this->streamHubListeners[$name] = $listener;
-	}
+	#function addStreamHubListener(string $name, StreamHubListener $listener) {
+	#	$this->streamHubListeners[$name] = $listener;
+	#}
 	
 	function close(string $name, int $id) {
 		fclose($this->clients[$name.":".$id]);
@@ -44,6 +46,29 @@ class StreamHub {
 			$data = trim(fgets($this->clients[$key]));
 			$listener->onRead($name, $id, $data);
 		}
+		if($listener->getBinary($name, $id)) {
+			$data = fread($this->clients[$key], 1024);
+			$length = strlen($data);
+			$listener->onRead($name, $id, $data);
+		}
+	}
+	
+	private function write(string $key, \Net\HubClientListener $listener) {
+		$exp = explode(":", $key);
+		$name = $exp[0];
+		$id = (int)$exp[1];
+		if(!$listener->hasWrite($name, $id)) {
+			return;
+		}
+		if(!$listener->getBinary($name, $id)) {
+			$write = $listener->onWrite($name, $id);
+			fwrite($this->clients[$key], $listener->onWrite($name, $id).PHP_EOL);
+		}
+		if($listener->getBinary($name, $id)) {
+			$write = $listener->onWrite($name, $id);
+			fwrite($this->clients[$key], $write);
+		}
+		
 	}
 	
 	function listen() {
@@ -53,6 +78,11 @@ class StreamHub {
 			foreach($this->clients as $key => $value) {
 				$read[$key] = $value;
 			}
+		
+			foreach($this->clients as $key => $value) {
+				$write[$key] = $value;
+			}
+
 			foreach($this->server as $key => $value) {
 				$read[$key] = $value;
 			}
@@ -69,12 +99,22 @@ class StreamHub {
 					$next = $this->counters[$key];
 					$this->counters[$key]++;
 					$this->clients[$key.":".$next] = $client;
-					$this->streamHubListeners[$key]->onConnect($key, $next, $client);
+					$listener = $this->serverListeners[$key]->onConnect($key, $next, $client);
+					$this->clientListeners[$key.":".$next] = $listener;
+
+					#$this->streamHubListeners[$key]->onConnect($key, $next, $client);
 					continue;
 				}
 				$this->read($key, $this->clientListeners[$key]);
 				
 				#$this->streamHubListeners[$exp[0]]->onRead($exp[0], (int)$exp[1], $value);
+			}
+			
+			foreach($write as $key => $value) {
+				if(in_array($key, array_keys($this->server), TRUE)) {
+					continue;
+				}
+				$this->write($key, $this->clientListeners[$key]);
 			}
 		}
 	}
