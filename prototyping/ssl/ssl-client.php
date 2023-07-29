@@ -5,6 +5,7 @@ class Client implements Net\HubClientListener {
 	private $socket;
 	private $protocol;
 	private $hub;
+	private $input = "";
 	function __construct($server) {
 		$this->hub = new StreamHub();
 		$this->hub->addClientStream("input", 0, STDIN, $this);
@@ -13,16 +14,16 @@ class Client implements Net\HubClientListener {
 		$context = new Net\SSLContext();
 		$context->setCAFile(__DIR__."/ca.crt");
 		
-		#$this->socket = stream_socket_client("tcp://".$server.":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT, $context->getContextClient());
-		#stream_set_blocking($this->socket, TRUE);
-		#if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT )) {
-		#	exit();
-		#}
-		#stream_set_blocking($this->socket, FALSE);
+		$this->socket = stream_socket_client("tcp://".$server.":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT, $context->getContextClient());
+		stream_set_blocking($this->socket, TRUE);
+		if (! stream_socket_enable_crypto ($this->socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT )) {
+			exit();
+		}
+		stream_set_blocking($this->socket, FALSE);
 		if($this->socket===FALSE) {
 			exit(255);
 		}
-		#$this->hub->addCustomStream("ssl", 0, $this->socket);
+		$this->hub->addClientStream("ssl", 0, $this->socket, $this);
 		#$this->hub->addStreamHubListener("ssl", $this);
 		#$this->protocol = new \Net\ProtocolBase($this->socket);
 	}
@@ -66,6 +67,10 @@ class Client implements Net\HubClientListener {
 		if($name=="input") {
 			return false;
 		}
+		if($name=="ssl") {
+			return true;
+		}
+
 	}
 
 	public function getPacketLength(string $name, int $id): int {
@@ -76,6 +81,10 @@ class Client implements Net\HubClientListener {
 		if($name=="input") {
 			return false;
 		}
+		if($name=="ssl" && $this->input!="") {
+			return true;
+		}
+	return false;
 	}
 
 	public function onRead(string $name, int $id, string $data) {
@@ -84,12 +93,17 @@ class Client implements Net\HubClientListener {
 				exit();
 			}
 			echo "You typed: ".$data.PHP_EOL;
+			$this->input = $data;
 		}
 		
 	}
 
 	public function onWrite(string $name, int $id): string {
-		
+		if($name=="ssl") {
+			$value = str_pad($this->input, 1024);
+			$this->input = "";
+			return $value;
+		}
 	}
 
 }

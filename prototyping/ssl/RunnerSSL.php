@@ -11,7 +11,7 @@
  *
  * @author hm
  */
-class RunnerSSL implements Runner, StreamHubListener {
+class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListener {
 	private $clientCount = 0;
 	private $sslProtocol = array();
 	private $sslClients = array();
@@ -37,9 +37,9 @@ class RunnerSSL implements Runner, StreamHubListener {
 		$context->setPrivateKeyFile(__DIR__."/server.key");
 		$context->setCertificateFile(__DIR__."/server.crt");
 		$this->socket = stream_socket_server("ssl://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN, $context->getContextServer());
-		$this->hub->addServer("ssl", $this->socket);
-		$this->hub->addStreamHubListener("ssl", $this);
-		$this->hub->addStreamHubListener("ipc", $this);
+		$this->hub->addServer("ssl", $this->socket, $this);
+		#$this->hub->addStreamHubListener("ssl", $this);
+		#$this->hub->addStreamHubListener("ipc", $this);
 	}
 	
 	public function run() {
@@ -104,28 +104,44 @@ class RunnerSSL implements Runner, StreamHubListener {
 		} while(TRUE);
 	}
 
-	public function onConnect(string $name, int $id, $newClient) {
-		$this->sslProtocol[$id] = new \Net\ProtocolBase($newClient);
-		$this->sslProtocol[$id]->sendMessage("Connected as client ".$id);
-		$ipcClient = stream_socket_client("unix://ssl-server.socket", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
-		$this->hub->addCustomStream("ipc", $id, $ipcClient);
+	public function onConnect(string $name, int $id, $newClient): \Net\HubClientListener {
+		return $this;
+		#$this->sslProtocol[$id] = new \Net\ProtocolBase($newClient);
+		#$this->sslProtocol[$id]->sendMessage("Connected as client ".$id);
+		#$ipcClient = stream_socket_client("unix://ssl-server.socket", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
+		#$this->hub->addCustomStream("ipc", $id, $ipcClient);
 	}
 
-	public function onRead(string $name, int $id, $stream) {
+	public function onRead(string $name, int $id, string $data) {
 		if($name == "ssl") {
-			$forward = fread($stream, 1024);
-			fwrite($this->hub->getStream("ipc", $id), $forward);
-		return;
+			echo trim($data).PHP_EOL;
 		}
-		if($name == "ipc") {
-			$forward = fread($stream, 1024);
-			fwrite($this->hub->getStream("ssl", $id), $forward);
+		#if($name == "ssl") {
+		#	$forward = fread($stream, 1024);
+		#	fwrite($this->hub->getStream("ipc", $id), $forward);
+		#return;
+		#}
+		#if($name == "ipc") {
+		#	$forward = fread($stream, 1024);
+		#	fwrite($this->hub->getStream("ssl", $id), $forward);
+		#}
+	}
+
+	public function onWrite(string $name, int $id): string {
+	}
+
+	public function getBinary(string $name, int $id): bool {
+		if($name=="ssl") {
+			return TRUE;
 		}
+	}
+
+	public function getPacketLength(string $name, int $id): int {
 		
 	}
 
-	public function onWrite(string $name, int $id, $stream) {
-		
+	public function hasWrite(string $name, int $id): bool {
+		return false;
 	}
 
 }

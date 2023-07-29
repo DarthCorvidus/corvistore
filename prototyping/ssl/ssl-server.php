@@ -6,6 +6,7 @@ include __DIR__."/RunnerSSL.php";
 class Server implements ProcessListener, SignalHandler, StreamHubListener {
 	private $hub;
 	private $ipcProtocol = array();
+	private $workerProcess = array();
 	function __construct() {
 		set_time_limit(0);
 		ob_implicit_flush();
@@ -20,10 +21,10 @@ class Server implements ProcessListener, SignalHandler, StreamHubListener {
 		if(file_exists("ssl-server.socket")) {
 			unlink("ssl-server.socket");
 		}
-		$ipcServer = stream_socket_server("unix://ssl-server.socket", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
-		$this->hub = new StreamHub();
-		$this->hub->addServer("ipc", $ipcServer);
-		$this->hub->addStreamHubListener("ipc", $this);
+		#$ipcServer = stream_socket_server("unix://ssl-server.socket", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
+		#$this->hub = new StreamHub();
+		#$this->hub->addServer("ipc", $ipcServer);
+		#$this->hub->addStreamHubListener("ipc", $this);
 	}
 	
 	function onSignal(int $signal, array $info) {
@@ -60,7 +61,10 @@ class Server implements ProcessListener, SignalHandler, StreamHubListener {
 		$sslProcess = new Process($runner);
 		$sslProcess->addProcessListener($this);
 		$sslProcess->run();
-		$this->hub->listen();
+		while(true) {
+			sleep(1);
+		}
+		#$this->hub->listen();
 		/*
 		do {
 			$read = array();
