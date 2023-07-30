@@ -13,7 +13,7 @@ namespace Net;
  * @author hm
  */
 interface ProtocolReactiveListener {
-	function onMessage(string $message);
-	function onCommand(string $command);
-	function onDisconnect();
+	function onMessage(\Net\ProtocolReactive $protocol, string $message);
+	function onCommand(\Net\ProtocolReactive $protocol, string $command);
+	function onDisconnect(\Net\ProtocolReactive $protocol);
 }

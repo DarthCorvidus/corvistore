@@ -55,7 +55,7 @@ class ProtocolReactive implements HubClientListener {
 	}
 
 	public function onDisconnect(string $name, int $id) {
-		$this->listener->onDisconnect();
+		$this->listener->onDisconnect($this);
 	}
 
 	public function onRead(string $name, int $id, string $data) {
@@ -95,10 +95,10 @@ class ProtocolReactive implements HubClientListener {
 		$length = \IntVal::uint32LE()->getValue(substr($data, 1, 4));
 		$string = substr($data, 5, $length);
 		if($type==self::MESSAGE) {
-			$this->listener->onMessage($string);
+			$this->listener->onMessage($this, $string);
 		}
 		if($type==self::COMMAND) {
-			$this->listener->onCommand($string);
+			$this->listener->onCommand($this, $string);
 		}
 		
 	}

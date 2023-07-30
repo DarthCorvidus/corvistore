@@ -11,7 +11,7 @@
  *
  * @author hm
  */
-class RunnerSSL implements Runner, \Net\HubServerListener, \Net\ProtocolReactiveListener {
+class RunnerSSL implements Runner, \Net\HubServerListener {
 	private $clientCount = 0;
 	private $sslProtocol = array();
 	private $sslClients = array();
@@ -107,7 +107,7 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\ProtocolReactive
 
 	public function onConnect(string $name, int $id, $newClient): \Net\HubClientListener {
 		$this->writeBuffer[$name.":".$id] = "";
-		$this->sslProtocol[$name.":".$id] = new \Net\ProtocolReactive($this);
+		$this->sslProtocol[$name.":".$id] = new \Net\ProtocolReactive(new SSLProtocolListener($id));
 		$this->sslProtocol[$name.":".$id]->sendString(\Net\ProtocolReactive::MESSAGE, "Welcome to Test SSL Server 1.0");
 		$this->sslProtocol[$name.":".$id]->sendString(\Net\ProtocolReactive::MESSAGE, "(c) ACME Backup Software");
 		$this->sslProtocol[$name.":".$id]->sendString(\Net\ProtocolReactive::MESSAGE, "Connected on ".date("Y-m-d H:i:s")." as client ".$id);

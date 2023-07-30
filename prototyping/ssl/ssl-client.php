@@ -3,7 +3,7 @@
 include __DIR__."/../../vendor/autoload.php";
 include __DIR__."/InputListener.php";
 include __DIR__."/ClientProtocolListener.php";
-class Client implements Net\ProtocolReactiveListener {
+class Client {
 	private $socket;
 	private $protocol;
 	private $hub;

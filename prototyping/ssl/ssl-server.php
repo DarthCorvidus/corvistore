@@ -3,6 +3,7 @@
 include __DIR__."/../../vendor/autoload.php";
 include __DIR__."/RunnerWorker.php";
 include __DIR__."/RunnerSSL.php";
+include __DIR__."/SSLProtocolListener.php";
 class Server implements ProcessListener, SignalHandler, StreamHubListener {
 	private $hub;
 	private $ipcProtocol = array();
