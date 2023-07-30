@@ -108,9 +108,9 @@ class RunnerSSL implements Runner, \Net\HubServerListener {
 	public function onConnect(string $name, int $id, $newClient): \Net\HubClientListener {
 		$this->writeBuffer[$name.":".$id] = "";
 		$this->sslProtocol[$name.":".$id] = new \Net\ProtocolReactive(new SSLProtocolListener($id));
-		$this->sslProtocol[$name.":".$id]->sendString(\Net\ProtocolReactive::MESSAGE, "Welcome to Test SSL Server 1.0");
-		$this->sslProtocol[$name.":".$id]->sendString(\Net\ProtocolReactive::MESSAGE, "(c) ACME Backup Software");
-		$this->sslProtocol[$name.":".$id]->sendString(\Net\ProtocolReactive::MESSAGE, "Connected on ".date("Y-m-d H:i:s")." as client ".$id);
+		$this->sslProtocol[$name.":".$id]->sendMessage("Welcome to Test SSL Server 1.0");
+		$this->sslProtocol[$name.":".$id]->sendMessage("(c) ACME Backup Software");
+		$this->sslProtocol[$name.":".$id]->sendMessage("Connected on ".date("Y-m-d H:i:s")." as client ".$id);
 		#$this->hub->addWriteBuffer($name, $id, str_pad("Welcome to Test SSL Server 1.0", $this->getPacketLength($name, $id)));
 		#$this->hub->addWriteBuffer($name, $id, str_pad("(c) ACME Backup Software", $this->getPacketLength($name, $id)));
 		#$connected = "Connected on ".date("Y-m-d H:i:s")." as client ".$id;

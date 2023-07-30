@@ -19,7 +19,7 @@ class SSLProtocolListener implements \Net\ProtocolReactiveListener {
 	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
 		if($command == "status") {
-			$protocol->sendString(\Net\ProtocolReactive::MESSAGE, "Status: connection #".$this->id);
+			$protocol->sendMessage("Status: connection #".$this->id);
 		return;
 		}
 
@@ -28,14 +28,18 @@ class SSLProtocolListener implements \Net\ProtocolReactiveListener {
 			exit();
 		}
 		
+		if($command == "count") {
+			
+		}
+	
 		if($command == "help") {
-			$protocol->sendString(\Net\ProtocolReactive::MESSAGE, "status - status information");
-			$protocol->sendString(\Net\ProtocolReactive::MESSAGE, "quit - disconnect client");
-			$protocol->sendString(\Net\ProtocolReactive::MESSAGE, "halt - shutdown the server");
+			$protocol->sendMessage("status - status information");
+			$protocol->sendMessage("quit - disconnect client");
+			$protocol->sendMessage("halt - shutdown the server");
 		return;
 		}
 		
-		$protocol->sendString(\Net\ProtocolReactive::MESSAGE, "Invalid command");
+		$protocol->sendMessage("Invalid command");
 	}
 
 	public function onDisconnect(\Net\ProtocolReactive $protocol) {

@@ -73,7 +73,7 @@ class ProtocolReactive implements HubClientListener {
 		return array_shift($this->sendStack);
 	}
 
-	public function sendString(int $type, string $data) {
+	private function sendString(int $type, string $data) {
 		$len = strlen($data);
 		/*
 		 * If the string length is below the packet length + 5 bytes overhead,
@@ -100,7 +100,14 @@ class ProtocolReactive implements HubClientListener {
 		if($type==self::COMMAND) {
 			$this->listener->onCommand($this, $string);
 		}
-		
+	}
+	
+	public function sendMessage(string $message) {
+		$this->sendString(self::MESSAGE, $message);
+	}
+
+	public function sendCommand(string $message) {
+		$this->sendString(self::COMMAND, $message);
 	}
 
 }

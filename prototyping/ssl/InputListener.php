@@ -21,7 +21,7 @@ class InputListener implements \Net\HubClientListener {
 	}
 
 	public function onRead(string $name, int $id, string $data) {
-		$this->protocol->sendString(\Net\ProtocolReactive::COMMAND, $data);
+		$this->protocol->sendCommand($data);
 		if($data=="quit") {
 			exit();
 		}
