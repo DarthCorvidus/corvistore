@@ -1,14 +1,16 @@
 #!/usr/bin/php
 <?php
 include __DIR__."/../../vendor/autoload.php";
-class Client implements Net\HubClientListener {
+include __DIR__."/InputListener.php";
+include __DIR__."/ClientProtocolListener.php";
+class Client implements Net\ProtocolReactiveListener {
 	private $socket;
 	private $protocol;
 	private $hub;
 	private $input = "";
+	private $inputListener;
 	function __construct($server) {
 		$this->hub = new StreamHub();
-		$this->hub->addClientStream("input", 0, STDIN, $this);
 		#$this->hub->addStreamHubListener("input", $this);
 
 		$context = new Net\SSLContext();
@@ -23,7 +25,11 @@ class Client implements Net\HubClientListener {
 		if($this->socket===FALSE) {
 			exit(255);
 		}
-		$this->hub->addClientStream("ssl", 0, $this->socket, $this);
+		$this->protocol = new \Net\ProtocolReactive(new ClientProtocolListener());
+		$this->inputListener = new InputListener($this->protocol);
+		$this->hub->addClientStream("ssl", 0, $this->socket, $this->protocol);
+		$this->hub->addClientStream("input", 0, STDIN, $this->inputListener);
+
 		#$this->hub->addStreamHubListener("ssl", $this);
 		#$this->protocol = new \Net\ProtocolBase($this->socket);
 	}
@@ -56,7 +62,7 @@ class Client implements Net\HubClientListener {
 	}
 	*/
 	public function onConnect(string $name, int $id, $newClient) {
-		
+
 	}
 
 	function run() {
@@ -109,10 +115,19 @@ class Client implements Net\HubClientListener {
 		}
 	}
 	
-	public function onDisconnect(string $name, int $id) {
+	public function onDisconnect() {
 		echo "Lost connection to server.".PHP_EOL;
 		exit();
 	}
+
+	public function onCommand(string $command) {
+		
+	}
+
+	public function onMessage(string $message) {
+		echo $message.PHP_EOL;
+	}
+
 }
 
 if(empty($argv[1])) {

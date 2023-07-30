@@ -11,7 +11,7 @@
  *
  * @author hm
  */
-class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListener {
+class RunnerSSL implements Runner, \Net\HubServerListener, \Net\ProtocolReactiveListener {
 	private $clientCount = 0;
 	private $sslProtocol = array();
 	private $sslClients = array();
@@ -107,11 +107,15 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 
 	public function onConnect(string $name, int $id, $newClient): \Net\HubClientListener {
 		$this->writeBuffer[$name.":".$id] = "";
-		$this->hub->addWriteBuffer($name, $id, str_pad("Welcome to Test SSL Server 1.0", $this->getPacketLength($name, $id)));
-		$this->hub->addWriteBuffer($name, $id, str_pad("(c) ACME Backup Software", $this->getPacketLength($name, $id)));
-		$connected = "Connected on ".date("Y-m-d H:i:s")." as client ".$id;
-		$this->hub->addWriteBuffer($name, $id, str_pad($connected, $this->getPacketLength($name, $id)));
-	return $this;
+		$this->sslProtocol[$name.":".$id] = new \Net\ProtocolReactive($this);
+		$this->sslProtocol[$name.":".$id]->sendString(\Net\ProtocolReactive::MESSAGE, "Welcome to Test SSL Server 1.0");
+		$this->sslProtocol[$name.":".$id]->sendString(\Net\ProtocolReactive::MESSAGE, "(c) ACME Backup Software");
+		$this->sslProtocol[$name.":".$id]->sendString(\Net\ProtocolReactive::MESSAGE, "Connected on ".date("Y-m-d H:i:s")." as client ".$id);
+		#$this->hub->addWriteBuffer($name, $id, str_pad("Welcome to Test SSL Server 1.0", $this->getPacketLength($name, $id)));
+		#$this->hub->addWriteBuffer($name, $id, str_pad("(c) ACME Backup Software", $this->getPacketLength($name, $id)));
+		#$connected = "Connected on ".date("Y-m-d H:i:s")." as client ".$id;
+		#$this->hub->addWriteBuffer($name, $id, str_pad($connected, $this->getPacketLength($name, $id)));
+	return $this->sslProtocol[$name.":".$id];
 		#$this->sslProtocol[$id] = new \Net\ProtocolBase($newClient);
 		#$this->sslProtocol[$id]->sendMessage("Connected as client ".$id);
 		#$ipcClient = stream_socket_client("unix://ssl-server.socket", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
@@ -166,8 +170,25 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 		return false;
 	}
 
-	public function onDisconnect(string $name, int $id) {
-		echo "Client ".$id." disconnected.".PHP_EOL;
-		unset($this->writeBuffer[$name.":".$id]);
+	public function onDisconnect() {
+		echo "Client disconnected".PHP_EOL;
+		#echo "Client ".$id." disconnected.".PHP_EOL;
+		#unset($this->writeBuffer[$name.":".$id]);
 	}
+
+	public function onCommand(string $command) {
+		echo $command.PHP_EOL;
+		/*
+		 * Common issue of this whole callback/listener scheme: We have
+		 * absolutely no clue who we are. 
+		 */
+		if($command=="quit") {
+			echo "Client disconnected.".PHP_EOL;
+		}
+	}
+
+	public function onMessage(string $message) {
+		
+	}
+
 }
