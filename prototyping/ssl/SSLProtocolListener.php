@@ -33,7 +33,9 @@ class SSLProtocolListener implements \Net\ProtocolReactiveListener {
 		}
 	
 		if($command == "srv") {
-			$protocol->sendSerialize($_SERVER);
+			$server = $_SERVER;
+			$server["date"] = date("Y-m-d H:i:s");
+			$protocol->sendSerialize($server);
 		return;
 		}
 		
