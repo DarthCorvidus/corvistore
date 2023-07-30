@@ -17,11 +17,13 @@ class ProtocolReactive implements HubClientListener {
 	const OK = 1;
 	const MESSAGE = 2;
 	const COMMAND = 3;
+	const SERIALIZED_PHP = 4;
 	const ERROR = 255;
 	private $sendStack = array();
 	private $listener = array();
 	public function __construct(ProtocolReactiveListener $listener) {
 		$this->listener = $listener;
+		
 	}
 	
 	static function padRandom(string $string, $padlength): string {
@@ -66,7 +68,9 @@ class ProtocolReactive implements HubClientListener {
 		if($type==self::COMMAND) {
 			$this->readString($type, $data);
 		}
-
+		if($type==self::SERIALIZED_PHP) {
+			$this->readString($type, $data);
+		}
 	}
 
 	public function onWrite(string $name, int $id): string {
@@ -81,6 +85,18 @@ class ProtocolReactive implements HubClientListener {
 		 */
 		if(strlen($data)<$this->getPacketLength("default", 0)+5) {
 			$this->sendShortString($type, $data, $len);
+		return;
+		}
+		$data = \IntVal::uint8()->putValue($type).\IntVal::uint32LE()->putValue($len).$data;
+		$total = $len+5;
+		$packets = floor($total/$this->getPacketLength("", 0));
+		$rest = $total % $this->getPacketLength("", 0);
+		$packetLength = $this->getPacketLength("", 0);
+		for($i=0;$i<$packets;$i++) {
+			$this->sendStack[] = substr($data, $i*$packetLength, $packetLength);
+		}
+		if($rest!=0) {
+			$this->sendStack[] = self::padRandom(substr($data, $i*$packetLength, $packetLength), $packetLength);
 		}
 	}
 	
@@ -100,6 +116,10 @@ class ProtocolReactive implements HubClientListener {
 		if($type==self::COMMAND) {
 			$this->listener->onCommand($this, $string);
 		}
+		if($type==self::SERIALIZED_PHP) {
+			$unserialized = unserialize($data);
+			$this->listener->onSerialized($this, $unserialized);
+		}
 	}
 	
 	public function sendMessage(string $message) {
@@ -110,4 +130,8 @@ class ProtocolReactive implements HubClientListener {
 		$this->sendString(self::COMMAND, $message);
 	}
 
+	public function sendSerialize($serialize) {
+		$serialized = serialize($serialize);
+		$this->sendString(self::SERIALIZED_PHP, $serialized);
+	}
 }

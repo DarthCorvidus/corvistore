@@ -16,4 +16,5 @@ interface ProtocolReactiveListener {
 	function onMessage(\Net\ProtocolReactive $protocol, string $message);
 	function onCommand(\Net\ProtocolReactive $protocol, string $command);
 	function onDisconnect(\Net\ProtocolReactive $protocol);
+	function onSerialized(\Net\ProtocolReactive $protocol, $unserialized);
 }

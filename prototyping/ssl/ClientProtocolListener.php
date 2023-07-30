@@ -13,4 +13,9 @@ class ClientProtocolListener implements \Net\ProtocolReactiveListener {
 		echo $message.PHP_EOL;
 	}
 
+	public function onSerialized(\Net\ProtocolReactive $protocol, $unserialized) {
+		echo "Serialized data".PHP_EOL;
+		print_r($unserialized);
+	}
+
 }

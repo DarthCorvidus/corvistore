@@ -32,6 +32,12 @@ class SSLProtocolListener implements \Net\ProtocolReactiveListener {
 			
 		}
 	
+		if($command == "srv") {
+			$protocol->sendSerialize($_SERVER);
+		return;
+		}
+		
+		
 		if($command == "help") {
 			$protocol->sendMessage("status - status information");
 			$protocol->sendMessage("quit - disconnect client");
@@ -47,6 +53,10 @@ class SSLProtocolListener implements \Net\ProtocolReactiveListener {
 	}
 
 	public function onMessage(\Net\ProtocolReactive $protocol, string $command) {
+		
+	}
+
+	public function onSerialized(\Net\ProtocolReactive $protocol, $unserialized) {
 		
 	}
 
