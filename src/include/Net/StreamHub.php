@@ -72,14 +72,14 @@ class StreamHub {
 		 * client.
 		 */
 		if($len===0 && $this->zeroCounter[$key]<1000) {
-			$this->zeroCounter[$key]++;
+			$this->zeroCounter[$key]++;	
 			return;
 		}
 		if($len===0 && $this->zeroCounter[$key]==1000) {
 			fclose($this->clients[$key]);
 			unset($this->clients[$key]);
 			unset($this->clientListeners[$key]);
-			$listener->onDisconnect($key, $id);
+			$listener->onDisconnect($name, $id);
 			return;
 		}
 		/*
