@@ -1,5 +1,5 @@
 <?php
-class RunnerWorker implements Runner, MessageListener, SignalHandler, StreamHubListener {
+class RunnerWorker implements Runner, MessageListener, SignalHandler {
 	private $socket;
 	private $clientId;
 	private $hub;
@@ -8,13 +8,18 @@ class RunnerWorker implements Runner, MessageListener, SignalHandler, StreamHubL
 		$this->clientId = $clientId;
 		$this->socket = $msgsock;
 		stream_set_blocking($this->socket, FALSE);
-		$this->protocol = new \Net\ProtocolBase($msgsock);
+		$this->protocol = new \Net\ProtocolReactive(new SSLProtocolListener($this->clientId));
 		$signal = Signal::get();
 		$signal->clearSignal(SIGTERM);
 		$this->hub = new StreamHub();
-		$this->hub->addCustomStream("ipc", $clientId, $msgsock);
-		$this->hub->addStreamHubListener("ipc", $this);
-		//$signal->addSignalHandler(SIGTERM, $this);
+		
+		$this->hub->addClientStream("ipc", $this->clientId, $msgsock, $this->protocol);
+		#$this->writeBuffer[$name.":".$id] = "";
+		#$this->sslProtocol[$name.":".$id] = new \Net\ProtocolReactive(new SSLProtocolListener($id));
+		$this->protocol->sendMessage("Welcome to Test SSL Server 1.0");
+		$this->protocol->sendMessage("(c) ACME Backup Software");
+		$this->protocol->sendMessage("Connected on ".date("Y-m-d H:i:s")." as client ".$this->clientId);
+
 	}
 	
 	function getQueue(): SysVQueue {
@@ -76,30 +81,4 @@ class RunnerWorker implements Runner, MessageListener, SignalHandler, StreamHubL
 			echo "Quitting worker (via signal)...";
 		}
 	}
-
-	public function onConnect(string $name, int $id, $newClient) {
-		
-	}
-
-	public function onRead(string $name, int $id, $stream) {
-		$command = $this->protocol->getCommand();
-		$this->protocol->sendMessage("Command sent ". posix_getpid().": ".$command);
-		if($command=="count") {
-			for($i=0;$i<10;$i++) {
-				$this->protocol->sendMessage("Count ".$i);
-				sleep(1);
-			}
-			$this->protocol->sendMessage("Done!");
-		return;
-		}
-		if($command=="quit") {
-			echo "Closing worker ".$id.", ".posix_getpid().PHP_EOL;
-			exit();
-		}
-	}
-
-	public function onWrite(string $name, int $id, $stream) {
-		
-	}
-
 }

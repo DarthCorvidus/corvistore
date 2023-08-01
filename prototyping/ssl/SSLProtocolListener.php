@@ -19,19 +19,28 @@ class SSLProtocolListener implements \Net\ProtocolReactiveListener {
 	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
 		if($command == "status") {
-			$protocol->sendMessage("Status: connection #".$this->id);
+			$protocol->sendMessage("Status:");
+			$protocol->sendMessage("\tConnection #".$this->id);
+			$protocol->sendMessage("\tWorker PID #". posix_getpid());
 		return;
 		}
 
 		if($command == "halt") {
-			echo "Halting SSL server on client ".$this->id." request.".PHP_EOL;
-			exit();
+			$protocol->sendMessage("Not yet implemented");
+			#echo "Halting SSL server on client ".$this->id." request.".PHP_EOL;
+			#exit();
+		return;
 		}
 		
 		if($command == "count") {
 			
 		}
 	
+		if($command == "quit") {
+			echo "Terminating worker for ".$this->id." with PID ".posix_getpid().PHP_EOL;
+			exit();
+		}
+		
 		if($command == "srv") {
 			$server = $_SERVER;
 			$server["date"] = date("Y-m-d H:i:s");

@@ -100,12 +100,12 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 	}
 
 	public function onConnect(string $name, int $id, $newClient) {
-		echo "New IPC connection - forking off".PHP_EOL;
+		echo "New IPC connection - forking off...";
 		$this->hub->detach($name, $id);
 		$worker = new RunnerWorker($newClient, $id);
 		$process = new Process($worker);
 		$process->run();
-		
+		echo "forked off with PID ".$process->getPid().PHP_EOL;
 		
 		#$this->ipcProtocol[$id] = new \Net\ProtocolBase($newClient);
 	}
