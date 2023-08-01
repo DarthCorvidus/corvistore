@@ -135,7 +135,10 @@ class StreamHub {
 					$next = $this->counters[$key];
 					$this->counters[$key]++;
 					$this->clients[$key.":".$next] = $client;
-					$listener = $this->serverListeners[$key]->onConnect($key, $next, $client);
+					$this->serverListeners[$key]->onConnect($key, $next, $client);
+					if($this->serverListeners[$key]->hasClientListener($key, $next)) {
+						$listener = $this->serverListeners[$key]->getClientListener($key, $next);
+					}
 					$this->clientListeners[$key.":".$next] = $listener;
 					$this->zeroCounter[$key.":".$next] = 0;
 					#$this->streamHubListeners[$key]->onConnect($key, $next, $client);

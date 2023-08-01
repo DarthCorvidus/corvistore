@@ -105,7 +105,7 @@ class RunnerSSL implements Runner, \Net\HubServerListener {
 		} while(TRUE);
 	}
 
-	public function onConnect(string $name, int $id, $newClient): \Net\HubClientListener {
+	public function onConnect(string $name, int $id, $newClient) {
 		$this->writeBuffer[$name.":".$id] = "";
 		$this->sslProtocol[$name.":".$id] = new \Net\ProtocolReactive(new SSLProtocolListener($id));
 		$this->sslProtocol[$name.":".$id]->sendMessage("Welcome to Test SSL Server 1.0");
@@ -120,6 +120,14 @@ class RunnerSSL implements Runner, \Net\HubServerListener {
 		#$this->sslProtocol[$id]->sendMessage("Connected as client ".$id);
 		#$ipcClient = stream_socket_client("unix://ssl-server.socket", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
 		#$this->hub->addCustomStream("ipc", $id, $ipcClient);
+	}
+	
+	public function hasClientListener(string $name, int $id): bool {
+		return true;
+	}
+	
+	public function getClientListener(string $name, int $id): \Net\HubClientListener {
+		return $this->sslProtocol[$name.":".$id];
 	}
 
 	public function onRead(string $name, int $id, string $data) {

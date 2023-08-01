@@ -8,5 +8,7 @@
 
 namespace Net;
 interface HubServerListener {
-	function onConnect(string $name, int $id, $newClient): HubClientListener;
+	function onConnect(string $name, int $id, $newClient);
+	function hasClientListener(string $name, int $id): bool;
+	function getClientListener(string $name, int $id): HubClientListener;
 }

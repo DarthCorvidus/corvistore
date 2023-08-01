@@ -4,7 +4,7 @@ include __DIR__."/../../vendor/autoload.php";
 include __DIR__."/RunnerWorker.php";
 include __DIR__."/RunnerSSL.php";
 include __DIR__."/SSLProtocolListener.php";
-class Server implements ProcessListener, SignalHandler, StreamHubListener {
+class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 	private $hub;
 	private $ipcProtocol = array();
 	private $workerProcess = array();
@@ -19,13 +19,12 @@ class Server implements ProcessListener, SignalHandler, StreamHubListener {
 		$port = 4096;
 		$context = stream_context_create();
 
-		if(file_exists("ssl-server.socket")) {
-			unlink("ssl-server.socket");
+		if(file_exists(__DIR__."/ssl-server.socket")) {
+			unlink(__DIR__."/ssl-server.socket");
 		}
-		#$ipcServer = stream_socket_server("unix://ssl-server.socket", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
-		#$this->hub = new StreamHub();
-		#$this->hub->addServer("ipc", $ipcServer);
-		#$this->hub->addStreamHubListener("ipc", $this);
+		$ipcServer = stream_socket_server("unix://".__DIR__."/ssl-server.socket", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
+		$this->hub = new StreamHub();
+		$this->hub->addServer("ipc", $ipcServer, $this);
 	}
 	
 	function onSignal(int $signal, array $info) {
@@ -62,44 +61,8 @@ class Server implements ProcessListener, SignalHandler, StreamHubListener {
 		$sslProcess = new Process($runner);
 		$sslProcess->addProcessListener($this);
 		$sslProcess->run();
-		while(true) {
-			sleep(1);
-		}
-		#$this->hub->listen();
-		/*
-		do {
-			$read = array();
-			$read["mainIPC"] = $this->ipcServer;
-			foreach($this->ipcClients as $key => $value) {
-				$read[$key] = $value;
-			}
-			if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
-				//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
-				#$error = socket_last_error($this->socket);
-				#if($error!==0) {
-				#	echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
-				#}
-				continue;
-			}
-			if(isset($read["mainIPC"])) {
-				echo "A new IPC connection has occurred.".PHP_EOL;
-				if (($msgsock = stream_socket_accept($this->ipcServer)) === false) {
-					echo "socket_accept() failed: ".socket_strerror(socket_last_error($this->socket)).PHP_EOL;
-					#stream_set_blocking($msgsock, TRUE);
-					return;
-				}
-				$clientId = IntVal::uint64LE()->getValue(fread($msgsock, 8));
-				echo "New connection for ".$clientId." has been accepted.".PHP_EOL;
-				$this->ipcClients[$clientId] = $msgsock;
-				$this->workers[$clientId] = new RunnerServer($msgsock, $clientId);
-				$this->workerProcess[$clientId] = new Process($this->workers[$clientId]);
-				$this->workerProcess[$clientId]->addProcessListener($this);
-				$this->workerProcess[$clientId]->run();
-				echo "Forked off worker process with pid ".$this->workerProcess[$clientId]->getPid().PHP_EOL;
-			}
-		} while(TRUE);
-		 * 
-		 */
+		
+		$this->hub->listen();
 	}
 
 	public function onEnd(Process $process) {
@@ -146,6 +109,15 @@ class Server implements ProcessListener, SignalHandler, StreamHubListener {
 		
 		#$this->ipcProtocol[$id] = new \Net\ProtocolBase($newClient);
 	}
+	
+	public function hasClientListener(string $name, int $id): bool {
+		return false;
+	}
+	
+	public function getClientListener(string $name, int $id): \Net\HubClientListener {
+		;
+	}
+	
 
 	public function onRead(string $name, int $id, $stream) {
 		echo "This should not get called.".PHP_EOL;
