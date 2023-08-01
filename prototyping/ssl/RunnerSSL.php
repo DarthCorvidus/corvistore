@@ -61,7 +61,9 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 	}
 
 	public function onDisconnect(string $name, int $id) {
-
+		if($name=="ssl") {
+			$this->hub->close("ipc", $id);
+		}
 	}
 
 	public function onRead(string $name, int $id, string $data) {

@@ -60,7 +60,8 @@ class SSLProtocolListener implements \Net\ProtocolReactiveListener {
 	}
 
 	public function onDisconnect(\Net\ProtocolReactive $protocol) {
-		echo "Client ".$this->id." disconnected".PHP_EOL;
+		echo "Client ".$this->id." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
+		exit();
 	}
 
 	public function onMessage(\Net\ProtocolReactive $protocol, string $command) {
