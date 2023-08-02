@@ -22,6 +22,7 @@ class ProtocolReactive implements HubClientListener {
 	private $sendStack = array();
 	private $listener = array();
 	private $rest = 0;
+	private $expected = array();
 	public function __construct(ProtocolReactiveListener $listener) {
 		$this->listener = $listener;
 		
@@ -67,6 +68,7 @@ class ProtocolReactive implements HubClientListener {
 		return;
 		}
 		$type = ord($data[0]);
+		$this->checkExpect($type);
 		if($type==self::MESSAGE) {
 			$this->readString($type, $data);
 		}
@@ -180,5 +182,19 @@ class ProtocolReactive implements HubClientListener {
 	public function sendSerialize($serialize) {
 		$serialized = serialize($serialize);
 		$this->sendString(self::SERIALIZED_PHP, $serialized);
+	}
+	
+	public function expect(int $type) {
+		$this->expected[] = $type;
+	}
+	
+	public function checkExpect(int $type) {
+		if(empty($this->expected)) {
+			return;
+		}
+		$expected = array_shift($this->expected);
+		if($type!=$expected) {
+			throw new \RuntimeException("Expectation mismatch: expected ".$expected.", got ".$type);
+		}
 	}
 }

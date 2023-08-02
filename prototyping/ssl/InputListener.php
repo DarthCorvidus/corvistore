@@ -25,6 +25,11 @@ class InputListener implements \Net\HubClientListener {
 		if($data=="quit") {
 			exit();
 		}
+		if($data=="srv") {
+			$this->protocol->expect(\Net\ProtocolReactive::SERIALIZED_PHP);
+		return;
+		}
+		$this->protocol->expect(\Net\ProtocolReactive::MESSAGE);
 	}
 
 	public function onWrite(string $name, int $id): string {
