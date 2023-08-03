@@ -5,17 +5,20 @@ use Net\ProtocolReactive;
 class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListener {
 	private $lastString;
 	private $lastUnserialized;
+	private $lastOK = TRUE;
 	function __construct() {
 		parent::__construct();
 	}
 	function setUp() {
 		$this->lastString = NULL;
 		$this->lastUnserialized = array();
+		$this->lastOK = FALSE;
 	}
 	
 	function tearDown() {
 		$this->lastString = NULL;
 		$this->lastUnserialized;
+		$this->lastOK = FALSE;
 	}
 	
 	
@@ -94,7 +97,19 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		}
 		$this->assertEquals($_SERVER, $this->lastUnserialized);
 	}
-
+	
+	function testSendOk() {
+		$sender = new ProtocolReactive($this);
+		$receiver = new ProtocolReactive($this);
+		$receiver->expect(ProtocolReactive::OK);
+		$sender->sendOK("name", 0);
+		while($sender->hasWrite("x", 0)) {
+			$data = $sender->onWrite("x", 0);
+			$receiver->onRead("x", 0, $data);
+		}
+		$this->assertEquals(TRUE, $this->lastOK);
+	}
+	
 	public function onCommand(ProtocolReactive $protocol, string $command) {
 		$this->lastString = $command;
 	}
@@ -109,6 +124,10 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 
 	public function onSerialized(ProtocolReactive $protocol, $unserialized) {
 		$this->lastUnserialized = $unserialized;
+	}
+
+	public function onOk(ProtocolReactive $protocol) {
+		$this->lastOK = true;
 	}
 
 }

@@ -18,4 +18,8 @@ class ClientProtocolListener implements \Net\ProtocolReactiveListener {
 		print_r($unserialized);
 	}
 
+	public function onOk(\Net\ProtocolReactive $protocol) {
+		
+	}
+
 }

@@ -72,4 +72,8 @@ class SSLProtocolListener implements \Net\ProtocolReactiveListener {
 		
 	}
 
+	public function onOk(\Net\ProtocolReactive $protocol) {
+		
+	}
+
 }

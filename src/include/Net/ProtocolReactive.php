@@ -82,6 +82,9 @@ class ProtocolReactive implements HubClientListener {
 		if($type==self::SERIALIZED_PHP) {
 			$this->readString($type, $data);
 		}
+		if($type==self::OK) {
+			$this->readOK($data);
+		}
 	}
 
 	public function onWrite(string $name, int $id): string {
@@ -110,6 +113,20 @@ class ProtocolReactive implements HubClientListener {
 			$this->sendStack[] = self::padRandom(substr($data, $i*$packetLength, $packetLength), $packetLength);
 		}
 	}
+	
+	function sendOK($name, $id) {
+		$data = chr(self::OK).random_bytes($this->getPacketLength($name, $id)-2).chr(self::OK);
+		$this->sendStack[] = $data;
+	}
+	
+	function readOk(string $data) {
+		$last = $data[strlen($data)-1];
+		if($last!==chr(self::OK)) {
+			throw new RuntimeException("malformed OK packet.");
+		}
+		$this->listener->onOK($this);
+	}
+	
 	
 	private function sendShortString(int $type, string $data, int $len) {
 		$packet = \IntVal::uint8()->putValue($type);
