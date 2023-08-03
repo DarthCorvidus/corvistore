@@ -53,6 +53,10 @@ class ProtocolReactive implements HubClientListener {
 	public function getPacketLength(string $name, int $id): int {
 		return 1024;
 	}
+	
+	public function getStackSize(): int {
+		return count($this->sendStack);
+	}
 
 	public function hasWrite(string $name, int $id): bool {
 		return !empty($this->sendStack);
