@@ -23,6 +23,7 @@ class ProtocolReactive implements HubClientListener {
 	private $listener = array();
 	private $rest = 0;
 	private $expected = array();
+	private $sendStream = array();
 	public function __construct(ProtocolReactiveListener $listener) {
 		$this->listener = $listener;
 		
@@ -45,6 +46,9 @@ class ProtocolReactive implements HubClientListener {
 		}
 	}
 
+	private function getCurrentSender(): StreamSender {
+		return $this->sendStream[0];
+	}
 	
 	public function getBinary(string $name, int $id): bool {
 		return true;
@@ -54,12 +58,12 @@ class ProtocolReactive implements HubClientListener {
 		return 1024;
 	}
 	
-	public function getStackSize(): int {
-		return count($this->sendStack);
-	}
+	#public function getStackSize(): int {
+	#	return count($this->sendStack);
+	#}
 
 	public function hasWrite(string $name, int $id): bool {
-		return !empty($this->sendStack);
+		return !empty($this->sendStream);
 	}
 
 	public function onDisconnect(string $name, int $id) {
@@ -88,35 +92,25 @@ class ProtocolReactive implements HubClientListener {
 	}
 
 	public function onWrite(string $name, int $id): string {
-		return array_shift($this->sendStack);
+		$current = $this->getCurrentSender();
+		$left = $current->getSendLeft();
+		$length = $this->getPacketLength($name, $id);
+		if($left<=$length) {
+			$data = $current->getSendData($left);
+			array_shift($this->sendStream);
+			return self::padRandom($data, $length);
+		}
+	return $current->getSendData($length);
 	}
 
 	private function sendString(int $type, string $data) {
-		$len = strlen($data);
-		/*
-		 * If the string length is below the packet length + 5 bytes overhead,
-		 * use sendShortString.
-		 */
-		if(strlen($data)<$this->getPacketLength("default", 0)+5) {
-			$this->sendShortString($type, $data, $len);
-		return;
-		}
-		$data = \IntVal::uint8()->putValue($type).\IntVal::uint32LE()->putValue($len).$data;
-		$total = $len+5;
-		$packets = floor($total/$this->getPacketLength("", 0));
-		$rest = $total % $this->getPacketLength("", 0);
-		$packetLength = $this->getPacketLength("", 0);
-		for($i=0;$i<$packets;$i++) {
-			$this->sendStack[] = substr($data, $i*$packetLength, $packetLength);
-		}
-		if($rest!=0) {
-			$this->sendStack[] = self::padRandom(substr($data, $i*$packetLength, $packetLength), $packetLength);
-		}
+		$this->sendStream[] = new StringReader(chr($type).\IntVal::uint32LE()->putValue(strlen($data)).$data);
+	return;
 	}
 	
 	function sendOK($name, $id) {
 		$data = chr(self::OK).random_bytes($this->getPacketLength($name, $id)-2).chr(self::OK);
-		$this->sendStack[] = $data;
+		$this->sendStream[] = new StringReader($data);
 	}
 	
 	function readOk(string $data) {
@@ -125,14 +119,6 @@ class ProtocolReactive implements HubClientListener {
 			throw new RuntimeException("malformed OK packet.");
 		}
 		$this->listener->onOK($this);
-	}
-	
-	
-	private function sendShortString(int $type, string $data, int $len) {
-		$packet = \IntVal::uint8()->putValue($type);
-		$packet .= \IntVal::uint32LE()->putValue($len);
-		$packet .= $data;
-		$this->sendStack[] = self::padRandom($packet, $this->getPacketLength("", 0));
 	}
 	
 	private function readString(int $type, string $data) {

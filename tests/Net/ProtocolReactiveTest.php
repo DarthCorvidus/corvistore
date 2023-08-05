@@ -27,15 +27,29 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$this->assertInstanceOf(ProtocolReactive::class, $protocol);
 	}
 	
-	function testGetStackSize() {
+	function testGetDefaultSize() {
 		$protocol = new ProtocolReactive($this);
-		$string = serialize($_SERVER);
-		$steps = (int)ceil(strlen($string)/$protocol->getPacketLength(" ", 0));
-		$protocol->sendMessage($string);
-		$this->assertEquals($steps, $protocol->getStackSize());
+		$this->assertEquals(1024, $protocol->getPacketLength("x", 0));
 	}
 	
-	function testReceiveShortCommand() {
+	#function testGetStackSize() {
+	#	$protocol = new ProtocolReactive($this);
+	#	$string = serialize($_SERVER);
+	#	$steps = (int)ceil(strlen($string)/$protocol->getPacketLength(" ", 0));
+	#	$protocol->sendMessage($string);
+	#	$this->assertEquals($steps, $protocol->getStackSize());
+	#}
+	
+	function testOnWriteShortCommand() {
+		$expected = chr(ProtocolReactive::COMMAND).IntVal::uint32LE()->putValue(4)."quit";
+		$protocol = new ProtocolReactive($this);
+		$protocol->sendCommand("quit");
+		$write = $protocol->onWrite("x", 0);
+		$this->assertEquals(1024, strlen($write));
+		$this->assertEquals($expected, substr($write, 0, 1+4+4));
+	}
+	
+	function testOnReadShortCommand() {
 		$protocol = new ProtocolReactive($this);
 		$expected = "quit";
 		$data = chr(ProtocolReactive::COMMAND);
@@ -44,9 +58,10 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$padded = ProtocolReactive::padRandom($data, 1024);
 		$protocol->onRead("squid", 0, $padded);
 		$this->assertEquals($expected, $this->lastString);
+		$this->assertEquals(FALSE, $protocol->hasWrite("", 0));
 	}
 	
-	function testReceiveLongMessage() {
+	function testOnWriteLongMessage() {
 		$sender = new ProtocolReactive($this);
 		$receiver = new ProtocolReactive($this);
 		$expected = serialize($_SERVER);
@@ -59,7 +74,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		}
 		$this->assertEquals($expected, $this->lastString);
 	}
-
+	
 	function testReceiveMessage() {
 		$sender = new ProtocolReactive($this);
 		$receiver = new ProtocolReactive($this);
@@ -109,7 +124,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		}
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
-	
+
 	public function onCommand(ProtocolReactive $protocol, string $command) {
 		$this->lastString = $command;
 	}
