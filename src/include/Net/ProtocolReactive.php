@@ -104,13 +104,13 @@ class ProtocolReactive implements HubClientListener {
 	}
 
 	private function sendString(int $type, string $data) {
-		$this->sendStream[] = new StringReader(chr($type).\IntVal::uint32LE()->putValue(strlen($data)).$data);
+		$this->sendStream[] = new StringSender(chr($type).\IntVal::uint32LE()->putValue(strlen($data)).$data);
 	return;
 	}
 	
 	function sendOK($name, $id) {
 		$data = chr(self::OK).random_bytes($this->getPacketLength($name, $id)-2).chr(self::OK);
-		$this->sendStream[] = new StringReader($data);
+		$this->sendStream[] = new StringSender($data);
 	}
 	
 	function readOk(string $data) {
