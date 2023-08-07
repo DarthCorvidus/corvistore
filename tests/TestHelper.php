@@ -78,6 +78,14 @@ class TestHelper {
 	return $method->invokeArgs($object, $args);
 	}
 	
+	static function getPropertyValue($object, $propertyName) {
+		$reflector = new ReflectionObject($object);
+		$property = $reflector->getProperty($propertyName);
+		$property->setAccessible(true);
+	return $property->getValue($object);
+	}
+	
+	
 	static function fileowner($filename) {
 		$owner = posix_getpwuid(fileowner($filename));
 		
