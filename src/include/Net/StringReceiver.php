@@ -47,5 +47,9 @@ class StringReceiver implements StreamReceiver {
 		$this->size = $size;
 		$this->left = $size;
 	}
+	
+	public function getString() {
+		return $this->string;
+	}
 
 }

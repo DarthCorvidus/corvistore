@@ -19,7 +19,7 @@ class StringReceiverTest extends TestCase {
 		$sr = new StringReceiver();
 		$sr->setRecvSize(12);
 		$sr->receiveData($expected);
-		$this->assertEquals($expected, TestHelper::getPropertyValue($sr, "string"));
+		$this->assertEquals($expected, $sr->getString());
 	}
 
 	function testReceiveDataShortPadded() {
@@ -27,7 +27,7 @@ class StringReceiverTest extends TestCase {
 		$sr = new StringReceiver();
 		$sr->setRecvSize(12);
 		$sr->receiveData($expected.random_bytes(1024-12));
-		$this->assertEquals($expected, TestHelper::getPropertyValue($sr, "string"));
+		$this->assertEquals($expected, $sr->getString());
 	}
 	
 	function testReceiveDataLongPadded() {
@@ -46,6 +46,6 @@ class StringReceiverTest extends TestCase {
 			$sr->receiveData(substr($padded, 1024*$i, 1024));
 		}
 		$this->assertEquals(0, $sr->getRecvLeft());
-		$this->assertEquals($serialized, TestHelper::getPropertyValue($sr, "string"));
+		$this->assertEquals($serialized, $sr->getString());
 	}
 }
