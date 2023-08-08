@@ -24,9 +24,10 @@ class ProtocolReactive implements HubClientListener {
 	private $rest = 0;
 	private $expected = array();
 	private $sendStream = array();
+	private $streamReceiver = NULL;
+	private $currentRecvType = NULL;
 	public function __construct(ProtocolReactiveListener $listener) {
 		$this->listener = $listener;
-		
 	}
 	
 	static function padRandom(string $string, $padlength): string {
@@ -49,6 +50,10 @@ class ProtocolReactive implements HubClientListener {
 	private function getCurrentSender(): StreamSender {
 		return $this->sendStream[0];
 	}
+
+	private function getCurrentReceiver(): StreamReceiver {
+		return $this->streamReceiver;
+	}
 	
 	public function getBinary(string $name, int $id): bool {
 		return true;
@@ -69,25 +74,37 @@ class ProtocolReactive implements HubClientListener {
 	public function onDisconnect(string $name, int $id) {
 		$this->listener->onDisconnect($this);
 	}
+	
+	private function isString(int $type) {
+		return in_array($type, array(self::MESSAGE, self::COMMAND, self::SERIALIZED_PHP));
+	}
 
 	public function onRead(string $name, int $id, string $data) {
-		if($this->rest>0) {
-			$this->continueString($data);
+		/*
+		 * If $this->currentRecvType is empty: determine message type, start
+		 * reading from data.
+		 */
+		if($this->currentRecvType===NULL) {
+			$this->currentRecvType = ord($data[0]);
+			$this->checkExpect($this->currentRecvType);
+			if($this->isString($this->currentRecvType)) {
+				$this->streamReceiver = new StringReceiver();
+				$this->streamReceiver->setRecvSize(\IntVal::uint32LE()->getValue(substr($data, 1, 4)));
+				$this->readString(substr($data, 5));
+			return;
+			}
+			if($this->currentRecvType===self::OK) {
+				$this->readOk($data);
+			return;
+			}
 		return;
 		}
-		$type = ord($data[0]);
-		$this->checkExpect($type);
-		if($type==self::MESSAGE) {
-			$this->readString($type, $data);
-		}
-		if($type==self::COMMAND) {
-			$this->readString($type, $data);
-		}
-		if($type==self::SERIALIZED_PHP) {
-			$this->readString($type, $data);
-		}
-		if($type==self::OK) {
-			$this->readOK($data);
+		/*
+		 * if $this->currentRecvType is set: continue reading from data. 
+		 */
+		if($this->isString($this->currentRecvType)) {
+			$this->readString($data);
+		return;
 		}
 	}
 
@@ -118,62 +135,25 @@ class ProtocolReactive implements HubClientListener {
 		if($last!==chr(self::OK)) {
 			throw new RuntimeException("malformed OK packet.");
 		}
+		$this->currentRecvType = NULL;
 		$this->listener->onOK($this);
 	}
 	
-	private function readString(int $type, string $data) {
-		$length = \IntVal::uint32LE()->getValue(substr($data, 1, 4));
-		$data = substr($data, 5, $length);
-		if($length>$this->getPacketLength("", 0)-5) {
-			$this->length = $length;
-			$this->data = $data;
-			$this->rest = $this->length-($this->getPacketLength("", 0)-5);
-			$this->type = $type;
-		return;
+	private function readString(string $data) {
+		$this->getCurrentReceiver()->receiveData($data);
+		if($this->getCurrentReceiver()->getRecvLeft()>0) {
+			return;
 		}
-		/*
-		 * If the string is shorter/equals the package size, we can finish it
-		 * right here.
-		 */
-		$this->finishString($type, $data);
-	}
-	
-	/**
-	 * Continues to get string data from onRead.
-	 * @param string $data
-	 * @return type
-	 */
-	private function continueString(string $data) {
-		if($this->rest>=$this->getPacketLength("", 0)) {
-			$this->data .= $data;
-			$this->rest -= $this->getPacketLength("", 0);
-			if($this->rest == 0) {
-				$this->finishString($this->type, $this->data);
-			}
-		return;
-		}
-		if($this->rest<=$this->getPacketLength("", 0)) {
-			$this->data .= substr($data, 0, $this->rest);
-			$this->finishString($this->type, $this->data);
-		}
-	}
-	
-	/**
-	 * Commit finished string data to listener callback, depending on type.
-	 * @param int $type
-	 * @param type $data
-	 */
-	private function finishString(int $type, $data) {
-		$this->data = "";
-		$this->rest = 0;
+		$type = $this->currentRecvType;
+		$this->currentRecvType = NULL;
 		if($type==self::MESSAGE) {
-			$this->listener->onMessage($this, $data);
+			$this->listener->onMessage($this, $this->streamReceiver->getString());
 		}
 		if($type==self::COMMAND) {
-			$this->listener->onCommand($this, $data);
+			$this->listener->onCommand($this, $this->streamReceiver->getString());
 		}
 		if($type==self::SERIALIZED_PHP) {
-			$unserialized = unserialize($data);
+			$unserialized = unserialize($this->streamReceiver->getString());
 			$this->listener->onSerialized($this, $unserialized);
 		}
 	}
