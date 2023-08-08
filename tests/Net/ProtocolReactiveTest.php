@@ -88,7 +88,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		}
 		$this->assertEquals($expected, $this->lastString);
 	}
-
+	
 	function testReceiveSerialized() {
 		$sender = new ProtocolReactive($this);
 		$receiver = new ProtocolReactive($this);
@@ -117,11 +117,28 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender = new ProtocolReactive($this);
 		$receiver = new ProtocolReactive($this);
 		$receiver->expect(ProtocolReactive::OK);
-		$sender->sendOK("name", 0);
+		$sender->sendOK();
 		while($sender->hasWrite("x", 0)) {
 			$data = $sender->onWrite("x", 0);
 			$receiver->onRead("x", 0, $data);
 		}
+		$this->assertEquals(TRUE, $this->lastOK);
+	}
+
+	function testSeveralMessages() {
+		$sender = new ProtocolReactive($this);
+		$receiver = new ProtocolReactive($this);
+		$sender->sendMessage("Hello World!");
+		$data = $sender->onWrite("x", 0);
+		$receiver->onRead("x", 0, $data);
+		$this->assertEquals("Hello World!", $this->lastString);
+		$sender->sendMessage("How are you?");
+		$data = $sender->onWrite("x", 0);
+		$receiver->onRead("x", 0, $data);
+		$this->assertEquals("How are you?", $this->lastString);
+		$sender->sendOK();
+		$data = $sender->onWrite("x", 0);
+		$receiver->onRead("x", 0, $data);
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
 
