@@ -18,6 +18,7 @@ class ProtocolReactive implements HubClientListener {
 	const MESSAGE = 2;
 	const COMMAND = 3;
 	const SERIALIZED_PHP = 4;
+	const FILE = 5;
 	const ERROR = 255;
 	private $sendStack = array();
 	private $listener = array();
@@ -110,30 +111,60 @@ class ProtocolReactive implements HubClientListener {
 
 	public function onWrite(string $name, int $id): string {
 		$current = $this->getCurrentSender();
-		$left = $current->getSendLeft();
-		$length = $this->getPacketLength($name, $id);
-		if($left<=$length) {
-			$data = $current->getSendData($left);
-			array_shift($this->sendStream);
-			return self::padRandom($data, $length);
+		if($this->isString($current->getSendType()) && $current->getSendSize()==$current->getSendLeft()) {
+			return $this->onWriteFirstString($current);
 		}
-	return $current->getSendData($length);
+		if($current->getSendType()==self::OK) {
+			return $this->onWriteFirstString($current);
+		}
+		if($this->isString($current->getSendType())) {
+			return $this->onWriteString($current);
+		}
 	}
+	
+	private function onWriteFirstString(StreamSender $sender) {
+		$data = chr($sender->getSendType());
+		$data .= \IntVal::uint32LE()->putValue($sender->getSendSize());
+		$packetLength = $this->getPacketLength("X", 0);
+		if($sender->getSendLeft()<=$packetLength-5) {
+			$data .= self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-5);
+			array_shift($this->sendStream);
+		return $data;
+		}
+		$data .= $sender->getSendData($packetLength-5);
+	return $data;
+	}
+	
+	private function onWriteString(StreamSender $sender) {
+		$packetLength = $this->getPacketLength("X", 0);
+		if($sender->getSendLeft()<=$packetLength) {
+			$data = self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
+			array_shift($this->sendStream);
+		return $data;
+		}
+	return $sender->getSendData($packetLength);
+	}
+	
 
 	private function sendString(int $type, string $data) {
-		$this->sendStream[] = new StringSender(chr($type).\IntVal::uint32LE()->putValue(strlen($data)).$data);
+		#$this->sendStream[] = new StringSender(chr($type).\IntVal::uint32LE()->putValue(strlen($data)).$data);
+		$this->sendStream[] = new StringSender($type, $data);
 	return;
 	}
 	
 	function sendOK() {
-		$data = chr(self::OK).random_bytes($this->getPacketLength("x", 0)-2).chr(self::OK);
-		$this->sendStream[] = new StringSender($data);
+		/**
+		 * OK packages are a special form of strings that have the size of a
+		 * package, but begin and end with self::OK.
+		 */
+		$data = random_bytes($this->getPacketLength("x", 0)-6).chr(self::OK);
+		$this->sendStream[] = new StringSender(self::OK, $data);
 	}
 	
 	function readOk(string $data) {
 		$last = $data[strlen($data)-1];
 		if($last!==chr(self::OK)) {
-			throw new RuntimeException("malformed OK packet.");
+			throw new \RuntimeException("malformed OK packet.");
 		}
 		$this->currentRecvType = NULL;
 		$this->listener->onOK($this);
@@ -169,6 +200,11 @@ class ProtocolReactive implements HubClientListener {
 	public function sendSerialize($serialize) {
 		$serialized = serialize($serialize);
 		$this->sendString(self::SERIALIZED_PHP, $serialized);
+	}
+	
+	public function sendFile(StreamSender $sender) {
+		$this->sendStream[] = $sender;
+		$sender->onSendStart();
 	}
 	
 	public function expect(int $type) {

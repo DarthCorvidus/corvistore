@@ -4,10 +4,16 @@ class StringSender implements StreamSender {
 	private $content;
 	private $pos;
 	private $size;
-	function __construct(string $string) {
+	private $type;
+	function __construct(int $type, string $string) {
 		$this->content = $string;
 		$this->pos = 0;
 		$this->size = strlen($string);
+		$this->type = $type;
+	}
+	
+	public function getSendType(): int {
+		return $this->type;
 	}
 
 	public function getSendData(int $amount): string {

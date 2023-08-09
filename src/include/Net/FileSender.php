@@ -23,6 +23,11 @@ class FileSender implements StreamSender {
 		$this->size = $file->getSize();
 		$this->left = $this->size;
 	}
+	
+	public function getSendType(): int {
+		return ProtocolReactive::FILE;
+	}
+	
 	public function getSendData(int $amount): string {
 		if(!is_resource($this->handle)) {
 			throw new \RuntimeException("Resource for ".$this->file->getPath()." went away.");

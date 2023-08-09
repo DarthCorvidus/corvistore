@@ -4,17 +4,17 @@ use PHPUnit\Framework\TestCase;
 use Net\StringSender;
 class StringSenderTest extends TestCase {
 	function testConstruct() {
-		$sr = new StringSender("Hello World!");
+		$sr = new StringSender(1, "Hello World!");
 		$this->assertInstanceOf(StringSender::class, $sr);
 	}
 	
 	function testGetSize() {
-		$sr = new StringSender("Hello World!");
+		$sr = new StringSender(1, "Hello World!");
 		$this->assertEquals(12, $sr->getSendSize());
 	}
 	
 	function testGetData() {
-		$sr = new StringSender("Hello World!");
+		$sr = new StringSender(1, "Hello World!");
 		$this->assertEquals("He", $sr->getSendData(2));
 		$this->assertEquals("llo ", $sr->getSendData(4));
 		$this->assertEquals("W", $sr->getSendData(1));
@@ -23,7 +23,7 @@ class StringSenderTest extends TestCase {
 	}
 	
 	function testGetLeft() {
-		$sr = new StringSender("Hello World!");
+		$sr = new StringSender(1, "Hello World!");
 		$this->assertEquals("He", $sr->getSendData(2));
 		$this->assertEquals(10, $sr->getSendLeft());
 		$this->assertEquals("llo ", $sr->getSendData(4));

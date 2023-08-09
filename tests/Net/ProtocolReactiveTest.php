@@ -6,6 +6,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 	private $lastString;
 	private $lastUnserialized;
 	private $lastOK = TRUE;
+	const FILESIZE = 93821;
 	function __construct() {
 		parent::__construct();
 	}
@@ -19,6 +20,13 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$this->lastString = NULL;
 		$this->lastUnserialized;
 		$this->lastOK = FALSE;
+		if(file_exists(self::getSourceName())) {
+			unlink(self::getSourceName());
+		}
+	}
+	
+	static function getSourceName() {
+		return __DIR__."/example.bin";
 	}
 	
 	
@@ -141,6 +149,18 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$receiver->onRead("x", 0, $data);
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
+	
+	#function testSendSmallFile() {
+	#	$payload = random_bytes(16);
+	#	file_put_contents(self::getSourceName(), $payload);
+	#	$file = new File(self::getSourceName());
+	#	$sender = new ProtocolReactive($this);
+	#	$sender->sendFile(new \Net\FileSender($file));
+	#	$data = $sender->onWrite("x", 0);
+	#	$this->assertEquals();
+	#	
+	#	
+	#}
 
 	public function onCommand(ProtocolReactive $protocol, string $command) {
 		$this->lastString = $command;
