@@ -1,6 +1,6 @@
 <?php
 namespace Net;
-interface HubClientListener {
+interface HubClientNamedListener {
 	function getBinary(string $name, int $id): bool;
 	function getPacketLength(string $name, int $id): int;
 	function onRead(string $name, int $id, string $data);
