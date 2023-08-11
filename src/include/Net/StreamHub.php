@@ -12,6 +12,13 @@ class StreamHub {
 		;
 	}
 	
+	private function hasClientListener(string $key) {
+		return !empty($this->clientListeners[$key]);
+	}
+	private function getClientListener(string $key): Net\HubClientListener {
+		return $this->clientListeners[$key];
+	}
+	
 	function detach($name, $id) {
 		unset($this->clients[$name.":".$id]);
 	}
@@ -43,28 +50,34 @@ class StreamHub {
 	
 	function close(string $name, int $id) {
 		fclose($this->clients[$name.":".$id]);
+		unset($this->clients[$name.":".$id]);
+		$this->getClientListener($name.":".$id)->onDisconnect($name, $id);
+		unset($this->clientListeners[$name.":".$id]);
 		$this->detach($name, $id);
 	}
 	
-	private function read(string $key, \Net\HubClientListener $listener) {
+	private function read(string $key) {
 		$exp = explode(":", $key);
 		$name = $exp[0];
 		$id = (int)$exp[1];
+		$listener = $this->getClientListener($key);
 		if(!$listener->getBinary($name, $id)) {
 			$data = trim(fgets($this->clients[$key]));
 			$listener->onRead($name, $id, $data);
 		}
 		if($listener->getBinary($name, $id)) {
-			$this->readBinary($key, $listener);
+			$this->readBinary($key);
 		}
 	}
 
-	private function readBinary(string $key, \Net\HubClientListener $listener) {
+	private function readBinary(string $key) {
 		$exp = explode(":", $key);
 		$name = $exp[0];
 		$id = (int)$exp[1];
+		$listener = $this->getClientListener($key);
 		$data = fread($this->clients[$key], $listener->getPacketLength($name, $id));
 		$len = strlen($data);
+		
 		/*
 		 * If a connection goes away, stream_select will trigger read() in a
 		 * very short succession. I don't know whether this check is feasible,
@@ -76,10 +89,7 @@ class StreamHub {
 			return;
 		}
 		if($len===0 && $this->zeroCounter[$key]==1000) {
-			fclose($this->clients[$key]);
-			unset($this->clients[$key]);
-			unset($this->clientListeners[$key]);
-			$listener->onDisconnect($name, $id);
+			$this->close($name, $id);
 			return;
 		}
 		/*
@@ -89,10 +99,11 @@ class StreamHub {
 		$listener->onRead($name, $id, $data);
 	}
 	
-	private function write(string $key, \Net\HubClientListener $listener) {
+	private function write(string $key) {
 		$exp = explode(":", $key);
 		$name = $exp[0];
 		$id = (int)$exp[1];
+		$listener = $this->getClientListener($key);
 		if(!$listener->hasWrite($name, $id) and empty($this->clientBuffers[$key])) {
 			return;
 		}
@@ -144,8 +155,7 @@ class StreamHub {
 					#$this->streamHubListeners[$key]->onConnect($key, $next, $client);
 					continue;
 				}
-				# TODO this is bugged right now, as clientListeners could be empty.
-				$this->read($key, $this->clientListeners[$key]);
+				$this->read($key);
 				
 				#$this->streamHubListeners[$exp[0]]->onRead($exp[0], (int)$exp[1], $value);
 			}
