@@ -21,6 +21,7 @@ class Protocol {
 		 * so the problem of fread ending one byte prematurely reappeared. So
 		 * we have to implement it manually.
 		 */
+	return fread($this->socket, $amount);
 		$read = "";
 		while(strlen($read)<$amount) {
 			$read .= fread($this->socket, $amount-strlen($read));
@@ -31,8 +32,14 @@ class Protocol {
 	private function write(string $data) {
 		$amount = strlen($data);
 		$written = 0;
+		fwrite($this->socket, $data);
+	return;
 		while($written<$amount) {
 			$written += fwrite($this->socket, $data, $amount-$written);
+			#$error = error_get_last();
+			#if(!empty($error)) {
+			#	throw new \Exception("Unable to write: ".$error["message"]);
+			#}
 		}
 	}
 	
@@ -240,6 +247,7 @@ class Protocol {
 
 	function listen() {
 		do {
+			$read = array();
 			$read[] = $this->socket;
 			$write = NULL;
 			$except = NULL;

@@ -56,11 +56,11 @@ class ProtocolReactive implements HubClientListener {
 		return $this->streamReceiver;
 	}
 	
-	public function getBinary(string $name, int $id): bool {
+	public function getBinary(): bool {
 		return true;
 	}
 
-	public function getPacketLength(string $name, int $id): int {
+	public function getPacketLength(): int {
 		return 1024;
 	}
 	
@@ -68,11 +68,11 @@ class ProtocolReactive implements HubClientListener {
 	#	return count($this->sendStack);
 	#}
 
-	public function hasWrite(string $name, int $id): bool {
+	public function hasWrite(): bool {
 		return !empty($this->sendStream);
 	}
 
-	public function onDisconnect(string $name, int $id) {
+	public function onDisconnect() {
 		$this->listener->onDisconnect($this);
 	}
 	
@@ -80,7 +80,7 @@ class ProtocolReactive implements HubClientListener {
 		return in_array($type, array(self::MESSAGE, self::COMMAND, self::SERIALIZED_PHP));
 	}
 
-	public function onRead(string $name, int $id, string $data) {
+	public function onRead(string $data) {
 		/*
 		 * If $this->currentRecvType is empty: determine message type, start
 		 * reading from data.
@@ -109,7 +109,7 @@ class ProtocolReactive implements HubClientListener {
 		}
 	}
 
-	public function onWrite(string $name, int $id): string {
+	public function onWrite(): string {
 		$current = $this->getCurrentSender();
 		if($this->isString($current->getSendType()) && $current->getSendSize()==$current->getSendLeft()) {
 			return $this->onWriteFirstString($current);

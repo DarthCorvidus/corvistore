@@ -1,5 +1,5 @@
 <?php
-class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListener {
+class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientNamedListener {
 	private $clientCount = 0;
 	private $sslProtocol = array();
 	private $sslClients = array();
@@ -37,14 +37,22 @@ class RunnerSSL implements Runner, \Net\HubServerListener, \Net\HubClientListene
 		#$this->sslProtocol[$name.":".$id]->sendMessage("(c) ACME Backup Software");
 		#$this->sslProtocol[$name.":".$id]->sendMessage("Connected on ".date("Y-m-d H:i:s")." as client ".$id);
 		$ipcClient = stream_socket_client("unix://".__DIR__."/ssl-server.socket", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
-		$this->hub->addClientStream("ipc", $id, $ipcClient, $this);
+		$this->hub->addClientNamedStream("ipc", $id, $ipcClient, $this);
 	}
 	
 	public function hasClientListener(string $name, int $id): bool {
-		return true;
+		return false;
 	}
 	
 	public function getClientListener(string $name, int $id): \Net\HubClientListener {
+		
+	}
+	
+	public function hasClientNamedListener(string $name, int $id): bool {
+		return true;
+	}
+	
+	public function getClientNamedListener(string $name, int $id): \Net\HubClientNamedListener {
 		return $this;
 	}
 

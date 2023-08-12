@@ -4,23 +4,23 @@ class InputListener implements \Net\HubClientListener {
 	function __construct(\Net\ProtocolReactive $protocol) {
 		$this->protocol = $protocol;
 	}
-	public function getBinary(string $name, int $id): bool {
+	public function getBinary(): bool {
 		return FALSE;
 	}
 
-	public function getPacketLength(string $name, int $id): int {
+	public function getPacketLength(): int {
 		return 1024;
 	}
 
-	public function hasWrite(string $name, int $id): bool {
+	public function hasWrite(): bool {
 		return FALSE;
 	}
 
-	public function onDisconnect(string $name, int $id) {
+	public function onDisconnect() {
 		
 	}
 
-	public function onRead(string $name, int $id, string $data) {
+	public function onRead(string $data) {
 		$this->protocol->sendCommand($data);
 		if($data=="quit") {
 			exit();
@@ -32,7 +32,7 @@ class InputListener implements \Net\HubClientListener {
 		$this->protocol->expect(\Net\ProtocolReactive::MESSAGE);
 	}
 
-	public function onWrite(string $name, int $id): string {
+	public function onWrite(): string {
 		
 	}
 

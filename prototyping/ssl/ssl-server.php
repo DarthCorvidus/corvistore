@@ -118,6 +118,13 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 		;
 	}
 	
+	public function hasClientNamedListener(string $name, int $id): bool {
+		return false;
+	}
+	
+	public function getClientNamedListener(string $name, int $id): \Net\HubClientNamedListener {
+		;
+	}
 
 	public function onRead(string $name, int $id, $stream) {
 		echo "This should not get called.".PHP_EOL;

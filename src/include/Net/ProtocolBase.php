@@ -212,4 +212,12 @@ class ProtocolBase {
 		}
 		$receiver->onRecvEnd();
 	}
+	
+	function disableCrypto() {
+		stream_socket_enable_crypto($this->socket, FALSE);
+	}
+	
+	function close() {
+		fclose($this->socket);
+	}
 }

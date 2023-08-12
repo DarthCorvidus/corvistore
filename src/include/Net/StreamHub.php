@@ -4,6 +4,7 @@ class StreamHub {
 	private $clients = array();
 	private $streamHubListeners = array();
 	private $clientListeners;
+	private $clientNamedListeners = array();
 	private $counters = array();
 	private $serverListeners = array();
 	private $zeroCounter = array();
@@ -19,6 +20,14 @@ class StreamHub {
 		return $this->clientListeners[$key];
 	}
 	
+	private function hasClientNamedListener(string $key) {
+		return !empty($this->clientNamedListeners[$key]);
+	}
+
+	private function getClientNamedListener(string $key): Net\HubClientNamedListener {
+		return $this->clientNamedListeners[$key];
+	}
+	
 	function detach($name, $id) {
 		unset($this->clients[$name.":".$id]);
 	}
@@ -32,6 +41,13 @@ class StreamHub {
 	function addClientStream(string $name, int $id, $stream, \Net\HubClientListener $listener) {
 		$this->clients[$name.":".$id] = $stream;
 		$this->clientListeners[$name.":".$id] = $listener;
+		$this->zeroCounter[$name.":".$id] = 0;
+		$this->clientBuffers[$name.":".$id] = array();
+	}
+
+	function addClientNamedStream(string $name, int $id, $stream, \Net\HubClientNamedListener $listener) {
+		$this->clients[$name.":".$id] = $stream;
+		$this->clientNamedListeners[$name.":".$id] = $listener;
 		$this->zeroCounter[$name.":".$id] = 0;
 		$this->clientBuffers[$name.":".$id] = array();
 	}
@@ -51,7 +67,13 @@ class StreamHub {
 	function close(string $name, int $id) {
 		fclose($this->clients[$name.":".$id]);
 		unset($this->clients[$name.":".$id]);
-		$this->getClientListener($name.":".$id)->onDisconnect($name, $id);
+		if($this->hasClientListener($name.":".$id)) {
+			$this->getClientListener($name.":".$id)->onDisconnect();
+		}
+		if($this->hasClientNamedListener($name.":".$id)) {
+			$this->getClientNamedListener($name.":".$id)->onDisconnect($name, $id);
+		}
+		
 		unset($this->clientListeners[$name.":".$id]);
 		$this->detach($name, $id);
 	}
@@ -60,12 +82,29 @@ class StreamHub {
 		$exp = explode(":", $key);
 		$name = $exp[0];
 		$id = (int)$exp[1];
-		$listener = $this->getClientListener($key);
-		if(!$listener->getBinary($name, $id)) {
+		if(!$this->hasClientListener($key) && !$this->hasClientNamedListener($key)) {
+			throw new Exception("no listener to read to read event for ".$key);
+		}
+		if($this->hasClientListener($key)) {
+			$listener = $this->getClientListener($key);
+			$binary = $listener->getBinary();
+		}
+		if($this->hasClientNamedListener($key)) {
+			$listener = $this->getClientNamedListener($key);
+			$binary = $listener->getBinary($name, $id);
+		}
+		
+		if(!$binary && $listener instanceof \Net\HubClientNamedListener) {
 			$data = trim(fgets($this->clients[$key]));
 			$listener->onRead($name, $id, $data);
 		}
-		if($listener->getBinary($name, $id)) {
+		
+		if(!$binary && $listener instanceof \Net\HubClientListener) {
+			$data = trim(fgets($this->clients[$key]));
+			$listener->onRead($data);
+		}
+		
+		if($binary) {
 			$this->readBinary($key);
 		}
 	}
@@ -74,8 +113,19 @@ class StreamHub {
 		$exp = explode(":", $key);
 		$name = $exp[0];
 		$id = (int)$exp[1];
-		$listener = $this->getClientListener($key);
-		$data = fread($this->clients[$key], $listener->getPacketLength($name, $id));
+
+		if(!$this->hasClientListener($key) && !$this->hasClientNamedListener($key)) {
+			throw new Exception("no listener to read to write event for ".$key);
+		}
+
+		if($this->hasClientListener($key)) {
+			$listener = $this->getClientListener($key);
+			$data = fread($this->clients[$key], $listener->getPacketLength());
+		}
+		if($this->hasClientNamedListener($key)) {
+			$listener = $this->getClientNamedListener($key);
+			$data = fread($this->clients[$key], $listener->getPacketLength($name, $id));
+		}
 		$len = strlen($data);
 		
 		/*
@@ -96,17 +146,38 @@ class StreamHub {
 		 * I cannot really be sure that I got all bytes as mandated by
 		 * HubClientListener::getPacketLength, but for now, this is sufficient.
 		 */
-		$listener->onRead($name, $id, $data);
+		if($listener instanceof \Net\HubClientNamedListener) {
+			$listener->onRead($name, $id, $data);
+		}
+		
+		if($listener instanceof \Net\HubClientListener) {
+			$listener->onRead($data);
+		}
 	}
 	
 	private function write(string $key) {
 		$exp = explode(":", $key);
 		$name = $exp[0];
 		$id = (int)$exp[1];
-		$listener = $this->getClientListener($key);
-		if(!$listener->hasWrite($name, $id) and empty($this->clientBuffers[$key])) {
+		if(!$this->hasClientListener($key) && !$this->hasClientNamedListener($key)) {
+			throw new Exception("no listener to write event for ".$key);
+		}
+
+		if($this->hasClientListener($key)) {
+			$listener = $this->getClientListener($key);
+			$hasWrite = $listener->hasWrite();
+		}
+		
+		if($this->hasClientNamedListener($key)) {
+			
+			$listener = $this->getClientNamedListener($key);
+			$hasWrite = $listener->hasWrite($name, $id);
+		}
+		
+		if(!$hasWrite and empty($this->clientBuffers[$key])) {
 			return;
 		}
+		
 		$this->clientBuffers[$key][] = $listener->onWrite($name, $id);
 		if(!$listener->getBinary($name, $id)) {
 			$write = array_shift($this->clientBuffers[$key]);
@@ -151,6 +222,10 @@ class StreamHub {
 						$listener = $this->serverListeners[$key]->getClientListener($key, $next);
 						$this->clientListeners[$key.":".$next] = $listener;
 					}
+					if($this->serverListeners[$key]->hasClientNamedListener($key, $next)) {
+						$listener = $this->serverListeners[$key]->getClientNamedListener($key, $next);
+						$this->clientNamedListeners[$key.":".$next] = $listener;
+					}
 					$this->zeroCounter[$key.":".$next] = 0;
 					#$this->streamHubListeners[$key]->onConnect($key, $next, $client);
 					continue;
@@ -168,7 +243,7 @@ class StreamHub {
 				 * this is necessary, because the client listener could have
 				 * gone away as part of some read action.
 				 */
-				if(!isset($this->clientListeners[$key])) {
+				if(!isset($this->clientListeners[$key]) and !isset($this->clientNamedListeners[$key])) {
 					continue;
 				}
 				$this->write($key, $this->clientListeners[$key]);
