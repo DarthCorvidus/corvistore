@@ -150,17 +150,62 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
 	
-	#function testSendSmallFile() {
-	#	$payload = random_bytes(16);
-	#	file_put_contents(self::getSourceName(), $payload);
-	#	$file = new File(self::getSourceName());
-	#	$sender = new ProtocolReactive($this);
-	#	$sender->sendFile(new \Net\FileSender($file));
-	#	$data = $sender->onWrite("x", 0);
-	#	$this->assertEquals();
-	#	
-	#	
-	#}
+	function testSendSmallFile() {
+		$payload = random_bytes(16);
+		file_put_contents(self::getSourceName(), $payload);
+		$file = new File(self::getSourceName());
+		$sender = new ProtocolReactive($this);
+		$sender->sendFile(new \Net\FileSender($file));
+		$data = $sender->onWrite();
+		$this->assertEquals(chr(ProtocolReactive::FILE), substr($data, 0, 1));
+		$this->assertEquals(IntVal::uint64LE()->putValue(16), substr($data, 1, 8));
+		$this->assertEquals($payload, substr($data, 9, 16));
+		$this->assertEquals(1024, strlen($data));
+		// Nothing more to send
+		$this->assertEquals(FALSE, $sender->hasWrite());
+	}
+	
+	function testSendBlockSizedFile() {
+		$payload = random_bytes(1024);
+		file_put_contents(self::getSourceName(), $payload);
+		$file = new File(self::getSourceName());
+		$sender = new ProtocolReactive($this);
+		$sender->sendFile(new \Net\FileSender($file));
+		$data = $sender->onWrite();
+		// File Type (1 Byte)
+		$this->assertEquals(chr(ProtocolReactive::FILE), substr($data, 0, 1));
+		// Length as 64 bit Little Endian (8 Bytes)
+		$this->assertEquals(IntVal::uint64LE()->putValue(1024), substr($data, 1, 8));
+		// Payload block is 1015 bytes long
+		$this->assertEquals(substr($payload, 0, 1024-9), substr($data, 9, 1024-9));
+		$data = $sender->onWrite();
+		
+		// second block is padded to 1024 bytes
+		$this->assertEquals(1024, strlen($data));
+		// first 9 bytes contain the remaining payload
+		$this->assertEquals(substr($payload, 1024-9, 9), substr($data, 0, 9));
+		// Nothing more to send.
+		$this->assertEquals(FALSE, $sender->hasWrite());
+	}
+	
+	function testSendLargerFile() {
+		$payload = random_bytes(self::FILESIZE);
+		file_put_contents(self::getSourceName(), $payload);
+		$file = new File(self::getSourceName());
+		$sender = new ProtocolReactive($this);
+		$sender->sendFile(new \Net\FileSender($file));
+		$data = $sender->onWrite();
+		$this->assertEquals(chr(ProtocolReactive::FILE), substr($data, 0, 1));
+		$this->assertEquals(IntVal::uint64LE()->putValue(self::FILESIZE), substr($data, 1, 8));
+		$this->assertEquals(substr($payload, 0, 1024-9), substr($data, 9, 1024-9));
+		while($sender->hasWrite()) {
+			$data .= $sender->onWrite();
+		}
+		// ceil(Filesize/1024)*1024
+		$this->assertEquals(94208, strlen($data));
+		// Payload is substring with offset 9 and length FILESIZE
+		$this->assertEquals($payload, substr($data, 9, self::FILESIZE));
+	}
 
 	public function onCommand(ProtocolReactive $protocol, string $command) {
 		$this->lastString = $command;

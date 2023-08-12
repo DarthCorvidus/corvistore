@@ -114,11 +114,19 @@ class ProtocolReactive implements HubClientListener {
 		if($this->isString($current->getSendType()) && $current->getSendSize()==$current->getSendLeft()) {
 			return $this->onWriteFirstString($current);
 		}
+		if($current->getSendType()==self::FILE && $current->getSendSize()==$current->getSendLeft()) {
+			return $this->onWriteFirstFile($current);
+		}
+		
+		
 		if($current->getSendType()==self::OK) {
 			return $this->onWriteFirstString($current);
 		}
 		if($this->isString($current->getSendType())) {
 			return $this->onWriteString($current);
+		}
+		if($current->getSendType()==self::FILE) {
+			return $this->onWriteFile($current);
 		}
 	}
 	
@@ -135,8 +143,31 @@ class ProtocolReactive implements HubClientListener {
 	return $data;
 	}
 	
+	private function onWriteFirstFile(StreamSender $sender) {
+		$data = chr($sender->getSendType());
+		$data .= \IntVal::uint64LE()->putValue($sender->getSendSize());
+		$packetLength = $this->getPacketLength();
+		if($sender->getSendLeft()<=$packetLength-9) {
+			$data .= self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-9);
+			array_shift($this->sendStream);
+		return $data;
+		}
+		$data .= $sender->getSendData($packetLength-9);
+	return $data;
+	}
+	
 	private function onWriteString(StreamSender $sender) {
-		$packetLength = $this->getPacketLength("X", 0);
+		$packetLength = $this->getPacketLength();
+		if($sender->getSendLeft()<=$packetLength) {
+			$data = self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
+			array_shift($this->sendStream);
+		return $data;
+		}
+	return $sender->getSendData($packetLength);
+	}
+
+	private function onWriteFile(StreamSender $sender) {
+		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength) {
 			$data = self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
 			array_shift($this->sendStream);
