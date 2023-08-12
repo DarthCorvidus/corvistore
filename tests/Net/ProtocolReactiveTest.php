@@ -64,9 +64,9 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$data .= IntVal::uint32LE()->putValue(strlen($expected));
 		$data .= $expected;
 		$padded = ProtocolReactive::padRandom($data, 1024);
-		$protocol->onRead("squid", 0, $padded);
+		$protocol->onRead($padded);
 		$this->assertEquals($expected, $this->lastString);
-		$this->assertEquals(FALSE, $protocol->hasWrite("", 0));
+		$this->assertEquals(FALSE, $protocol->hasWrite());
 	}
 	
 	function testOnWriteLongMessage() {
@@ -76,9 +76,9 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$steps = ceil(strlen($expected)/$sender->getPacketLength(" ", 0));
 
 		$sender->sendMessage($expected);
-		while($sender->hasWrite("x", 0)) {
-			$data = $sender->onWrite("x", 0);
-			$receiver->onRead("x", 0, $data);
+		while($sender->hasWrite()) {
+			$data = $sender->onWrite();
+			$receiver->onRead($data);
 		}
 		$this->assertEquals($expected, $this->lastString);
 	}
@@ -90,9 +90,9 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$steps = ceil(strlen($expected)/$sender->getPacketLength(" ", 0));
 
 		$sender->sendMessage($expected);
-		while($sender->hasWrite("x", 0)) {
-			$data = $sender->onWrite("x", 0);
-			$receiver->onRead("x", 0, $data);
+		while($sender->hasWrite()) {
+			$data = $sender->onWrite();
+			$receiver->onRead($data);
 		}
 		$this->assertEquals($expected, $this->lastString);
 	}
@@ -101,9 +101,9 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender = new ProtocolReactive($this);
 		$receiver = new ProtocolReactive($this);
 		$sender->sendSerialize($_SERVER);
-		while($sender->hasWrite("x", 0)) {
-			$data = $sender->onWrite("x", 0);
-			$receiver->onRead("x", 0, $data);
+		while($sender->hasWrite()) {
+			$data = $sender->onWrite();
+			$receiver->onRead($data);
 		}
 		$this->assertEquals($_SERVER, $this->lastUnserialized);
 	}
@@ -113,10 +113,10 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$receiver = new ProtocolReactive($this);
 		$receiver->expect(ProtocolReactive::MESSAGE);
 		$sender->sendSerialize($_SERVER);
-		while($sender->hasWrite("x", 0)) {
-			$data = $sender->onWrite("x", 0);
+		while($sender->hasWrite()) {
+			$data = $sender->onWrite();
 			$this->expectException(RuntimeException::class); 
-			$receiver->onRead("x", 0, $data);
+			$receiver->onRead($data);
 		}
 		$this->assertEquals($_SERVER, $this->lastUnserialized);
 	}
@@ -126,9 +126,9 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$receiver = new ProtocolReactive($this);
 		$receiver->expect(ProtocolReactive::OK);
 		$sender->sendOK();
-		while($sender->hasWrite("x", 0)) {
-			$data = $sender->onWrite("x", 0);
-			$receiver->onRead("x", 0, $data);
+		while($sender->hasWrite()) {
+			$data = $sender->onWrite();
+			$receiver->onRead($data);
 		}
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
@@ -137,16 +137,16 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender = new ProtocolReactive($this);
 		$receiver = new ProtocolReactive($this);
 		$sender->sendMessage("Hello World!");
-		$data = $sender->onWrite("x", 0);
-		$receiver->onRead("x", 0, $data);
+		$data = $sender->onWrite();
+		$receiver->onRead($data);
 		$this->assertEquals("Hello World!", $this->lastString);
 		$sender->sendMessage("How are you?");
 		$data = $sender->onWrite("x", 0);
-		$receiver->onRead("x", 0, $data);
+		$receiver->onRead($data);
 		$this->assertEquals("How are you?", $this->lastString);
 		$sender->sendOK();
-		$data = $sender->onWrite("x", 0);
-		$receiver->onRead("x", 0, $data);
+		$data = $sender->onWrite();
+		$receiver->onRead($data);
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
 	
