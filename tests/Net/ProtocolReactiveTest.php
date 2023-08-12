@@ -37,7 +37,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 	
 	function testGetDefaultSize() {
 		$protocol = new ProtocolReactive($this);
-		$this->assertEquals(1024, $protocol->getPacketLength("x", 0));
+		$this->assertEquals(1024, $protocol->getPacketLength());
 	}
 	
 	#function testGetStackSize() {
@@ -52,7 +52,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$expected = chr(ProtocolReactive::COMMAND).IntVal::uint32LE()->putValue(4)."quit";
 		$protocol = new ProtocolReactive($this);
 		$protocol->sendCommand("quit");
-		$write = $protocol->onWrite("x", 0);
+		$write = $protocol->onWrite();
 		$this->assertEquals(1024, strlen($write));
 		$this->assertEquals($expected, substr($write, 0, 1+4+4));
 	}
@@ -73,7 +73,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender = new ProtocolReactive($this);
 		$receiver = new ProtocolReactive($this);
 		$expected = serialize($_SERVER);
-		$steps = ceil(strlen($expected)/$sender->getPacketLength(" ", 0));
+		$steps = ceil(strlen($expected)/$sender->getPacketLength());
 
 		$sender->sendMessage($expected);
 		while($sender->hasWrite()) {
@@ -87,7 +87,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender = new ProtocolReactive($this);
 		$receiver = new ProtocolReactive($this);
 		$expected = serialize($_SERVER);
-		$steps = ceil(strlen($expected)/$sender->getPacketLength(" ", 0));
+		$steps = ceil(strlen($expected)/$sender->getPacketLength());
 
 		$sender->sendMessage($expected);
 		while($sender->hasWrite()) {
@@ -141,7 +141,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$receiver->onRead($data);
 		$this->assertEquals("Hello World!", $this->lastString);
 		$sender->sendMessage("How are you?");
-		$data = $sender->onWrite("x", 0);
+		$data = $sender->onWrite();
 		$receiver->onRead($data);
 		$this->assertEquals("How are you?", $this->lastString);
 		$sender->sendOK();
