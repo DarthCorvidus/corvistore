@@ -147,7 +147,7 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 					#$protocol->sendOK();
 					$msgsock = $this->hub->getStream($name, $id);
 					$this->hub->detach($name, $id);
-					$worker = new Server\WorkerAdmin($msgsock, $id);
+					$worker = new Server\WorkerAdmin($msgsock, $id, $user->getId());
 					$process = new Process($worker);
 					$process->run();
 					unset($this->authFail[$key]);

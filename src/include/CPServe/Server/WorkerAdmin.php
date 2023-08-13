@@ -5,11 +5,15 @@ class WorkerAdmin implements \Runner, \MessageListener, \SignalHandler {
 	private $clientId;
 	private $hub;
 	private $protocol;
-	function __construct($msgsock, int $clientId) {
+	private $user;
+	private $pdo;
+	function __construct($msgsock, int $clientId, int $userId) {
 		$this->clientId = $clientId;
+		$this->pdo = \Shared::getEPDO();
+		$this->user = \User::fromId($this->pdo, $userId);
 		$this->socket = $msgsock;
 		stream_set_blocking($this->socket, FALSE);
-		$this->protocol = new \Net\ProtocolReactive(new AdminProtocolListener($this->clientId));
+		$this->protocol = new \Net\ProtocolReactive(new AdminProtocolListener($this->clientId, $this->user));
 		$signal = \Signal::get();
 		$signal->clearSignal(SIGTERM);
 		$this->hub = new \StreamHub();

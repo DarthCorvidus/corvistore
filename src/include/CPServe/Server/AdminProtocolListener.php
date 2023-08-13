@@ -2,15 +2,18 @@
 namespace Server;
 class AdminProtocolListener implements \Net\ProtocolReactiveListener {
 	private $id;
-	public function __construct(int $id) {
+	private $user;
+	public function __construct(int $id, \User $user) {
 		$this->id = $id;
+		$this->user = $user;
 	}
 	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
 		if($command == "status") {
 			$protocol->sendMessage("Status:");
 			$protocol->sendMessage("\tConnection #".$this->id);
-			$protocol->sendMessage("\tWorker PID #". posix_getpid());
+			$protocol->sendMessage("\tWorker PID #".posix_getpid());
+			$protocol->sendMessage("\tUser:       ".$this->user->getName());
 		return;
 		}
 
