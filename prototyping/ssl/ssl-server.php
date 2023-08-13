@@ -6,7 +6,6 @@ include __DIR__."/RunnerSSL.php";
 include __DIR__."/SSLProtocolListener.php";
 class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 	private $hub;
-	private $ipcProtocol = array();
 	private $workerProcess = array();
 	function __construct() {
 		set_time_limit(0);
@@ -15,10 +14,6 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 		$signal = Signal::get();
 		#$signal->addSignalHandler(SIGINT, $this);
 		#$signal->addSignalHandler(SIGTERM, $this);
-		$address = '127.0.0.1';
-		$port = 4096;
-		$context = stream_context_create();
-
 		if(file_exists(__DIR__."/ssl-server.socket")) {
 			unlink(__DIR__."/ssl-server.socket");
 		}
@@ -33,27 +28,6 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 			echo "Exiting.".PHP_EOL;
 			exit();
 		}
-	}
-	
-	private function streamSelect(): array {
-		$read = array();
-		$read["mainServer"] = $this->socket;
-		$read["mainIPC"] = $this->ipcServer;
-		foreach($this->ipcClients as $key => $value) {
-			$read[$key] = $value;
-		}
-		foreach($this->clients as $key => $value) {
-			$read[$key] = $value;
-		}
-		if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
-			//pcntl_sigprocmask(SIG_UNBLOCK, array(SIGCHLD));
-			#$error = socket_last_error($this->socket);
-			#if($error!==0) {
-			#	echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
-			#}
-			return array();
-		}
-	return $read;
 	}
 
 	function run() {
@@ -84,11 +58,8 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 		if($name=="RunnerServer") {
 			echo "Removing worker".PHP_EOL;
 			$clientId = $process->getRunner()->getId();
-			unset($this->workers[$clientId]);
 			unset($this->workerProcess[$clientId]);
-			unset($this->ipcClients[$clientId]);
 			Signal::get()->clearHandler($process);
-			
 		}
 	}
 
@@ -106,8 +77,6 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 		$process = new Process($worker);
 		$process->run();
 		echo "forked off with PID ".$process->getPid().PHP_EOL;
-		
-		#$this->ipcProtocol[$id] = new \Net\ProtocolBase($newClient);
 	}
 	
 	public function hasClientListener(string $name, int $id): bool {
@@ -125,7 +94,7 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 	public function getClientNamedListener(string $name, int $id): \Net\HubClientNamedListener {
 		;
 	}
-
+	/*
 	public function onRead(string $name, int $id, $stream) {
 		echo "This should not get called.".PHP_EOL;
 		#echo "New IPC activity: ".PHP_EOL;
@@ -137,6 +106,8 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 	public function onWrite(string $name, int $id, $stream) {
 		
 	}
+	 * 
+	 */
 
 }
 
