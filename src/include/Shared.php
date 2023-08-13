@@ -35,6 +35,10 @@ class Shared {
 		return self::getDatabasePath()."/crow-protect.sqlite";
 	}
 
+	static function getIPCSocket() {
+		return self::getInstancePath()."/ssl-server.socket";
+	}
+	
 	static function getSSLPath() {
 		return self::getInstancePath()."/ssl";
 	}
