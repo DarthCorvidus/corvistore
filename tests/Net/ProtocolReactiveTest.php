@@ -23,13 +23,19 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		if(file_exists(self::getSourceName())) {
 			unlink(self::getSourceName());
 		}
+		if(file_exists(self::getTargetName())) {
+			unlink(self::getTargetName());
+		}
 	}
 	
 	static function getSourceName() {
-		return __DIR__."/example.bin";
+		return __DIR__."/source.bin";
 	}
-	
-	
+
+	static function getTargetName() {
+		return __DIR__."/target.bin";
+	}
+
 	function testConstruct() {
 		$protocol = new ProtocolReactive($this);
 		$this->assertInstanceOf(ProtocolReactive::class, $protocol);
@@ -206,7 +212,80 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		// Payload is substring with offset 9 and length FILESIZE
 		$this->assertEquals($payload, substr($data, 9, self::FILESIZE));
 	}
+	
+	function testReceiveSmallFile() {
+		$payload = random_bytes(16);
+		file_put_contents(self::getSourceName(), $payload);
+		$file = new File(self::getSourceName());
+		$sender = new ProtocolReactive($this);
+		$sender->sendFile(new \Net\FileSender($file));
+		$receiver = new ProtocolReactive($this);
+		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
+		$receiver->onRead($sender->onWrite());
+		$this->assertFileExists(self::getTargetName());
+	}
 
+	function testReceiveBlockSizedFile() {
+		$payload = random_bytes(1024);
+		file_put_contents(self::getSourceName(), $payload);
+		$file = new File(self::getSourceName());
+		$sender = new ProtocolReactive($this);
+		$sender->sendFile(new \Net\FileSender($file));
+		$receiver = new ProtocolReactive($this);
+		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
+		$receiver->onRead($sender->onWrite());
+		$receiver->onRead($sender->onWrite());
+		$this->assertFileExists(self::getTargetName());
+		$this->assertEquals(1024, filesize(self::getTargetName()));
+		$this->assertFileEquals(self::getSourceName(), self::getTargetName());
+	}
+	
+	function testReceiveLargerFile() {
+		$payload = random_bytes(self::FILESIZE);
+		file_put_contents(self::getSourceName(), $payload);
+		$file = new File(self::getSourceName());
+		$sender = new ProtocolReactive($this);
+		$sender->sendFile(new \Net\FileSender($file));
+		
+		$receiver = new ProtocolReactive($this);
+		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
+		while($sender->hasWrite()) {
+			$receiver->onRead($sender->onWrite());
+		}
+		$this->assertFileExists(self::getTargetName());
+		$this->assertEquals(self::FILESIZE, filesize(self::getTargetName()));
+		$this->assertFileEquals(self::getSourceName(), self::getTargetName());
+	}
+
+	function testReceiveMultipleFileOneByOne() {
+		$payload = random_bytes(self::FILESIZE);
+		file_put_contents(self::getSourceName(), $payload);
+		$file = new File(self::getSourceName());
+		$sender = new ProtocolReactive($this);
+		$sender->sendFile(new \Net\FileSender($file));
+		$receiver = new ProtocolReactive($this);
+		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
+		while($sender->hasWrite()) {
+			$receiver->onRead($sender->onWrite());
+		}
+		$this->assertFileExists(self::getTargetName());
+		$this->assertEquals(self::FILESIZE, filesize(self::getTargetName()));
+		$this->assertFileEquals(self::getSourceName(), self::getTargetName());
+
+		// We send a second file to test if the FileReceiver gets reused, which
+		// is expected behaviour.
+		$payload = random_bytes(self::FILESIZE-15);
+		file_put_contents(self::getSourceName(), $payload);
+		$file = new File(self::getSourceName());
+		$sender->sendFile(new \Net\FileSender($file));
+		while($sender->hasWrite()) {
+			$receiver->onRead($sender->onWrite());
+		}
+		$this->assertFileExists(self::getTargetName());
+		$this->assertEquals(self::FILESIZE-15, filesize(self::getTargetName()));
+		$this->assertFileEquals(self::getSourceName(), self::getTargetName());
+	}
+	
 	public function onCommand(ProtocolReactive $protocol, string $command) {
 		$this->lastString = $command;
 	}

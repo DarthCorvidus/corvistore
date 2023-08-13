@@ -26,9 +26,14 @@ class ProtocolReactive implements HubClientListener {
 	private $expected = array();
 	private $sendStream = array();
 	private $streamReceiver = NULL;
+	private $fileReceiver = NULL;
 	private $currentRecvType = NULL;
 	public function __construct(ProtocolReactiveListener $listener) {
 		$this->listener = $listener;
+	}
+	
+	function setFileReceiver(StreamReceiver $receiver) {
+		$this->fileReceiver = $receiver;
 	}
 	
 	static function padRandom(string $string, $padlength): string {
@@ -94,6 +99,12 @@ class ProtocolReactive implements HubClientListener {
 				$this->readString(substr($data, 5));
 			return;
 			}
+			if($this->currentRecvType===self::FILE) {
+				$this->streamReceiver = $this->fileReceiver;
+				$this->streamReceiver->setRecvSize(\IntVal::uint64LE()->getValue(substr($data, 1, 8)));
+				$this->streamReceiver->onRecvStart();
+				$this->readFile(substr($data, 9));
+			}
 			if($this->currentRecvType===self::OK) {
 				$this->readOk($data);
 			return;
@@ -105,6 +116,11 @@ class ProtocolReactive implements HubClientListener {
 		 */
 		if($this->isString($this->currentRecvType)) {
 			$this->readString($data);
+		return;
+		}
+		
+		if($this->currentRecvType==self::FILE) {
+			$this->readFile($data);
 		return;
 		}
 	}
@@ -218,6 +234,27 @@ class ProtocolReactive implements HubClientListener {
 			$unserialized = unserialize($this->streamReceiver->getString());
 			$this->listener->onSerialized($this, $unserialized);
 		}
+	}
+	
+	private function readFile(string $data) {
+		$current = $this->getCurrentReceiver();
+		if($current->getRecvLeft()<$this->getPacketLength()) {
+			// The last packet has to be cut off.
+			$current->receiveData(substr($data, 0, $current->getRecvLeft()));
+			// As we are done, we notify the receiver, delete it and return
+			$this->getCurrentReceiver()->onRecvEnd();
+			$this->currentRecvType = NULL;
+			return;
+		} else {
+			$current->receiveData($data);
+		}
+		// continue if packages are left.
+		if($current->getRecvLeft()>0) {
+		return;
+		}
+		// End if nothing is left.
+		$this->getCurrentReceiver()->onRecvEnd();
+		$this->currentRecvType = NULL;
 	}
 	
 	public function sendMessage(string $message) {
