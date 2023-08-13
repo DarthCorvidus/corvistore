@@ -94,21 +94,6 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener {
 	public function getClientNamedListener(string $name, int $id): \Net\HubClientNamedListener {
 		;
 	}
-	/*
-	public function onRead(string $name, int $id, $stream) {
-		echo "This should not get called.".PHP_EOL;
-		#echo "New IPC activity: ".PHP_EOL;
-		#$command = $this->ipcProtocol[$id]->getCommand();
-		#echo $command.PHP_EOL;
-		#$this->ipcProtocol[$id]->sendMessage("IPC message: received".$command);
-	}
-
-	public function onWrite(string $name, int $id, $stream) {
-		
-	}
-	 * 
-	 */
-
 }
 
 $certfiles[] = __DIR__."/server.crt";
