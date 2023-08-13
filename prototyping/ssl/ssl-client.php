@@ -11,7 +11,6 @@ class Client {
 	private $inputListener;
 	function __construct($server) {
 		$this->hub = new StreamHub();
-		#$this->hub->addStreamHubListener("input", $this);
 
 		$context = new Net\SSLContext();
 		$context->setCAFile(__DIR__."/ca.crt");
@@ -29,105 +28,11 @@ class Client {
 		$this->inputListener = new InputListener($this->protocol);
 		$this->hub->addClientStream("ssl", 0, $this->socket, $this->protocol);
 		$this->hub->addClientStream("input", 0, STDIN, $this->inputListener);
-
-		#$this->hub->addStreamHubListener("ssl", $this);
-		#$this->protocol = new \Net\ProtocolBase($this->socket);
 	}
 	
-	/*
-	public function onRead(string $name, int $id, $stream) {
-		if($name=="input") {
-			$input = trim(fgets($stream));
-			#echo "User typed: ".$input.PHP_EOL;
-			$this->protocol->sendCommand($input);
-			#if($input=="srv") {
-			#	$this->protocol->sendSerializePHP($_SERVER);
-			#}
-			if($input=="quit") {
-				$this->hub->close("ssl", 0);
-				exit();
-			}
-		}
-		
-		
-		if($name=="ssl") {
-			echo "Server sent: ".$this->protocol->getMessage().PHP_EOL;
-		}
-		
-	}
-	*/
-	/*
-	public function onWrite(string $name, int $id, $stream) {
-		
-	}
-	*/
-	public function onConnect(string $name, int $id, $newClient) {
-
-	}
-
 	function run() {
 		$this->hub->listen();
 	}
-
-	public function getBinary(string $name, int $id): bool {
-		if($name=="input") {
-			return false;
-		}
-		if($name=="ssl") {
-			return true;
-		}
-
-	}
-
-	public function getPacketLength(string $name, int $id): int {
-		return 1024;
-	}
-
-	public function hasWrite(string $name, int $id): bool {
-		if($name=="input") {
-			return false;
-		}
-		if($name=="ssl" && $this->input!="") {
-			return true;
-		}
-	return false;
-	}
-
-	public function onRead(string $name, int $id, string $data) {
-		if($name=="input") {
-			if($data=="quit") {
-				exit();
-			}
-			echo "You typed: ".$data.PHP_EOL;
-			$this->input = $data;
-		}
-		if($name=="ssl") {
-			echo trim($data).PHP_EOL;
-		}
-		
-	}
-
-	public function onWrite(string $name, int $id): string {
-		if($name=="ssl") {
-			$value = str_pad($this->input, 1024);
-			$this->input = "";
-			return $value;
-		}
-	}
-	
-	public function onDisconnect() {
-		echo "Lost connection to server.".PHP_EOL;
-		exit();
-	}
-
-	public function onCommand(string $command) {
-		
-	}
-
-	public function onMessage(string $message) {
-		echo $message.PHP_EOL;
-	}
-
 }
 
 if(empty($argv[1])) {
