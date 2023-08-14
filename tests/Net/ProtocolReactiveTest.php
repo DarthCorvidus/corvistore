@@ -26,14 +26,35 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		if(file_exists(self::getTargetName())) {
 			unlink(self::getTargetName());
 		}
+		foreach(self::getSourceNames() as $value) {
+			if(file_exists($value)) {
+				unlink($filename);
+			}
+		}
+
+		foreach(self::getTargetNames() as $value) {
+			if(file_exists($value)) {
+				unlink($filename);
+			}
+		}
+		
 	}
 	
 	static function getSourceName() {
 		return __DIR__."/source.bin";
 	}
 
+	static function getSourceNames(): array {
+		return array(__DIR__."/source01.bin", __DIR__."/source03.bin", __DIR__."/source.bin");
+	}
+	
+	
 	static function getTargetName() {
 		return __DIR__."/target.bin";
+	}
+	
+	static function getTargetNames(): array {
+		return array(__DIR__."/target01.bin", __DIR__."/target03.bin", __DIR__."/target02.bin");
 	}
 
 	function testConstruct() {
@@ -285,7 +306,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$this->assertEquals(self::FILESIZE-15, filesize(self::getTargetName()));
 		$this->assertFileEquals(self::getSourceName(), self::getTargetName());
 	}
-	
+
 	public function onCommand(ProtocolReactive $protocol, string $command) {
 		$this->lastString = $command;
 	}
