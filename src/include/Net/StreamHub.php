@@ -9,6 +9,7 @@ class StreamHub {
 	private $serverListeners = array();
 	private $zeroCounter = array();
 	private $clientBuffers = array();
+	private $detach = array();
 	function __construct() {
 		;
 	}
@@ -29,7 +30,8 @@ class StreamHub {
 	}
 	
 	function detach($name, $id) {
-		unset($this->clients[$name.":".$id]);
+		$this->detach[$name.":".$id] = TRUE;
+		#unset($this->clients[$name.":".$id]);
 	}
 	
 	function addServer(string $name, $stream, \Net\HubServerListener $listener) {
@@ -173,7 +175,18 @@ class StreamHub {
 			$listener = $this->getClientNamedListener($key);
 			$hasWrite = $listener->hasWrite($name, $id);
 		}
-		
+
+		/*
+		 * If detach was called on a stream, detach it here once everything in
+		 * the pipeline has been written; otherwise, data would be lost.
+		 * Call onDetach on the server listener afterwards.
+		 */
+		if(!$hasWrite and empty($this->clientBuffers[$key]) && isset($this->detach[$key])) {
+			unset($this->clients[$key]);
+			unset($this->detach[$key]);
+			$this->serverListeners[$name]->onDetach($name, $id);
+		return;
+		}
 		if(!$hasWrite and empty($this->clientBuffers[$key])) {
 			return;
 		}

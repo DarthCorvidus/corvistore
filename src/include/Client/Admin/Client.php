@@ -44,7 +44,7 @@ class Client {
 		$this->protocol->sendCommand("mode admin");
 		#$this->protocol->expect(\Net\Protocol::OK);
 		$this->protocol->sendCommand("authenticate ".$user.":".$password);
-		#$this->protocol->expect(\Net\Protocol::OK);
+		$this->protocol->expect(\Net\Protocol::OK);
 	}
 	
 	function run() {

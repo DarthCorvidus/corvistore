@@ -6,6 +6,7 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 	private $authProt = array();
 	private $authMode = array();
 	private $authFail = array();
+	private $workers = array();
 	function __construct(EPDO $pdo) {
 		set_time_limit(0);
 		ob_implicit_flush();
@@ -55,10 +56,11 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 		 * If the client quits via "quit", quit is sent to the Worker via IPC,
 		 * which will end as well. Clean up here.
 		 */
-		if($name=="RunnerServer") {
-			echo "Removing worker".PHP_EOL;
+		if($name=="WorkerAdmin") {
 			$clientId = $process->getRunner()->getId();
+			echo "Removing WorkerAdmin #".$clientId.PHP_EOL;
 			unset($this->workerProcess[$clientId]);
+			unset($this->workers[$clientId]);
 			Signal::get()->clearHandler($process);
 		}
 	}
@@ -78,6 +80,18 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 		#$process = new Process($worker);
 		#$process->run();
 		#echo "forked off with PID ".$process->getPid().PHP_EOL;
+	}
+	
+	public function onDetach($name, $id) {
+		$key = $name.":".$id;
+		if($name!="ipc") {
+			return;
+		}
+		$process = new Process($this->workers[$id]);
+		$process->run();
+		unset($this->authFail[$key]);
+		unset($this->authProt[$key]);
+		unset($this->authMode[$key]);
 	}
 	
 	public function hasClientListener(string $name, int $id): bool {
@@ -144,15 +158,10 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 				try {
 					$user = User::authenticate($this->pdo, $exp[1]);
 					echo $user->getName()." authenticated!".PHP_EOL;
-					#$protocol->sendOK();
+					$protocol->sendOK();
 					$msgsock = $this->hub->getStream($name, $id);
+					$this->workers[$id] = new Server\WorkerAdmin($msgsock, $id, $user->getId());
 					$this->hub->detach($name, $id);
-					$worker = new Server\WorkerAdmin($msgsock, $id, $user->getId());
-					$process = new Process($worker);
-					$process->run();
-					unset($this->authFail[$key]);
-					unset($this->authProt[$key]);
-					unset($this->authMode[$key]);
 					return;
 				} catch (Exception $ex) {
 					echo "Authentication failed!".PHP_EOL;
