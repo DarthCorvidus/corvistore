@@ -1,17 +1,19 @@
 <?php
 namespace Server;
 class AdminProtocolListener implements \Net\ProtocolReactiveListener {
-	private $id;
+	private $clientId;
 	private $user;
-	public function __construct(int $id, \User $user) {
-		$this->id = $id;
+	private $pdo;
+	public function __construct(\EPDO $pdo, int $clientId, \User $user) {
+		$this->clientId = $clientId;
 		$this->user = $user;
+		$this->pdo = $pdo;
 	}
 	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
 		if($command == "status") {
 			$protocol->sendMessage("Status:");
-			$protocol->sendMessage("\tConnection #".$this->id);
+			$protocol->sendMessage("\tConnection #".$this->clientId);
 			$protocol->sendMessage("\tWorker PID #".posix_getpid());
 			$protocol->sendMessage("\tUser:       ".$this->user->getName());
 		return;
@@ -47,12 +49,17 @@ class AdminProtocolListener implements \Net\ProtocolReactiveListener {
 			$protocol->sendMessage("halt - shutdown the server");
 		return;
 		}
-		
-		$protocol->sendMessage("Invalid command");
+		$handler = new \CommandHandler($this->pdo, new \CommandParser($command));
+		try {
+			$msg = $handler->execute();
+			$protocol->sendMessage($msg);
+		} catch (\Exception $ex) {
+			$protocol->sendMessage($ex->getMessage());
+		}
 	}
 
 	public function onDisconnect(\Net\ProtocolReactive $protocol) {
-		echo "Client ".$this->id." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
+		echo "Client ".$this->clientId." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
 		exit();
 	}
 

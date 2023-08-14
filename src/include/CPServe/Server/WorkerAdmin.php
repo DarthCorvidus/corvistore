@@ -1,6 +1,6 @@
 <?php
 namespace Server;
-class WorkerAdmin implements \Runner, \MessageListener, \SignalHandler {
+class WorkerAdmin implements \Runner, \SignalHandler {
 	private $socket;
 	private $clientId;
 	private $hub;
@@ -13,7 +13,7 @@ class WorkerAdmin implements \Runner, \MessageListener, \SignalHandler {
 		$this->user = \User::fromId($this->pdo, $userId);
 		$this->socket = $msgsock;
 		stream_set_blocking($this->socket, FALSE);
-		$this->protocol = new \Net\ProtocolReactive(new AdminProtocolListener($this->clientId, $this->user));
+		$this->protocol = new \Net\ProtocolReactive(new AdminProtocolListener($this->pdo, $this->clientId, $this->user));
 		$signal = \Signal::get();
 		$signal->clearSignal(SIGTERM);
 		$this->hub = new \StreamHub();
@@ -26,15 +26,7 @@ class WorkerAdmin implements \Runner, \MessageListener, \SignalHandler {
 		$this->protocol->sendMessage("Connected on ".date("Y-m-d H:i:s")." as client ".$this->clientId);
 
 	}
-	
-	function getQueue(): SysVQueue {
-		return $this->queue;
-	}
-	
-	function onMessage(\Message $message) {
-		$this->write($message->getMessage()).PHP_EOL;
-	}
-	
+
 	function getId() {
 		return $this->clientId;
 	}
@@ -43,42 +35,10 @@ class WorkerAdmin implements \Runner, \MessageListener, \SignalHandler {
 		return $this->ipcClient;
 	}
 	
-	private function write($message) {
-		socket_write($this->ipcClient, $message, strlen($message));
-	}
-	
 	public function run() {
 		echo "Start worker for client ".$this->clientId.PHP_EOL;
 		$this->hub->listen();
 	return;
-		
-		#if (! stream_socket_enable_crypto ($this->conn, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT )) {
-		#	exit();
-		#}
-		do {
-			$read = array();
-			$read["main"] = $this->socket;
-			$write = NULL;
-			$except = NULL;
-			if(stream_select($read, $write, $except, $tv_sec = 5) < 1) {
-				#if(socket_last_error($this->conn)!==0) {
-				#	echo "socket_select() failed: ".socket_strerror(socket_last_error($this->conn)).PHP_EOL;
-				#}
-				continue;
-			}
-			if(!isset($read["main"])) {
-				continue;
-			}
-			
-			if($command=="") {
-				continue;
-			}
-			echo sprintf("Command via IPC from %d: %s", $this->clientId, $command).PHP_EOL;
-			if($command=="quit") {
-				echo "Quitting worker (via command)...".PHP_EOL;
-				exit();
-			}
-		} while(true);
 	}
 
 	public function onSignal(int $signal, array $info) {
