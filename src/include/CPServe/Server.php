@@ -32,10 +32,10 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 	}
 
 	function run() {
-		#$runner = new RunnerSSL();
-		#$sslProcess = new Process($runner);
-		#$sslProcess->addProcessListener($this);
-		#$sslProcess->run();
+		$runner = new \Server\RunnerSSL();
+		$sslProcess = new Process($runner);
+		$sslProcess->addProcessListener($this);
+		$sslProcess->run();
 		
 		$this->hub->listen();
 	}
