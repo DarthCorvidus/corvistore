@@ -171,10 +171,21 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 			}
 			if($this->authMode[$key]=="node") {
 				echo "Authenticating node...".PHP_EOL;
+				try {
+					$node = Node::authenticate($this->pdo, $exp[1]);
+					echo $node->getName()." authenticated!".PHP_EOL;
+					$protocol->sendOK();
+					$msgsock = $this->hub->getStream($name, $id);
+					$this->workers[$id] = new Server\WorkerNode($msgsock, $id, $node->getId());
+					$this->hub->detach($name, $id);
+					return;
+				} catch (Exception $ex) {
+					echo "Authentication failed!".PHP_EOL;
+					$this->endHandshake($key);
+				return;
+				}
 			}
-			
 		}
-		
 		$this->endHandshake($key);
 	}
 
