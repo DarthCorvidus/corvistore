@@ -77,7 +77,7 @@ class StreamHub {
 		}
 		
 		unset($this->clientListeners[$name.":".$id]);
-		$this->detach($name, $id);
+		#$this->detach($name, $id);
 	}
 	
 	private function read(string $key) {
