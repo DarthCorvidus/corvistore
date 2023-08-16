@@ -32,10 +32,12 @@ class Client {
 		if($socket===FALSE) {
 			throw new \RuntimeException("Unable to connect to ".$this->config->getHost().":4096: ".$errstr.".");
 		}
-		$this->protocol = new \Net\ProtocolReactive(new ReportListener());
 		$this->hub = new \StreamHub();
 		
-		
+		if($argv[1]=="report") {
+			$this->protocol = new \Net\ProtocolReactive(new ReportListener($argv));
+		}
+				
 		$this->hub->addClientStream("ssl", 0, $socket, $this->protocol);
 		$this->protocol->sendCommand("mode node");
 		$this->protocol->sendCommand("authenticate ".$this->config->getNode().":".file_get_contents("/root/.crow-protect"));

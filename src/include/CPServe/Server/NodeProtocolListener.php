@@ -8,9 +8,22 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 		$this->clientId = $clientId;
 		$this->node = $node;
 		$this->pdo = $pdo;
+		$this->catalog = new \Catalog($this->pdo, $this->node);
 	}
 	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
+		$exp = explode(" ", $command);
+		if(count($exp)==1) {
+			$this->handleOne($protocol, $command);
+		}
+		
+		if(count($exp)==2) {
+			$this->handleTwo($protocol, $exp);
+		}
+
+	}
+
+	private function handleOne(\Net\ProtocolReactive $protocol, string $command) {
 		if($command == "report") {
 			$report["files"] = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ? and dc_id in (select dc_id from d_version where dvs_type = ?)", array($this->node->getId(), \Catalog::TYPE_FILE));
 			$params[] = $this->node->getId();
@@ -27,7 +40,34 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 			exit();
 		}
 	}
-
+	
+	private function handleTwo(\Net\ProtocolReactive $protocol, array $command) {
+			if($command[0]=="report") {
+			// Report for the root directory.
+			if($command[1]=="/") {
+				$entries = $this->catalog->getEntries(0);
+				$protocol->sendSerialize($entries);
+			return;
+			}
+			/*
+			 * Report for a directory; get parent first, then entries below
+			 * parent.
+			 */
+			if(substr($command[1], -1)=="/") {
+				$parent = $this->catalog->getEntryByPath($this->node, substr($command[1], 0, -1));
+				$entries = $this->catalog->getEntries($parent->getId());
+				$protocol->sendSerialize($entries);
+			return;
+			}
+			/*
+			 * Report for single file
+			 */
+			$entry = $this->catalog->getEntryByPath($this->node, $command[1]);
+			$protocol->sendSerialize($entry);
+		return;
+		}
+	}
+	
 	public function onDisconnect(\Net\ProtocolReactive $protocol) {
 		echo "Client ".$this->clientId." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
 		exit();
