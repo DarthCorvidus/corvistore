@@ -22,10 +22,15 @@ class InputListener implements \Net\HubClientListener {
 	}
 
 	public function onRead(string $data) {
-		$this->protocol->sendCommand($data);
+		$quit = (new class() implements \Net\ProtocolSendListener {
+			public function onSent(\Net\ProtocolReactive $protocol) { exit(); }}
+		);
+
 		if($data=="quit") {
-			exit();
+			$this->protocol->sendCommand($data, $quit);
+		return;
 		}
+		$this->protocol->sendCommand($data, $this);
 		if($data=="srv") {
 			$this->protocol->expect(\Net\ProtocolReactive::SERIALIZED_PHP);
 		return;

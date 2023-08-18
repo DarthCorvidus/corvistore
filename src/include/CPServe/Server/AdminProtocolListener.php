@@ -31,7 +31,7 @@ class AdminProtocolListener implements \Net\ProtocolReactiveListener {
 		}
 	
 		if($command == "quit") {
-			echo "Terminating worker for ".$this->id." with PID ".posix_getpid().PHP_EOL;
+			echo "Terminating worker for ".$this->clientId." with PID ".posix_getpid().PHP_EOL;
 			exit();
 		}
 		
