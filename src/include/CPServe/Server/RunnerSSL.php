@@ -92,4 +92,8 @@ class RunnerSSL implements \Runner, \Net\HubServerListener, \Net\HubClientNamedL
 		return array_shift($this->writeBuffer[$name.":".$id]);
 	}
 
+	public function onWritten(string $name, int $id) {
+		
+	}
+
 }

@@ -25,6 +25,7 @@ class ProtocolReactive implements HubClientListener {
 	private $rest = 0;
 	private $expected = array();
 	private $sendStream = array();
+	private $sendListeners = array();
 	private $streamReceiver = NULL;
 	private $fileReceiver = NULL;
 	private $currentRecvType = NULL;
@@ -152,7 +153,7 @@ class ProtocolReactive implements HubClientListener {
 		$packetLength = $this->getPacketLength("X", 0);
 		if($sender->getSendLeft()<=$packetLength-5) {
 			$data .= self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-5);
-			array_shift($this->sendStream);
+			#array_shift($this->sendStream);
 		return $data;
 		}
 		$data .= $sender->getSendData($packetLength-5);
@@ -165,7 +166,7 @@ class ProtocolReactive implements HubClientListener {
 		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength-9) {
 			$data .= self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-9);
-			array_shift($this->sendStream);
+			#array_shift($this->sendStream);
 		return $data;
 		}
 		$data .= $sender->getSendData($packetLength-9);
@@ -176,7 +177,7 @@ class ProtocolReactive implements HubClientListener {
 		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength) {
 			$data = self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
-			array_shift($this->sendStream);
+			#array_shift($this->sendStream);
 		return $data;
 		}
 	return $sender->getSendData($packetLength);
@@ -186,26 +187,41 @@ class ProtocolReactive implements HubClientListener {
 		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength) {
 			$data = self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
-			array_shift($this->sendStream);
+			#array_shift($this->sendStream);
 		return $data;
 		}
 	return $sender->getSendData($packetLength);
 	}
-	
 
-	private function sendString(int $type, string $data) {
+	function onWritten() {
+		/**
+		 * If we're at the end of a SendStream, move the stream off the stack
+		 * and call the send listener, if there is one (it can be NULL).
+		 */
+		if($this->sendStream[0]->getSendLeft()<=0) {
+			array_shift($this->sendStream);
+			$listener = array_shift($this->sendListeners);
+			if($listener!=NULL) {
+				$listener->onSent($this);
+			}
+		}
+	}
+
+	private function sendString(int $type, string $data, ProtocolSendListener $listener = NULL) {
 		#$this->sendStream[] = new StringSender(chr($type).\IntVal::uint32LE()->putValue(strlen($data)).$data);
 		$this->sendStream[] = new StringSender($type, $data);
+		$this->sendListeners[] = $listener;
 	return;
 	}
 	
-	function sendOK() {
+	function sendOK(ProtocolSendListener $listener = NULL) {
 		/**
 		 * OK packages are a special form of strings that have the size of a
 		 * package, but begin and end with self::OK.
 		 */
 		$data = random_bytes($this->getPacketLength("x", 0)-6).chr(self::OK);
 		$this->sendStream[] = new StringSender(self::OK, $data);
+		$this->sendListeners[] = $listener;
 	}
 	
 	function readOk(string $data) {
@@ -257,21 +273,22 @@ class ProtocolReactive implements HubClientListener {
 		$this->currentRecvType = NULL;
 	}
 	
-	public function sendMessage(string $message) {
-		$this->sendString(self::MESSAGE, $message);
+	public function sendMessage(string $message, ProtocolSendListener $listener = NULL) {
+		$this->sendString(self::MESSAGE, $message, $listener);
 	}
 
-	public function sendCommand(string $message) {
-		$this->sendString(self::COMMAND, $message);
+	public function sendCommand(string $message, ProtocolSendListener $listener = NULL) {
+		$this->sendString(self::COMMAND, $message, $listener);
 	}
 
-	public function sendSerialize($serialize) {
+	public function sendSerialize($serialize, ProtocolSendListener $listener = NULL) {
 		$serialized = serialize($serialize);
-		$this->sendString(self::SERIALIZED_PHP, $serialized);
+		$this->sendString(self::SERIALIZED_PHP, $serialized, $listener);
 	}
 	
-	public function sendFile(StreamSender $sender) {
+	public function sendFile(StreamSender $sender, ProtocolSendListener $listener = NULL) {
 		$this->sendStream[] = $sender;
+		$this->sendListeners[] = $listener;
 		$sender->onSendStart();
 	}
 	

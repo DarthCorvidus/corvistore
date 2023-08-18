@@ -192,13 +192,20 @@ class StreamHub {
 		}
 		
 		$this->clientBuffers[$key][] = $listener->onWrite($name, $id);
+		/*
+		 *  Java would kick me in the b… for using $name and $id regardless of
+		 *  the listener type, but sometimes it is ok to use the privileges of
+		 *  PHP...
+		 */
 		if(!$listener->getBinary($name, $id)) {
 			$write = array_shift($this->clientBuffers[$key]);
 			fwrite($this->clients[$key], $listener->onWrite($name, $id).PHP_EOL);
+			$listener->onWritten($key, $id);
 		}
 		if($listener->getBinary($name, $id)) {
 			$write = array_shift($this->clientBuffers[$key]);
 			fwrite($this->clients[$key], $write);
+			$listener->onWritten($key, $id);
 		}
 	}
 	

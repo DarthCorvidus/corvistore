@@ -36,4 +36,8 @@ class InputListener implements \Net\HubClientListener {
 	public function onWrite(): string {
 		
 	}
+
+	public function onWritten() {
+		
+	}
 }

@@ -6,5 +6,6 @@ interface HubClientNamedListener {
 	function onRead(string $name, int $id, string $data);
 	function hasWrite(string $name, int $id): bool;
 	function onWrite(string $name, int $id): string;
+	function onWritten(string $name, int $id);
 	function onDisconnect(string $name, int $id);
 }

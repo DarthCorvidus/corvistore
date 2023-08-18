@@ -2,10 +2,11 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\ProtocolReactive;
-class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListener {
+class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListener, \Net\ProtocolSendListener {
 	private $lastString;
 	private $lastUnserialized;
 	private $lastOK = TRUE;
+	private $sent = NULL;
 	const FILESIZE = 93821;
 	function __construct() {
 		parent::__construct();
@@ -14,12 +15,14 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$this->lastString = NULL;
 		$this->lastUnserialized = array();
 		$this->lastOK = FALSE;
+		$this->sent = NULL;
 	}
 	
 	function tearDown() {
 		$this->lastString = NULL;
 		$this->lastUnserialized;
 		$this->lastOK = FALSE;
+		$this->sent = NULL;
 		if(file_exists(self::getSourceName())) {
 			unlink(self::getSourceName());
 		}
@@ -80,6 +83,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$protocol = new ProtocolReactive($this);
 		$protocol->sendCommand("quit");
 		$write = $protocol->onWrite();
+		$protocol->onWritten();
 		$this->assertEquals(1024, strlen($write));
 		$this->assertEquals($expected, substr($write, 0, 1+4+4));
 	}
@@ -105,6 +109,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender->sendMessage($expected);
 		while($sender->hasWrite()) {
 			$data = $sender->onWrite();
+			$sender->onWritten();
 			$receiver->onRead($data);
 		}
 		$this->assertEquals($expected, $this->lastString);
@@ -119,6 +124,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender->sendMessage($expected);
 		while($sender->hasWrite()) {
 			$data = $sender->onWrite();
+			$sender->onWritten();
 			$receiver->onRead($data);
 		}
 		$this->assertEquals($expected, $this->lastString);
@@ -130,6 +136,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender->sendSerialize($_SERVER);
 		while($sender->hasWrite()) {
 			$data = $sender->onWrite();
+			$sender->onWritten();
 			$receiver->onRead($data);
 		}
 		$this->assertEquals($_SERVER, $this->lastUnserialized);
@@ -155,6 +162,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender->sendOK();
 		while($sender->hasWrite()) {
 			$data = $sender->onWrite();
+			$sender->onWritten();
 			$receiver->onRead($data);
 		}
 		$this->assertEquals(TRUE, $this->lastOK);
@@ -165,14 +173,46 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$receiver = new ProtocolReactive($this);
 		$sender->sendMessage("Hello World!");
 		$data = $sender->onWrite();
+		$sender->onWritten();
 		$receiver->onRead($data);
 		$this->assertEquals("Hello World!", $this->lastString);
+		
+		
 		$sender->sendMessage("How are you?");
 		$data = $sender->onWrite();
+		$sender->onWritten();
 		$receiver->onRead($data);
 		$this->assertEquals("How are you?", $this->lastString);
 		$sender->sendOK();
 		$data = $sender->onWrite();
+		$sender->onWritten();
+		
+		$receiver->onRead($data);
+		$this->assertEquals(TRUE, $this->lastOK);
+	}
+
+	/**
+	 * Test that we can send several messages at once.
+	 */
+	function testSeveralMessagesBuffered() {
+		$sender = new ProtocolReactive($this);
+		$receiver = new ProtocolReactive($this);
+		$sender->sendMessage("Hello World!");
+		$sender->sendMessage("How are you?");
+		
+		$data = $sender->onWrite();
+		$sender->onWritten();
+		$receiver->onRead($data);
+		$this->assertEquals("Hello World!", $this->lastString);
+		
+		$data = $sender->onWrite();
+		$sender->onWritten();
+		$receiver->onRead($data);
+		$this->assertEquals("How are you?", $this->lastString);
+		$sender->sendOK();
+		$data = $sender->onWrite();
+		$sender->onWritten();
+		
 		$receiver->onRead($data);
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
@@ -184,6 +224,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender = new ProtocolReactive($this);
 		$sender->sendFile(new \Net\FileSender($file));
 		$data = $sender->onWrite();
+		$sender->onWritten();
 		$this->assertEquals(chr(ProtocolReactive::FILE), substr($data, 0, 1));
 		$this->assertEquals(IntVal::uint64LE()->putValue(16), substr($data, 1, 8));
 		$this->assertEquals($payload, substr($data, 9, 16));
@@ -206,6 +247,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		// Payload block is 1015 bytes long
 		$this->assertEquals(substr($payload, 0, 1024-9), substr($data, 9, 1024-9));
 		$data = $sender->onWrite();
+		$sender->onWritten();
 		
 		// second block is padded to 1024 bytes
 		$this->assertEquals(1024, strlen($data));
@@ -227,6 +269,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$this->assertEquals(substr($payload, 0, 1024-9), substr($data, 9, 1024-9));
 		while($sender->hasWrite()) {
 			$data .= $sender->onWrite();
+			$sender->onWritten();
 		}
 		// ceil(Filesize/1024)*1024
 		$this->assertEquals(94208, strlen($data));
@@ -255,7 +298,9 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$receiver = new ProtocolReactive($this);
 		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
 		$receiver->onRead($sender->onWrite());
+		$sender->onWritten();
 		$receiver->onRead($sender->onWrite());
+		$sender->onWritten();
 		$this->assertFileExists(self::getTargetName());
 		$this->assertEquals(1024, filesize(self::getTargetName()));
 		$this->assertFileEquals(self::getSourceName(), self::getTargetName());
@@ -272,6 +317,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
 		while($sender->hasWrite()) {
 			$receiver->onRead($sender->onWrite());
+			$sender->onWritten();
 		}
 		$this->assertFileExists(self::getTargetName());
 		$this->assertEquals(self::FILESIZE, filesize(self::getTargetName()));
@@ -288,6 +334,7 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
 		while($sender->hasWrite()) {
 			$receiver->onRead($sender->onWrite());
+			$sender->onWritten();
 		}
 		$this->assertFileExists(self::getTargetName());
 		$this->assertEquals(self::FILESIZE, filesize(self::getTargetName()));
@@ -301,12 +348,27 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 		$sender->sendFile(new \Net\FileSender($file));
 		while($sender->hasWrite()) {
 			$receiver->onRead($sender->onWrite());
+			$sender->onWritten();
 		}
 		$this->assertFileExists(self::getTargetName());
 		$this->assertEquals(self::FILESIZE-15, filesize(self::getTargetName()));
 		$this->assertFileEquals(self::getSourceName(), self::getTargetName());
 	}
 
+	function testOnSentFalse() {
+		$sender = new ProtocolReactive($this);
+		$sender->sendMessage("do not send", $this);
+		$this->assertEquals(FALSE, $this->sent);
+	}
+
+	function testOnSentTrue() {
+		$sender = new ProtocolReactive($this);
+		$sender->sendMessage("do not send", $this);
+		$sender->onWrite();
+		$sender->onWritten();
+		$this->assertEquals(TRUE, $this->sent);
+	}
+	
 	public function onCommand(ProtocolReactive $protocol, string $command) {
 		$this->lastString = $command;
 	}
@@ -325,6 +387,10 @@ class ProtocolReactiveTest extends TestCase implements Net\ProtocolReactiveListe
 
 	public function onOk(ProtocolReactive $protocol) {
 		$this->lastOK = true;
+	}
+
+	public function onSent(ProtocolReactive $protocol) {
+		$this->sent = TRUE;
 	}
 
 }
