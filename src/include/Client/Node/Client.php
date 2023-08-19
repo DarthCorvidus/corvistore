@@ -37,6 +37,10 @@ class Client {
 		if($argv[1]=="report") {
 			$this->protocol = new \Net\ProtocolReactive(new ReportListener($argv));
 		}
+
+		if($argv[1]=="backup") {
+			$this->protocol = new \Net\ProtocolReactive(new BackupListener($this->config, $argv));
+		}
 				
 		$this->hub->addClientStream("ssl", 0, $socket, $this->protocol);
 		$this->protocol->sendCommand("mode node");

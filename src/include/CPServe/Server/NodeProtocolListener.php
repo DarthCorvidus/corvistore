@@ -4,6 +4,8 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 	private $clientId;
 	private $node;
 	private $pdo;
+	private $createId;
+	private $catalog;
 	public function __construct(\EPDO $pdo, int $clientId, \Node $node) {
 		$this->clientId = $clientId;
 		$this->node = $node;
@@ -21,6 +23,9 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 			$this->handleTwo($protocol, $exp);
 		}
 
+		if(count($exp)==3) {
+			$this->handleThree($protocol, $exp);
+		}
 	}
 
 	private function handleOne(\Net\ProtocolReactive $protocol, string $command) {
@@ -42,7 +47,7 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 	}
 	
 	private function handleTwo(\Net\ProtocolReactive $protocol, array $command) {
-			if($command[0]=="report") {
+		if($command[0]=="report") {
 			// Report for the root directory.
 			if($command[1]=="/") {
 				$entries = $this->catalog->getEntries(0);
@@ -66,6 +71,22 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 			$protocol->sendSerialize($entry);
 		return;
 		}
+		if($command[0]=="send" && $command[1]=="ok") {
+			$protocol->sendOK();
+		}
+	}
+	
+	private function handleThree(\Net\ProtocolReactive $protocol, array $command) {
+		if($command[0]=="GET" and strtoupper($command[1])=="CATALOG") {
+			$entries = $this->catalog->getEntries($command[2]);
+			$protocol->sendSerialize($entries);
+		return;
+		}
+		if($command[0]=="CREATE" and $command[1]=="FILE") {
+			$protocol->expect(\Net\ProtocolReactive::SERIALIZED_PHP);
+			$this->createId = $command[2];
+		}
+
 	}
 	
 	public function onDisconnect(\Net\ProtocolReactive $protocol) {
@@ -78,8 +99,21 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 	}
 
 	public function onSerialized(\Net\ProtocolReactive $protocol, $unserialized) {
-		
+		echo "Received serialized ".get_class($unserialized).PHP_EOL;
+		if($this->createId!==NULL && get_class($unserialized)=="File") {
+			$this->onSerializedFile($protocol, $unserialized, $this->createId);
+			$this->createId = NULL;
+		}
 	}
+	
+	private function onSerializedFile(\Net\ProtocolReactive $protocol, \File $file, $createId) {
+		echo "new entry ".$file->getBasename().", parent ".$createId.PHP_EOL;
+		if($file->getType()== \Catalog::TYPE_DIR) {
+			$entry = $this->catalog->newEntry($file, $createId);
+			$protocol->sendSerialize($entry);
+		}
+	}
+	
 
 	public function onOk(\Net\ProtocolReactive $protocol) {
 		
