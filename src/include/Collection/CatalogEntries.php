@@ -8,10 +8,17 @@
 class CatalogEntries {
 	private $array;
 	private $names;
-	function __construct() {
+	private $parentId;
+	function __construct(int $parent) {
 		$this->array = array();
 		$this->names = array();
+		$this->parentId = $parent;
 	}
+	
+	function getParentId(): int {
+		return $this->parentId;
+	}
+	
 	function addEntry(CatalogEntry $entry) {
 		$this->array[] = $entry;
 		$this->names[$entry->getName()] = $this->getCount()-1;
@@ -34,7 +41,7 @@ class CatalogEntries {
 	}
 	
 	public function getDiff(Files $files): CatFileDiff {
-		$diff = new CatFileDiff();
+		$diff = new CatFileDiff($this->parentId);
 		
 		for($i = 0; $i<$files->getCount();$i++) {
 			$file = $files->getEntry($i);

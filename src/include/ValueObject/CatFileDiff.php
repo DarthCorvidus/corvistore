@@ -7,10 +7,10 @@ class CatFileDiff {
 	private $new;
 	private $deleted;
 	private $changed;
-	function __construct() {
+	function __construct(int $parentId) {
 		$this->new = new Files();
 		$this->changed = new Files();
-		$this->deleted = new CatalogEntries();
+		$this->deleted = new CatalogEntries($parentId);
 	}
 	
 	function addNew(File $file) {

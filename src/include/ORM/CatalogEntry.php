@@ -62,7 +62,7 @@ class CatalogEntry {
 
 	function addVersion(array $array) {
 		if($array["dc_id"]!=$this->id) {
-			throw new Exception("this should not happen.");
+			throw new Exception("this should not happen, version id ".$array["dc_id"]." != catalog id ".$this->id.".");
 		}
 		$this->versions->addVersion(VersionEntry::fromArray($array));
 	}

@@ -1,11 +1,11 @@
 <?php
 namespace Node;
 class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSendListener {
-	private $currentDir;
 	private $processed = 0;
 	private $currentEntries;
 	private $quit = FALSE;
 	private $path;
+	private $last;
 	function __construct(\Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = $argv;
@@ -37,7 +37,7 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 	}
 
 	public function onSerialized(\Net\ProtocolReactive $protocol, $unserialized) {
-		echo get_class($unserialized).PHP_EOL;
+		#echo get_class($unserialized).PHP_EOL;
 		if(get_class($unserialized)=="CatalogEntries") {
 			$this->onCatalogEntries($protocol, $unserialized);
 		}
@@ -47,18 +47,23 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 	}
 	
 	public function onCatalogEntries(\Net\ProtocolReactive $protocol, \CatalogEntries $entries) {
-		$selfDir =  $this->currentDir;
-		$this->currentEntries = $entries;
-		$files = $this->readDirectory($selfDir);
+		$parentId = $entries->getParentId();
+		
+		$files = $this->readDirectory($this->path[$parentId]);
 		$diff = $entries->getDiff($files);
 		for($i=0;$i<$entries->getCount();$i++) {
 			$entry = $entries->getEntry($i);
-			if($entry->getVersions()->getLatest()->getType()== \Catalog::TYPE_DIR && $entry->hasParentId()) {
+			if($entry->getVersions()->getLatest()->getType()!= \Catalog::TYPE_DIR) {
+				continue;
+			}
+			if($entry->hasParentId()) {
 				$this->path[$entry->getId()] = $this->path[$entry->getParentId()]."/".$entry->getName();
 			}
-			if($entry->getVersions()->getLatest()->getType()== \Catalog::TYPE_DIR && !$entry->hasParentId()) {
+			if(!$entry->hasParentId()) {
 				$this->path[$entry->getId()] = "/".$entry->getName();
 			}
+			echo "recurse with GET CATALOG ".$entry->getId()." (".$this->path[$entry->getId()].")".PHP_EOL;
+			$protocol->sendCommand("GET CATALOG ".$entry->getId());
 		}
 		
 		
@@ -70,11 +75,7 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 				continue;
 			}
 			echo "Creating ".$file->getPath().PHP_EOL;
-			if($selfDir->getPath()=="/") {
-				$protocol->sendCommand("CREATE FILE 0", $this);
-			} else {
-				#$protocol->sendCommand("CREATE FILE ".$selfDir->ge);
-			}
+			$protocol->sendCommand("CREATE FILE ".$parentId, $this);
 			echo "Sending serialized file".PHP_EOL;
 			$protocol->sendSerialize($file, $this);
 			/*
@@ -100,27 +101,32 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 			
 		}
 		#$this->currentEntries = NULL;
-		print_r($this->path);
-		if($selfDir->getPath()=="/") {
-			$this->quit = TRUE;
-			$protocol->sendCommand("send ok");
-		}
+		#if($parentId === 0) {
+		#	#echo "Ende erreicht.";
+		#	$this->quit = TRUE;
+		#	$protocol->sendCommand("send ok");
+		#}
 	}
 	
 	private function onCatalogEntry(\Net\ProtocolReactive $protocol, \CatalogEntry $entry) {
 		if(!$entry->hasParentId()) {
-			echo "entry added by the server, ".$entry->getName().", parent 0".PHP_EOL;
+			echo "entry added by the server, /".$entry->getName().PHP_EOL;
 			$this->path[$entry->getId()] = "/".$entry->getName();
 		} else {
-			echo "entry added by the server, ".$entry->getName().", parent ".$entry->getParentId().PHP_EOL;
+			echo "entry added by the server, ".$this->path[$entry->getParentId()]."/".$entry->getName().PHP_EOL;
 			$this->path[$entry->getId()] = $this->path[$entry->getParentId()]."/".$entry->getName();
 		}
-		$this->currentEntries->addEntry($entry);
+		echo "Calling read directory with ".$this->path[$entry->getId()].PHP_EOL;
+		
+		echo "recurse with GET CATALOG ".$entry->getId()." (".$this->path[$entry->getId()].")".PHP_EOL;
+		$protocol->sendCommand("GET CATALOG ".$entry->getId());
+		$protocol->expect(\Net\ProtocolReactive::SERIALIZED_PHP);
+		#$this->currentEntries->addEntry($entry);
 	}
 	
-	private function readDirectory(\File $file): \Files {
+	private function readDirectory(string $path): \Files {
 		$files = new \Files();
-		foreach(glob($file->getPath()."/{,.}*", GLOB_BRACE) as $value) {
+		foreach(glob($path."/{,.}*", GLOB_BRACE) as $value) {
 			if(in_array(basename($value), array(".", ".."))) {
 				continue;
 			}
@@ -131,6 +137,7 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 			#if(in_array($value, $this->exclude)) {
 			#	continue;
 			#}
+			$file = new \File($value);
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
 				$this->processed++;
 				if($this->processed%5000==0) {
@@ -145,7 +152,6 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
-				$file = new \File($value);
 				$files->addEntry($file);
 				continue;
 			}
