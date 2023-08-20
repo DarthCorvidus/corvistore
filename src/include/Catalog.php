@@ -18,7 +18,7 @@ class Catalog {
 	}
 
 	function getEntries(int $parent = 0): CatalogEntries {
-		$entries = new CatalogEntries();
+		$entries = new CatalogEntries($parent);
 		$param = array();
 		$param[] = 1;
 		$param[] = $this->node->getId();
