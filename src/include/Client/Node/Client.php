@@ -42,7 +42,8 @@ class Client {
 			$this->protocol = new \Net\ProtocolReactive(new BackupListener($this->config, $argv));
 		}
 				
-		$this->hub->addClientStream("ssl", 0, $socket, $this->protocol);
+		$this->hub->addClientStream("ssl", 0, $socket);
+		$this->hub->addClientListener("ssl", 0, $this->protocol);
 		$this->protocol->sendCommand("mode node");
 		$this->protocol->sendCommand("authenticate ".$this->config->getNode().":".file_get_contents("/root/.crow-protect"));
 		$this->protocol->expect(\Net\ProtocolReactive::OK);

@@ -10,6 +10,8 @@ class StreamHub {
 	private $zeroCounter = array();
 	private $clientBuffers = array();
 	private $detach = array();
+	private $forward = array();
+	private $forwardLength = array();
 	function __construct() {
 		;
 	}
@@ -21,13 +23,13 @@ class StreamHub {
 		return $this->clientListeners[$key];
 	}
 	
-	private function hasClientNamedListener(string $key) {
-		return !empty($this->clientNamedListeners[$key]);
-	}
+	#private function hasClientNamedListener(string $key) {
+	#	return !empty($this->clientNamedListeners[$key]);
+	#}
 
-	private function getClientNamedListener(string $key): Net\HubClientNamedListener {
-		return $this->clientNamedListeners[$key];
-	}
+	#private function getClientNamedListener(string $key): Net\HubClientNamedListener {
+	#	return $this->clientNamedListeners[$key];
+	#}
 	
 	function detach($name, $id) {
 		$this->detach[$name.":".$id] = TRUE;
@@ -40,19 +42,23 @@ class StreamHub {
 		$this->serverListeners[$name] = $listener;
 	}
 	
-	function addClientStream(string $name, int $id, $stream, \Net\HubClientListener $listener) {
+	function addClientStream(string $name, int $id, $stream) {
 		$this->clients[$name.":".$id] = $stream;
+		#$this->clientListeners[$name.":".$id] = $listener;
+		$this->zeroCounter[$name.":".$id] = 0;
+		$this->clientBuffers[$name.":".$id] = array();
+	}
+	
+	function addClientListener(string $name, int $id, $listener) {
 		$this->clientListeners[$name.":".$id] = $listener;
-		$this->zeroCounter[$name.":".$id] = 0;
-		$this->clientBuffers[$name.":".$id] = array();
 	}
-
-	function addClientNamedStream(string $name, int $id, $stream, \Net\HubClientNamedListener $listener) {
-		$this->clients[$name.":".$id] = $stream;
-		$this->clientNamedListeners[$name.":".$id] = $listener;
-		$this->zeroCounter[$name.":".$id] = 0;
-		$this->clientBuffers[$name.":".$id] = array();
-	}
+	
+	#function addClientNamedStream(string $name, int $id, $stream, \Net\HubClientNamedListener $listener) {
+	#	$this->clients[$name.":".$id] = $stream;
+	#	$this->clientNamedListeners[$name.":".$id] = $listener;
+	#	$this->zeroCounter[$name.":".$id] = 0;
+	#	$this->clientBuffers[$name.":".$id] = array();
+	#}
 	
 	function getStream(string $name, int $id) {
 		return $this->clients[$name.":".$id];
@@ -60,6 +66,11 @@ class StreamHub {
 	
 	function addWriteBuffer(string $name, int $id, string $data) {
 		$this->clientBuffers[$name.":".$id][] = $data;
+	}
+	
+	function addForward(string $sourceName, int $sourceId, string $targetName, int $targetId, int $length) {
+		$this->forward[$sourceName.":".$sourceId] = $targetName.":".$targetId;
+		$this->forwardLength[$sourceName.":".$sourceId] = $length;
 	}
 	
 	#function addStreamHubListener(string $name, StreamHubListener $listener) {
@@ -72,10 +83,21 @@ class StreamHub {
 		if($this->hasClientListener($name.":".$id)) {
 			$this->getClientListener($name.":".$id)->onDisconnect();
 		}
-		if($this->hasClientNamedListener($name.":".$id)) {
-			$this->getClientNamedListener($name.":".$id)->onDisconnect($name, $id);
+		/**
+		 * This is not /necessarily/ the right thing to do, at least his may
+		 * change in the future, but at the moment, if one side of a forward
+		 * relation is closed, close the other side too.
+		 */
+		if(isset($this->forward[$name.":".$id])) {
+			$fkey = $this->forward[$name.":".$id];
+			fclose($this->clients[$fkey]);
+			unset($this->clients[$fkey]);
+			unset($this->forward[$fkey]);
 		}
-		
+		#if($this->hasClientNamedListener($name.":".$id)) {
+		#	$this->getClientNamedListener($name.":".$id)->onDisconnect($name, $id);
+		#}
+		unset($this->forward[$name.":".$id]);
 		unset($this->clientListeners[$name.":".$id]);
 		#$this->detach($name, $id);
 	}
@@ -84,31 +106,40 @@ class StreamHub {
 		$exp = explode(":", $key);
 		$name = $exp[0];
 		$id = (int)$exp[1];
-		if(!$this->hasClientListener($key) && !$this->hasClientNamedListener($key)) {
-			throw new Exception("no listener to read to read event for ".$key);
-		}
+		#if(!$this->hasClientListener($key)) {
+		#	throw new Exception("no listener to read to read event for ".$key);
+		#}
 		if($this->hasClientListener($key)) {
 			$listener = $this->getClientListener($key);
 			$binary = $listener->getBinary();
+			if(!$listener->getBinary()) {
+				$data = trim(fgets($this->clients[$key]));
+				$listener->onRead($data);
+			}
+			if($binary) {
+				$this->readBinary($key);
+			}
 		}
-		if($this->hasClientNamedListener($key)) {
-			$listener = $this->getClientNamedListener($key);
-			$binary = $listener->getBinary($name, $id);
-		}
-		
-		if(!$binary && $listener instanceof \Net\HubClientNamedListener) {
-			$data = trim(fgets($this->clients[$key]));
-			$listener->onRead($name, $id, $data);
-		}
-		
-		if(!$binary && $listener instanceof \Net\HubClientListener) {
-			$data = trim(fgets($this->clients[$key]));
-			$listener->onRead($data);
-		}
-		
-		if($binary) {
+		if(isset($this->forward[$key])) {
 			$this->readBinary($key);
 		}
+		#if($this->hasClientNamedListener($key)) {
+		#	$listener = $this->getClientNamedListener($key);
+		#	$binary = $listener->getBinary($name, $id);
+		#}
+		
+		#if(!$binary && $listener!=NULL) {
+		#	$data = trim(fgets($this->clients[$key]));
+		#	$listener->onRead($name, $id, $data);
+		#}
+		
+		#if(!$binary && $listener instanceof \Net\HubClientListener) {
+		#	$data = trim(fgets($this->clients[$key]));
+		#	$listener->onRead($data);
+		#}
+		
+		
+		
 	}
 
 	private function readBinary(string $key) {
@@ -116,18 +147,21 @@ class StreamHub {
 		$name = $exp[0];
 		$id = (int)$exp[1];
 
-		if(!$this->hasClientListener($key) && !$this->hasClientNamedListener($key)) {
-			throw new Exception("no listener to read to write event for ".$key);
+		if(!$this->hasClientListener($key) && !isset($this->forward[$key])) {
+			throw new Exception("no listener to read event for ".$key);
 		}
-
+		$listener = NULL;
 		if($this->hasClientListener($key)) {
 			$listener = $this->getClientListener($key);
 			$data = fread($this->clients[$key], $listener->getPacketLength());
 		}
-		if($this->hasClientNamedListener($key)) {
-			$listener = $this->getClientNamedListener($key);
-			$data = fread($this->clients[$key], $listener->getPacketLength($name, $id));
+		if(isset($this->forward[$key])) {
+			$data = fread($this->clients[$key], $this->forwardLength[$key]);
 		}
+		#if($this->hasClientNamedListener($key)) {
+		#	$listener = $this->getClientNamedListener($key);
+		#	$data = fread($this->clients[$key], $listener->getPacketLength($name, $id));
+		#}
 		$len = strlen($data);
 		
 		/*
@@ -148,20 +182,32 @@ class StreamHub {
 		 * I cannot really be sure that I got all bytes as mandated by
 		 * HubClientListener::getPacketLength, but for now, this is sufficient.
 		 */
-		if($listener instanceof \Net\HubClientNamedListener) {
-			$listener->onRead($name, $id, $data);
-		}
+		#if($listener instanceof \Net\HubClientNamedListener) {
+		#	$listener->onRead($name, $id, $data);
+		#}
 		
-		if($listener instanceof \Net\HubClientListener) {
+		if($listener != NULL) {
 			$listener->onRead($data);
+		}
+		if(isset($this->forward[$key])) {
+			$this->write($this->forward[$key], $data);
 		}
 	}
 	
-	private function write(string $key) {
+	private function write(string $key, $data = NULL) {
 		$exp = explode(":", $key);
 		$name = $exp[0];
 		$id = (int)$exp[1];
-		if(!$this->hasClientListener($key) && !$this->hasClientNamedListener($key)) {
+		if(isset($this->forward[$key])) {
+			if($data==NULL) {
+				return;
+			}
+			fwrite($this->clients[$key], $data);
+		return;
+		}
+		
+		if(!$this->hasClientListener($key) && !isset($this->forward[$key])) {
+			print_r($this->forward);
 			throw new Exception("no listener to write event for ".$key);
 		}
 
@@ -170,11 +216,11 @@ class StreamHub {
 			$hasWrite = $listener->hasWrite();
 		}
 		
-		if($this->hasClientNamedListener($key)) {
-			
-			$listener = $this->getClientNamedListener($key);
-			$hasWrite = $listener->hasWrite($name, $id);
-		}
+		#if($this->hasClientNamedListener($key)) {
+		#	
+		#	$listener = $this->getClientNamedListener($key);
+		#	$hasWrite = $listener->hasWrite($name, $id);
+		#}
 
 		/*
 		 * If detach was called on a stream, detach it here once everything in
@@ -207,6 +253,7 @@ class StreamHub {
 			fwrite($this->clients[$key], $write);
 			$listener->onWritten($key, $id);
 		}
+		
 	}
 	
 	function listen() {
@@ -242,10 +289,10 @@ class StreamHub {
 						$listener = $this->serverListeners[$key]->getClientListener($key, $next);
 						$this->clientListeners[$key.":".$next] = $listener;
 					}
-					if($this->serverListeners[$key]->hasClientNamedListener($key, $next)) {
-						$listener = $this->serverListeners[$key]->getClientNamedListener($key, $next);
-						$this->clientNamedListeners[$key.":".$next] = $listener;
-					}
+					#if($this->serverListeners[$key]->hasClientNamedListener($key, $next)) {
+					#	$listener = $this->serverListeners[$key]->getClientNamedListener($key, $next);
+					#	$this->clientNamedListeners[$key.":".$next] = $listener;
+					#}
 					$this->zeroCounter[$key.":".$next] = 0;
 					#$this->streamHubListeners[$key]->onConnect($key, $next, $client);
 					continue;
@@ -263,10 +310,10 @@ class StreamHub {
 				 * this is necessary, because the client listener could have
 				 * gone away as part of some read action.
 				 */
-				if(!isset($this->clientListeners[$key]) and !isset($this->clientNamedListeners[$key])) {
+				if(!isset($this->clientListeners[$key]) and !isset($this->clientNamedListeners[$key]) and !isset($this->forward[$key])) {
 					continue;
 				}
-				$this->write($key, $this->clientListeners[$key]);
+				$this->write($key);
 			}
 		}
 	}

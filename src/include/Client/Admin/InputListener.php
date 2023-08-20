@@ -30,7 +30,7 @@ class InputListener implements \Net\HubClientListener {
 			$this->protocol->sendCommand($data, $quit);
 		return;
 		}
-		$this->protocol->sendCommand($data, $this);
+		$this->protocol->sendCommand($data);
 		if($data=="srv") {
 			$this->protocol->expect(\Net\ProtocolReactive::SERIALIZED_PHP);
 		return;

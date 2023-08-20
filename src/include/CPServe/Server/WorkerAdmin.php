@@ -18,7 +18,8 @@ class WorkerAdmin implements \Runner, \SignalHandler {
 		$signal->clearSignal(SIGTERM);
 		$this->hub = new \StreamHub();
 		
-		$this->hub->addClientStream("ipc", $this->clientId, $msgsock, $this->protocol);
+		$this->hub->addClientStream("ipc", $this->clientId, $msgsock);
+		$this->hub->addClientListener("ipc", $this->clientId, $this->protocol);
 		#$this->writeBuffer[$name.":".$id] = "";
 		#$this->sslProtocol[$name.":".$id] = new \Net\ProtocolReactive(new SSLProtocolListener($id));
 		$this->protocol->sendMessage("Welcome to Test SSL Server 1.0");

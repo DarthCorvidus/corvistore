@@ -73,7 +73,7 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 	}
 
 	public function onConnect(string $name, int $id, $newClient) {
-		
+		echo "Connection from ".$name." ".$id.PHP_EOL;
 		#echo "New IPC connection - forking off...";
 		#$this->hub->detach($name, $id);
 		#$worker = new RunnerWorker($newClient, $id);

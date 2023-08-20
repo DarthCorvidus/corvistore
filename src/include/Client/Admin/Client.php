@@ -39,8 +39,13 @@ class Client {
 		}
 		$this->protocol = new \Net\ProtocolReactive(new ProtocolListener());
 		$this->inputListener = new InputListener($this->protocol);
+		
 		$this->hub->addClientStream("ssl", 0, $socket, $this->protocol);
-		$this->hub->addClientStream("input", 0, STDIN, $this->inputListener);
+		$this->hub->addClientListener("ssl", 0, $this->protocol);
+		
+		$this->hub->addClientStream("input", 0, STDIN);
+		$this->hub->addClientListener("input", 0, $this->inputListener);
+		
 		$this->protocol->sendCommand("mode admin");
 		#$this->protocol->expect(\Net\Protocol::OK);
 		$this->protocol->sendCommand("authenticate ".$user.":".$password);

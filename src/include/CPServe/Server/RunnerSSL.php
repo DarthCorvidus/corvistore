@@ -39,7 +39,9 @@ class RunnerSSL implements \Runner, \Net\HubServerListener, \Net\HubClientNamedL
 		#$this->sslProtocol[$name.":".$id]->sendMessage("(c) ACME Backup Software");
 		#$this->sslProtocol[$name.":".$id]->sendMessage("Connected on ".date("Y-m-d H:i:s")." as client ".$id);
 		$ipcClient = stream_socket_client("unix://".\Shared::getIPCSocket(), $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
-		$this->hub->addClientNamedStream("ipc", $id, $ipcClient, $this);
+		$this->hub->addClientStream("ipc", $id, $ipcClient);
+		$this->hub->addForward("ssl", $id, "ipc", $id, 1024);
+		$this->hub->addForward("ipc", $id, "ssl", $id, 1024);
 	}
 	
 	public function hasClientListener(string $name, int $id): bool {
@@ -51,7 +53,7 @@ class RunnerSSL implements \Runner, \Net\HubServerListener, \Net\HubClientNamedL
 	}
 	
 	public function hasClientNamedListener(string $name, int $id): bool {
-		return true;
+		return false;
 	}
 	
 	public function getClientNamedListener(string $name, int $id): \Net\HubClientNamedListener {
