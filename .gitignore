@@ -1,2 +1,12 @@
 /vendor
 *.sqlite
+/reset-backup.sh
+/recompose.sh
+/prototyping/ssl/server.key
+/prototyping/ssl/server.pem
+/prototyping/ssl/server.crt
+/prototyping/ssl/ca.crt
+/prototyping/ssl/combined.pem
+/notes.txt
+/example.txt
+/nbproject
