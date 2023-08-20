@@ -193,7 +193,7 @@ class Backup {
 				continue;
 			}
 		}
-	
+
 		$this->pdo->beginTransaction();
 		$catalogEntries = $this->catalog->getEntries($parent);
 		$diff = $catalogEntries->getDiff($files);
@@ -235,8 +235,8 @@ class Backup {
 			$this->recurseFiles($dir->getPath(), $depth, $parent);
 		}
 	}
-
 	
+		
 	function run() {
 		$start = hrtime();
 		$this->recurseFiles("/", 0);

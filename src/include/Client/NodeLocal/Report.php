@@ -1,4 +1,5 @@
 <?php
+namespace Local;
 /**
  * Report handles report request for a node, which will either display a general
  * report of the node or a detailed report for a file.
