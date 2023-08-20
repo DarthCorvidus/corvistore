@@ -11,7 +11,5 @@ interface HubServerListener {
 	function onConnect(string $name, int $id, $newClient);
 	function hasClientListener(string $name, int $id): bool;
 	function getClientListener(string $name, int $id): HubClientListener;
-	function hasClientNamedListener(string $name, int $id): bool;
-	function getClientNamedListener(string $name, int $id): HubClientNamedListener;
 	function onDetach(string $name, int $id);
 }

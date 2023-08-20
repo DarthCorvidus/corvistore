@@ -6,6 +6,7 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 	private $quit = FALSE;
 	private $path;
 	private $last;
+	private $inex;
 	function __construct(\Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = $argv;
@@ -137,8 +138,8 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 			#if(in_array($value, $this->exclude)) {
 			#	continue;
 			#}
-			$file = new \File($value);
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
+				$file = new \File($value);
 				$this->processed++;
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
@@ -147,7 +148,8 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 				$files->addEntry($file);
 				continue;
 			}
-			if(is_file($value) and $this->inex->isValid($file->getPath())) {
+			if(is_file($value) and $this->inex->isValid($value)) {
+				$file = new \File($value);
 				$this->processed++;
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
