@@ -11,6 +11,7 @@ class CatalogEntry {
 	private $pdo;
 	private $id;
 	private $name;
+	private $dirname;
 	private $parentId;
 	private $nodeId;
 	private $versions;
@@ -18,6 +19,7 @@ class CatalogEntry {
 		$this->versions = new Versions();
 		$this->id = (int)$array["dc_id"];
 		$this->name = $array["dc_name"];
+		$this->dirname = $array["dc_dirname"];
 		$this->nodeId = $array["dnd_id"];
 		if(isset($array["dc_parent"]) and $array["dc_parent"]!==NULL and $array["dc_parent"]!=="") {
 			$this->parentId = (int)$array["dc_parent"];
@@ -101,6 +103,17 @@ class CatalogEntry {
 	
 	function getName(): string {
 		return $this->name;
+	}
+	
+	function getDirname(): string {
+		$this->dirname;
+	}
+	
+	function getDirnameTrailed(): string {
+		if($this->dirname=="/") {
+			return "/";
+		}
+		return $this->dirname."/";
 	}
 	
 	function hasParentId(): bool {

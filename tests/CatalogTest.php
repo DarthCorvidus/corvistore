@@ -40,7 +40,7 @@ class CatalogTest extends TestCase {
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
 		$catalogEntry = $catalog->newEntry($file);
 		
-		$catTarget[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
+		$catTarget[0] = array("dc_id" => 1, "dc_name" => "tmp", "dc_dirname" => "/", "dnd_id" => 1, "dc_parent" => NULL);
 		$catDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
 		$this->assertEquals($catTarget, $catDB);
 		
@@ -122,8 +122,8 @@ class CatalogTest extends TestCase {
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/2023_thailand"), $catalogEntry);
-		$target[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
-		$target[1] = array("dc_id" => 2, "dc_name" => "crow-protect", "dnd_id" => 1, "dc_parent" => 1);
+		$target[0] = array("dc_id" => 1, "dc_dirname" => "/", "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
+		$target[1] = array("dc_id" => 2, "dc_dirname" => "/tmp", "dc_name" => "crow-protect", "dnd_id" => 1, "dc_parent" => 1);
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
 		$this->assertEquals($target, $database);
 	}
@@ -156,9 +156,9 @@ class CatalogTest extends TestCase {
 		$file = new File("/tmp/crow-protect/beach.bin");
 		$entry = $catalog->newEntry($file, $cp->getId());
 		
-		$catTarget[0] = array("dc_id" => 1, "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
-		$catTarget[1] = array("dc_id" => 2, "dc_name" => "crow-protect", "dnd_id" => 1, "dc_parent" => 1);
-		$catTarget[2] = array("dc_id" => 3, "dc_name" => "beach.bin", "dnd_id" => 1, "dc_parent" => 2);
+		$catTarget[0] = array("dc_id" => 1, "dc_dirname" => "/", "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
+		$catTarget[1] = array("dc_id" => 2, "dc_dirname" => "/tmp", "dc_name" => "crow-protect", "dnd_id" => 1, "dc_parent" => 1);
+		$catTarget[2] = array("dc_id" => 3, "dc_dirname" => "/tmp/crow-protect", "dc_name" => "beach.bin", "dnd_id" => 1, "dc_parent" => 2);
 		$catDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
 		$verDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
 

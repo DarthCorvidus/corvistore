@@ -27,6 +27,7 @@ class CatalogEntryTest extends TestCase {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$array["dc_id"] = 1;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test03")->getId();
+		$array["dc_dirname"] = "/";
 		$array["dc_name"] = "root";
 		$array["dc_parent"] = NULL;
 		$ce = CatalogEntry::fromArray(TestHelper::getEPDO(), $array);
@@ -67,6 +68,7 @@ class CatalogEntryTest extends TestCase {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$array["dc_id"] = 2;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test01")->getId();
+		$array["dc_dirname"] = "/root/";
 		$array["dc_name"] = ".bash_rc";
 		$array["dc_parent"] = 1;
 		TestHelper::getEPDO()->create("d_catalog", $array);

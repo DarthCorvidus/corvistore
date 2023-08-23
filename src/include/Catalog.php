@@ -54,6 +54,7 @@ class Catalog {
 	
 	private function newEntryDir(File $file, int $parent = 0): CatalogEntry {
 		$create["dc_name"] = $file->getBasename();
+		$create["dc_dirname"] = $file->getDirname();
 		$create["dnd_id"] = $this->node->getId();
 		if($parent!==0) {
 			$create["dc_parent"] = $parent;
@@ -75,6 +76,7 @@ class Catalog {
 	}
 	
 	private function newEntryFile(File $file, int $parent = 0) {
+		$create["dc_dirname"] = $file->getDirname();
 		$create["dc_name"] = $file->getBasename();
 		$create["dnd_id"] = $this->node->getId();
 		if($parent!==0) {

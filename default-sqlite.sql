@@ -57,6 +57,7 @@ CREATE TABLE `d_user` (
 
 CREATE TABLE `d_catalog` (
 `dc_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+`dc_dirname` TEXT,
 `dc_name` TEXT,
 `dnd_id` INTEGER,
 `dc_parent` INTEGER
