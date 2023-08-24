@@ -37,6 +37,7 @@ class CatalogEntryTest extends TestCase {
 	function testFromId() {
 		$array["dc_id"] = 1;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test03")->getId();
+		$array["dc_dirname"] = "/";
 		$array["dc_name"] = "root";
 		$array["dc_parent"] = NULL;
 		TestHelper::getEPDO()->create("d_catalog", $array);
@@ -68,7 +69,7 @@ class CatalogEntryTest extends TestCase {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$array["dc_id"] = 2;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test01")->getId();
-		$array["dc_dirname"] = "/root/";
+		$array["dc_dirname"] = "/root";
 		$array["dc_name"] = ".bash_rc";
 		$array["dc_parent"] = 1;
 		TestHelper::getEPDO()->create("d_catalog", $array);
@@ -90,6 +91,26 @@ class CatalogEntryTest extends TestCase {
 	function testGetVersions() {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->assertInstanceOf(Versions::class, $ce->getVersions());
+	}
+	
+	function testGetDirnameRoot() {
+		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
+		$this->assertEquals("/", $ce->getDirname());
+	}
+
+	function testGetDirnameRootTrailed() {
+		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
+		$this->assertEquals("/", $ce->getDirnameTrailed());
+	}
+
+	function testGetDirname() {
+		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 2);
+		$this->assertEquals("/root", $ce->getDirname());
+	}
+
+	function testGetDirnameTrailed() {
+		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 2);
+		$this->assertEquals("/root/", $ce->getDirnameTrailed());
 	}
 	
 }

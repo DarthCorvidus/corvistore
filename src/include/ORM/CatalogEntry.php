@@ -106,7 +106,7 @@ class CatalogEntry {
 	}
 	
 	function getDirname(): string {
-		$this->dirname;
+		return $this->dirname;
 	}
 	
 	function getDirnameTrailed(): string {
