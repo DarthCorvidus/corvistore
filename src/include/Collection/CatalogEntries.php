@@ -8,15 +8,15 @@
 class CatalogEntries {
 	private $array;
 	private $names;
-	private $parentId;
-	function __construct(int $parent) {
+	private $dirname;
+	function __construct(string $dirname) {
 		$this->array = array();
 		$this->names = array();
-		$this->parentId = $parent;
+		$this->dirname = $dirname;
 	}
 	
-	function getParentId(): int {
-		return $this->parentId;
+	function getDirname(): string {
+		return $this->dirname;
 	}
 	
 	function addEntry(CatalogEntry $entry) {
@@ -41,7 +41,7 @@ class CatalogEntries {
 	}
 	
 	public function getDiff(Files $files): CatFileDiff {
-		$diff = new CatFileDiff($this->parentId);
+		$diff = new CatFileDiff($this->dirname);
 		
 		for($i = 0; $i<$files->getCount();$i++) {
 			$file = $files->getEntry($i);

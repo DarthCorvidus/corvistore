@@ -33,7 +33,7 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 		}
 		echo "Received OK".PHP_EOL;
 		$this->path[0] = "/";
-		$protocol->sendCommand("GET CATALOG 0");
+		$protocol->sendCommand("GET CATALOG /");
 		$protocol->expect(\Net\ProtocolReactive::SERIALIZED_PHP);
 	}
 
@@ -48,9 +48,9 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 	}
 	
 	public function onCatalogEntries(\Net\ProtocolReactive $protocol, \CatalogEntries $entries) {
-		$parentId = $entries->getParentId();
+		$dirname = $entries->getDirname();
 		
-		$files = $this->readDirectory($this->path[$parentId]);
+		$files = $this->readDirectory($dirname);
 		$diff = $entries->getDiff($files);
 		for($i=0;$i<$entries->getCount();$i++) {
 			$entry = $entries->getEntry($i);
@@ -63,10 +63,10 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 			if(!$entry->hasParentId()) {
 				$this->path[$entry->getId()] = "/".$entry->getName();
 			}
-			echo "recurse with GET CATALOG ".$entry->getId()." (".$this->path[$entry->getId()].")".PHP_EOL;
-			$protocol->sendCommand("GET CATALOG ".$entry->getId());
+			#echo "recurse with GET CATALOG ".$entry->getId()." (".$this->path[$entry->getId()].")".PHP_EOL;
+			#echo "GET CATALOG ".$entry->getDirname().PHP_EOL;
+			#$protocol->sendCommand("GET CATALOG ".$entry->getDirname());
 		}
-		
 		
 		for($i=0;$i<$diff->getNew()->getCount();$i++) {
 			#pcntl_signal_dispatch();
@@ -75,8 +75,9 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 			if($file->getType()!= \Catalog::TYPE_DIR) {
 				continue;
 			}
-			echo "Creating ".$file->getPath().PHP_EOL;
-			$protocol->sendCommand("CREATE FILE ".$parentId, $this);
+			#echo "Creating ".$file->getPath().PHP_EOL;
+			echo "CREATE FILE ".$file->getPath().PHP_EOL;
+			$protocol->sendCommand("CREATE FILE ".$file->getPath(), $this);
 			echo "Sending serialized file".PHP_EOL;
 			$protocol->sendSerialize($file, $this);
 			/*
@@ -98,8 +99,15 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 			#if($entry->getVersions()->getLatest()->getType()==Catalog::TYPE_FILE) {
 			#	$this->storage->store($entry->getVersions()->getLatest(), $this->partition, $file);
 			#}
-			
-			
+
+		}
+			#echo "GET CATALOG ".$file->getPath().PHP_EOL;
+			#$protocol->sendCommand("GET CATALOG ".$file->getPath());
+		$directories = $files->getDirectories();
+		for($i=0;$i<$directories->getCount();$i++) {
+			$file = $directories->getEntry($i);
+			echo "GET CATALOG ".$file->getPath().PHP_EOL;
+			$protocol->sendCommand("GET CATALOG ".$file->getPath());
 		}
 		#$this->currentEntries = NULL;
 		#if($parentId === 0) {

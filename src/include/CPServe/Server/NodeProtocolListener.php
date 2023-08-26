@@ -6,6 +6,7 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 	private $pdo;
 	private $createId;
 	private $catalog;
+	private $fileAction;
 	public function __construct(\EPDO $pdo, int $clientId, \Node $node) {
 		$this->clientId = $clientId;
 		$this->node = $node;
@@ -84,7 +85,8 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 		}
 		if($command[0]=="CREATE" and $command[1]=="FILE") {
 			$protocol->expect(\Net\ProtocolReactive::SERIALIZED_PHP);
-			$this->createId = $command[2];
+			#$this->createId = $command[2];
+			$this->fileAction = "CREATE";
 		}
 
 	}
@@ -100,17 +102,17 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 
 	public function onSerialized(\Net\ProtocolReactive $protocol, $unserialized) {
 		echo "Received serialized ".get_class($unserialized).PHP_EOL;
-		if($this->createId!==NULL && get_class($unserialized)=="File") {
-			$this->onSerializedFile($protocol, $unserialized, $this->createId);
-			$this->createId = NULL;
+		if($this->fileAction!==NULL && get_class($unserialized)=="File") {
+			$this->onSerializedFile($protocol, $unserialized, $this->fileAction);
+			$this->fileAction = NULL;
 		}
 	}
 	
-	private function onSerializedFile(\Net\ProtocolReactive $protocol, \File $file, $createId) {
-		echo "new entry ".$file->getBasename().", parent ".$createId.PHP_EOL;
-		if($file->getType()== \Catalog::TYPE_DIR) {
-			$entry = $this->catalog->newEntry($file, $createId);
-			$protocol->sendSerialize($entry);
+	private function onSerializedFile(\Net\ProtocolReactive $protocol, \File $file, string $action) {
+		if($file->getType()== \Catalog::TYPE_DIR && $action=="CREATE") {
+			echo "new entry ".$file->getPath().PHP_EOL;
+			$entry = $this->catalog->newEntry($file);
+			#$protocol->sendSerialize($entry);
 		}
 	}
 	

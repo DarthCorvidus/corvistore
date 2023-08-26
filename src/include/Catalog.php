@@ -17,17 +17,19 @@ class Catalog {
 		$this->node = $node;
 	}
 
-	function getEntries(int $parent = 0): CatalogEntries {
-		$entries = new CatalogEntries($parent);
+	function getEntries(string $dirname): CatalogEntries {
+		$entries = new CatalogEntries($dirname);
 		$param = array();
 		$param[] = 1;
 		$param[] = $this->node->getId();
-		if($parent===0) {
-			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent IS NULL order by dc_id, dvs_created_epoch");
-		} else {
-			$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent = ? order by dc_id, dvs_created_epoch");
-			$param[] = $parent;
-		}
+		#if($parent===0) {
+		#	$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent IS NULL order by dc_id, dvs_created_epoch");
+		#} else {
+		#	$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_parent = ? order by dc_id, dvs_created_epoch");
+		#	$param[] = $parent;
+		#}
+		$stmt = $this->pdo->prepare("select * from d_catalog JOIN d_version USING (dc_id) where dvs_stored = ? and dnd_id = ? AND dc_dirname = ? order by dc_id, dvs_created_epoch");
+		$param[] = $dirname;
 		$stmt->setFetchMode(EPDO::FETCH_ASSOC);
 		$stmt->execute($param);
 		$tmp = array();

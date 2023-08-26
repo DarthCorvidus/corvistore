@@ -196,13 +196,13 @@ class CatalogTest extends TestCase {
 		$this->mockup->createRandom("/beach.bin", 12);
 		$file = new File("/tmp/crow-protect/beach.bin");
 		
-		$entries = $catalog->getEntries($cp->getId());
+		$entries = $catalog->getEntries("/tmp/crow-protect");
 		$latest = $entries->getEntry(0)->getVersions()->getLatest();
 		
 		$entry = $catalog->updateEntry($entry, $file);
 		$entry->getVersions()->getLatest()->setStored(TestHelper::getEPDO());
 		
-		$entries = $catalog->getEntries($cp->getId());
+		$entries = $catalog->getEntries("/tmp/crow-protect");
 		
 		$this->assertEquals(1, $entries->getCount());
 		$this->assertEquals(2, $entries->getEntry(0)->getVersions()->getCount());
