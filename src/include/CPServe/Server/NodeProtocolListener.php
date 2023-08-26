@@ -15,7 +15,7 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 	}
 	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
-		$exp = explode(" ", $command);
+		$exp = explode(" ", $command, 3);
 		if(count($exp)==1) {
 			$this->handleOne($protocol, $command);
 		}
