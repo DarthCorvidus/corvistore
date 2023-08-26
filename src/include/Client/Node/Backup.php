@@ -17,14 +17,17 @@ class Backup implements \SignalHandler {
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
-	function __construct(\Net\Protocol $protocol, \Client\Config $config, array $argv) {
+	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
 		$this->protocol = $protocol;
+		/*
 		$handler = \Signal::get();
 		$handler->addSignalHandler(SIGINT, $this);
 		$handler->addSignalHandler(SIGTERM, $this);
+		 * 
+		 */
 		#$this->inex = new InEx();
 		#$this->inex->addInclude("/boot/");
 		#$this->inex->addInclude("/tmp/");
@@ -51,7 +54,7 @@ class Backup implements \SignalHandler {
 	return $group["name"];
 	}
 	
-	private function recurseFiles(string $path, $depth, \CatalogEntry $parent = NULL) {
+	private function recurseFiles(string $path) {
 		$files = new \Files();
 		$directories = array();
 		$all = array();
@@ -86,6 +89,9 @@ class Backup implements \SignalHandler {
 				continue;
 			}
 		}
+		$this->protocol->sendCommand("GET CATALOG ".$path);
+		$catalogEntries = $this->protocol->getSerialized();
+		/*
 		if($parent == NULL) {
 			$this->protocol->sendCommand("GET CATALOG 0");
 			$catalogEntries = $this->protocol->getUnserializePHP();
@@ -93,25 +99,21 @@ class Backup implements \SignalHandler {
 			$this->protocol->sendCommand("GET CATALOG ".$parent->getId());
 			$catalogEntries = $this->protocol->getUnserializePHP();
 		}
-		
+		*/
 		#$this->pdo->beginTransaction();
 		#$catalogEntries = $this->catalog->getEntries($parent);
 		$diff = $catalogEntries->getDiff($files);
 		// Add new files (did not exist before).
 		for($i=0;$i<$diff->getNew()->getCount();$i++) {
-			pcntl_signal_dispatch();
+			#pcntl_signal_dispatch();
 			$file = $diff->getNew()->getEntry($i);
 			// Skip files for now.
-			#if($file->getType()!= \Catalog::TYPE_DIR) {
-			#	continue;
-			#}
-			echo "Creating ".$file->getPath().PHP_EOL;
-			if($parent == NULL) {
-				$this->protocol->sendCommand("CREATE FILE 0");
-			} else {
-				$this->protocol->sendCommand("CREATE FILE ".$parent->getId());
+			if($file->getType()!= \Catalog::TYPE_DIR) {
+				continue;
 			}
-			$this->protocol->sendSerializePHP($file);
+			echo "Creating ".$file->getPath().PHP_EOL;
+			$this->protocol->sendCommand("CREATE FILE ".$file->getPath());
+			$this->protocol->sendSerialize($file);
 			if($file->getType()== \Catalog::TYPE_FILE) {
 				echo "Sending ".$file->getPath().PHP_EOL;
 				try {
@@ -121,10 +123,11 @@ class Backup implements \SignalHandler {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
 			}
-			$entry = $this->protocol->getUnserializePHP();
+			#$entry = $this->protocol->getSerialized();
 			
 			#$entry = $this->catalog->newEntry($file, $parent);
-			$catalogEntries->addEntry($entry);
+			#$catalogEntries->addEntry($entry);
+			#print_r($entry);
 			#if($entry->getVersions()->getLatest()->getType()==Catalog::TYPE_FILE) {
 			#	$this->storage->store($entry->getVersions()->getLatest(), $this->partition, $file);
 			#}
@@ -133,7 +136,8 @@ class Backup implements \SignalHandler {
 		}
 		// Add changed files.
 		for($i=0;$i<$diff->getChanged()->getCount();$i++) {
-			pcntl_signal_dispatch();
+			continue;
+			#pcntl_signal_dispatch();
 			$file = $diff->getChanged()->getEntry($i);
 			echo "Updating ".$file->getPath().PHP_EOL;
 			$this->protocol->sendCommand("UPDATE FILE");
@@ -155,7 +159,8 @@ class Backup implements \SignalHandler {
 		
 		// Mark files as deleted.
 		for($i=0;$i<$diff->getDeleted()->getCount();$i++) {
-			pcntl_signal_dispatch();
+			continue;
+			#pcntl_signal_dispatch();
 			$catalogEntry = $diff->getDeleted()->getEntry($i);
 			echo "Deleting ".$catalogEntry->getName().PHP_EOL;
 			$this->protocol->sendCommand("DELETE ENTRY");
@@ -166,12 +171,9 @@ class Backup implements \SignalHandler {
 		
 		$directories = $files->getDirectories();
 		for($i=0;$i<$directories->getCount();$i++) {
-			pcntl_signal_dispatch();
+			#pcntl_signal_dispatch();
 			$dir = $directories->getEntry($i);
-			if($catalogEntries->hasName($dir->getBasename())) {
-				$parent = $catalogEntries->getByName($dir->getBasename());
-				$this->recurseFiles($dir->getPath(), $depth, $parent);
-			}
+			$this->recurseFiles($dir->getPath());
 		}
 	}
 	
@@ -184,7 +186,7 @@ class Backup implements \SignalHandler {
 		
 	function run() {
 		#$start = hrtime();
-		$this->recurseFiles("/", 0);
+		$this->recurseFiles("/");
 		$this->protocol->sendCommand("QUIT");
 		$this->displayResult();
 		#$end = hrtime();

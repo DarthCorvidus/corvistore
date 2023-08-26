@@ -32,25 +32,30 @@ class Client {
 		if($socket===FALSE) {
 			throw new \RuntimeException("Unable to connect to ".$this->config->getHost().":4096: ".$errstr.".");
 		}
-		$this->hub = new \StreamHub();
+		#$this->hub = new \StreamHub();
 		
-		if($argv[1]=="report") {
-			$this->protocol = new \Net\ProtocolReactive(new ReportListener($argv));
-		}
+		#if($argv[1]=="report") {
+		#	$this->protocol = new \Net\ProtocolReactive(new ReportListener($argv));
+		#}
 
-		if($argv[1]=="backup") {
-			$this->protocol = new \Net\ProtocolReactive(new BackupListener($this->config, $argv));
-		}
-				
-		$this->hub->addClientStream("ssl", 0, $socket);
-		$this->hub->addClientListener("ssl", 0, $this->protocol);
+		#if($argv[1]=="backup") {
+		#	$this->protocol = new \Net\ProtocolReactive(new BackupListener($this->config, $argv));
+		#}
+		$this->protocol = new \Net\ProtocolSync(new \Net\StreamClient($socket));
+		#$this->hub->addClientStream("ssl", 0, $socket);
+		#$this->hub->addClientListener("ssl", 0, $this->protocol);
 		$this->protocol->sendCommand("mode node");
 		$this->protocol->sendCommand("authenticate ".$this->config->getNode().":".file_get_contents("/root/.crow-protect"));
-		$this->protocol->expect(\Net\ProtocolReactive::OK);
+		#$this->protocol->expect(\Net\ProtocolReactive::OK);
+		echo $this->protocol->getOK();
 	}
 	
 	function run() {
-		$this->hub->listen();
+		if($this->argv[1]=="backup") {
+			$backup = new Backup($this->protocol, $this->config, $this->argv);
+			$backup->run();
+		}
+		#$this->hub->listen();
 	return;
 		#if($this->argv[1]=="test") {
 		#	$backup = new Test($this->config, $this->argv);
