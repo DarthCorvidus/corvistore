@@ -34,6 +34,10 @@ class ProtocolSync {
 		$this->sendString(self::MESSAGE, $message);
 	}
 	
+	function sendSerialize($serialize) {
+		$this->sendString(self::SERIALIZED_PHP, serialize($serialize));
+	}
+	
 	private function getString(int $expectedType): string {
 		$data = $this->stream->read($this->blockSize);
 		$type = ord($data[0]);
@@ -69,5 +73,22 @@ class ProtocolSync {
 	
 	function getSerialized() {
 		return unserialize($this->getString(self::SERIALIZED_PHP));
+	}
+	
+	public function sendOK() {
+		$package = random_bytes(\Net\ProtocolReactive::padRandom(chr(self::OK), $this->blockSize-2)).chr(self::OK);
+		$this->stream->write($package);
+	}
+	
+	public function getOK() {
+		$package = $this->stream->read($this->blockSize);
+		$type = ord($package[0]);
+		$secType = ord($package[$this->blockSize-1]);
+		if($type!=self::OK) {
+			throw new ProtocolMismatchException("received type ".$type." does not match expected type ".self::OK);
+		}
+		if($type!==$secType) {
+			throw new ProtocolMismatchException("malformed OK package");
+		}
 	}
 }
