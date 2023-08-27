@@ -102,21 +102,19 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 
 	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
 		echo "Received serialized ".get_class($unserialized).PHP_EOL;
-		if($this->fileAction!==NULL && get_class($unserialized)=="File") {
+		if(get_class($unserialized)=="File") {
 			$this->onSerializedFile($protocol, $unserialized, $this->fileAction);
 			$this->fileAction = NULL;
 		}
 	}
 	
-	private function onSerializedFile(\Net\ProtocolAsync $protocol, \File $file, string $action) {
-		if($file->getType()== \Catalog::TYPE_DIR && $action=="CREATE") {
+	private function onSerializedFile(\Net\ProtocolAsync $protocol, \File $file) {
+		if($file->getAction()== \File::CREATE) {
 			echo "new entry ".$file->getPath().PHP_EOL;
-			$entry = $this->catalog->newEntry($file);
-			#$protocol->sendSerialize($entry);
+			$this->catalog->newEntry($file);
 		}
 	}
 	
-
 	public function onOk(\Net\ProtocolAsync $protocol) {
 		
 	}

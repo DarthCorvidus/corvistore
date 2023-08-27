@@ -112,7 +112,8 @@ class Backup implements \SignalHandler {
 				continue;
 			}
 			echo "Creating ".$file->getPath().PHP_EOL;
-			$this->protocol->sendCommand("CREATE FILE ".$file->getPath());
+			#$this->protocol->sendCommand("CREATE FILE ".$file->getPath());
+			$file->setAction(\File::CREATE);
 			$this->protocol->sendSerialize($file);
 			if($file->getType()== \Catalog::TYPE_FILE) {
 				echo "Sending ".$file->getPath().PHP_EOL;
@@ -186,9 +187,12 @@ class Backup implements \SignalHandler {
 		
 	function run() {
 		#$start = hrtime();
+		\plibv4\profiler\Profiler::startTimer("recurse");
 		$this->recurseFiles("/");
 		$this->protocol->sendCommand("QUIT");
 		$this->displayResult();
+		\plibv4\profiler\Profiler::endTimer("recurse");
+		\plibv4\profiler\Profiler::printTimers();
 		#$end = hrtime();
 		#$elapsed = $end[0]-$start[0];
 		/*
