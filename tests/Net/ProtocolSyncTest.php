@@ -45,7 +45,7 @@ class ProtocolSyncTest extends TestCase {
 		$data .= \IntVal::uint32LE()->putValue(strlen($payload));
 		$data .= $payload;
 		
-		$fs = new StreamFake(\Net\ProtocolReactive::padRandom($data, 1024));
+		$fs = new StreamFake(\Net\Protocol::padRandom($data, 1024));
 		
 		$protocol = new \Net\ProtocolSync($fs);
 		$command = $protocol->getCommand();
@@ -61,7 +61,7 @@ class ProtocolSyncTest extends TestCase {
 		$len = strlen($serializedCats);
 		$header = chr(\Net\ProtocolSync::MESSAGE).\IntVal::uint32LE()->putValue($len);
 		
-		$fs = new StreamFake(\Net\ProtocolReactive::padRandom($header.$serializedCats, 1024*22));
+		$fs = new StreamFake(\Net\Protocol::padRandom($header.$serializedCats, 1024*22));
 		
 		$protocol = new \Net\ProtocolSync($fs);
 		$this->assertEquals($serializedCats, $protocol->getMessage());
@@ -76,7 +76,7 @@ class ProtocolSyncTest extends TestCase {
 		$len = strlen($serializedCats);
 		$header = chr(\Net\ProtocolSync::SERIALIZED_PHP).\IntVal::uint32LE()->putValue($len);
 		
-		$fs = new StreamFake(\Net\ProtocolReactive::padRandom($header.$serializedCats, 1024*22));
+		$fs = new StreamFake(\Net\Protocol::padRandom($header.$serializedCats, 1024*22));
 		
 		$protocol = new \Net\ProtocolSync($fs);
 		$this->assertEquals($array, $protocol->getSerialized());
@@ -91,7 +91,7 @@ class ProtocolSyncTest extends TestCase {
 		$len = strlen($serializedCats);
 		$header = chr(\Net\ProtocolSync::SERIALIZED_PHP).\IntVal::uint32LE()->putValue($len);
 		
-		$fs = new StreamFake(\Net\ProtocolReactive::padRandom($header.$serializedCats, 1024*22));
+		$fs = new StreamFake(\Net\Protocol::padRandom($header.$serializedCats, 1024*22));
 		
 		$protocol = new \Net\ProtocolSync($fs);
 		$this->expectException(\Net\ProtocolMismatchException::class);

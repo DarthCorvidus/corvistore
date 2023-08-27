@@ -9,11 +9,11 @@
 namespace Net;
 
 /**
- * Description of ProtocolReactive
+ * Description of ProtocolAsync
  *
  * @author hm
  */
-class ProtocolReactive extends Protocol implements HubClientListener {
+class ProtocolAsync extends Protocol implements HubClientListener {
 	private $sendStack = array();
 	private $listener = array();
 	private $rest = 0;
@@ -23,7 +23,7 @@ class ProtocolReactive extends Protocol implements HubClientListener {
 	private $streamReceiver = NULL;
 	private $fileReceiver = NULL;
 	private $currentRecvType = NULL;
-	public function __construct(ProtocolReactiveListener $listener) {
+	public function __construct(ProtocolAsyncListener $listener) {
 		$this->listener = $listener;
 	}
 	

@@ -25,7 +25,7 @@ class FileSender implements StreamSender {
 	}
 	
 	public function getSendType(): int {
-		return ProtocolReactive::FILE;
+		return ProtocolAsync::FILE;
 	}
 	
 	public function getSendData(int $amount): string {
