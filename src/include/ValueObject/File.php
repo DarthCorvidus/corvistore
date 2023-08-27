@@ -9,6 +9,10 @@ class File {
 	private $owner;
 	private $group;
 	private $type;
+	private $action = NULL;
+	const CREATE = 1;
+	const UPDATE = 2;
+	const DELETE = 3;
 	private static $userCache = array();
 	private static $groupCache = array();
 	function __construct(string $path) {
@@ -17,6 +21,15 @@ class File {
 		// on which realpath() can be called once.
 		$this->path = $path;
 		$this->reload();
+	}
+	
+	function setAction(int $action) {
+		Assert::isClassConstant(self::class, $action);
+		$this->action = $action;
+	}
+	
+	function getAction(): int {
+		return $this->action;
 	}
 	
 	function reload() {

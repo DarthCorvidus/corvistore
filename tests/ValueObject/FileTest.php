@@ -126,4 +126,17 @@ class FileTest extends TestCase {
 		$this->expectExceptionMessage("File /tmp/ has no parent.");
 		$object->getParent();
 	}
+	
+	function testSetGetAction() {
+		$object = new File("/tmp/");
+		$object->setAction(FILE::UPDATE);
+		$this->assertEquals(FILE::UPDATE, $object->getAction());
+	}
+	
+	function testSetInvalidAction() {
+		$object = new File("/tmp/");
+		$this->expectException(Exception::class);
+		$object->setAction(25);
+		
+	}
 }
