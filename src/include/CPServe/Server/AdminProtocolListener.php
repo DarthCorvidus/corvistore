@@ -1,6 +1,6 @@
 <?php
 namespace Server;
-class AdminProtocolListener implements \Net\ProtocolReactiveListener {
+class AdminProtocolListener implements \Net\ProtocolAsyncListener {
 	private $clientId;
 	private $user;
 	private $pdo;
@@ -9,7 +9,7 @@ class AdminProtocolListener implements \Net\ProtocolReactiveListener {
 		$this->user = $user;
 		$this->pdo = $pdo;
 	}
-	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
 		if($command == "status") {
 			$protocol->sendMessage("Status:");
@@ -58,20 +58,20 @@ class AdminProtocolListener implements \Net\ProtocolReactiveListener {
 		}
 	}
 
-	public function onDisconnect(\Net\ProtocolReactive $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol) {
 		echo "Client ".$this->clientId." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
 		exit();
 	}
 
-	public function onMessage(\Net\ProtocolReactive $protocol, string $command) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $command) {
 		
 	}
 
-	public function onSerialized(\Net\ProtocolReactive $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
 		
 	}
 
-	public function onOk(\Net\ProtocolReactive $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol) {
 		
 	}
 

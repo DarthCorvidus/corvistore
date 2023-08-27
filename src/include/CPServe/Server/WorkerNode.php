@@ -13,7 +13,7 @@ class WorkerNode implements \Runner, \SignalHandler {
 		$this->node = \Node::fromId($this->pdo, $nodeId);
 		$this->socket = $msgsock;
 		stream_set_blocking($this->socket, FALSE);
-		$this->protocol = new \Net\ProtocolReactive(new NodeProtocolListener($this->pdo, $this->clientId, $this->node));
+		$this->protocol = new \Net\ProtocolAsync(new NodeProtocolListener($this->pdo, $this->clientId, $this->node));
 		$signal = \Signal::get();
 		$signal->clearSignal(SIGTERM);
 		$this->hub = new \StreamHub();
@@ -21,7 +21,7 @@ class WorkerNode implements \Runner, \SignalHandler {
 		$this->hub->addClientStream("ipc", $this->clientId, $msgsock);
 		$this->hub->addClientListener("ipc",$this->clientId, $this->protocol);
 		#$this->writeBuffer[$name.":".$id] = "";
-		#$this->sslProtocol[$name.":".$id] = new \Net\ProtocolReactive(new SSLProtocolListener($id));
+		#$this->sslProtocol[$name.":".$id] = new \Net\ProtocolAsync(new SSLProtocolListener($id));
 		#$this->protocol->sendMessage("Welcome to Test SSL Server 1.0");
 		#$this->protocol->sendMessage("(c) ACME Backup Software");
 		#$this->protocol->sendMessage("Connected on ".date("Y-m-d H:i:s")." as client ".$this->clientId);

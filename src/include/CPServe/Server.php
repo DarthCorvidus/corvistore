@@ -1,5 +1,5 @@
 <?php
-class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \Net\ProtocolReactiveListener {
+class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \Net\ProtocolAsyncListener {
 	private $hub;
 	private $workerProcess = array();
 	private $pdo;
@@ -99,7 +99,7 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 	}
 	
 	public function getClientListener(string $name, int $id): \Net\HubClientListener {
-		$protocol = new \Net\ProtocolReactive($this);
+		$protocol = new \Net\ProtocolAsync($this);
 		$this->authProt[$name.":".$id] = $protocol;
 		$this->authFail[$name.":".$id] = 0;
 		$this->authMode[$name.":".$id] = NULL;
@@ -124,7 +124,7 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 		unset($this->authMode[$key]);
 	}
 	
-	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
 		$key = array_search($protocol, $this->authProt, TRUE);
 		$kexp = explode(":", $key);
 		$name = $kexp[0];
@@ -149,7 +149,7 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 		if($this->authMode[$key]==NULL && $exp[0]=="mode" && in_array($exp[1], array("admin", "node", TRUE))) {
 			$this->authMode[$key] = $exp[1];
 			#$protocol->sendOK();
-			$protocol->expect(\Net\ProtocolReactive::COMMAND);
+			$protocol->expect(\Net\ProtocolAsync::COMMAND);
 		return;
 		}
 		if($this->authMode[$key]!=NULL && $exp[0]=="authenticate") {
@@ -189,22 +189,22 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 		$this->endHandshake($key);
 	}
 
-	public function onDisconnect(\Net\ProtocolReactive $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol) {
 		$key = array_search($protocol, $this->authProt, TRUE);
 		unset($this->authFail[$key]);
 		unset($this->authProt);
 		unset($this->authMode);
 	}
 
-	public function onMessage(\Net\ProtocolReactive $protocol, string $message) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $message) {
 		
 	}
 
-	public function onOk(\Net\ProtocolReactive $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol) {
 		
 	}
 
-	public function onSerialized(\Net\ProtocolReactive $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
 		
 	}
 

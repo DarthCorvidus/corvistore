@@ -1,6 +1,6 @@
 <?php
 namespace Server;
-class NodeProtocolListener implements \Net\ProtocolReactiveListener {
+class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	private $clientId;
 	private $node;
 	private $pdo;
@@ -13,7 +13,7 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 		$this->pdo = $pdo;
 		$this->catalog = new \Catalog($this->pdo, $this->node);
 	}
-	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
 		$exp = explode(" ", $command, 3);
 		if(count($exp)==1) {
@@ -29,7 +29,7 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 		}
 	}
 
-	private function handleOne(\Net\ProtocolReactive $protocol, string $command) {
+	private function handleOne(\Net\ProtocolAsync $protocol, string $command) {
 		if($command == "report") {
 			$report["files"] = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ? and dc_id in (select dc_id from d_version where dvs_type = ?)", array($this->node->getId(), \Catalog::TYPE_FILE));
 			$params[] = $this->node->getId();
@@ -47,7 +47,7 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 		}
 	}
 	
-	private function handleTwo(\Net\ProtocolReactive $protocol, array $command) {
+	private function handleTwo(\Net\ProtocolAsync $protocol, array $command) {
 		if($command[0]=="report") {
 			// Report for the root directory.
 			if($command[1]=="/") {
@@ -77,30 +77,30 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 		}
 	}
 	
-	private function handleThree(\Net\ProtocolReactive $protocol, array $command) {
+	private function handleThree(\Net\ProtocolAsync $protocol, array $command) {
 		if($command[0]=="GET" and strtoupper($command[1])=="CATALOG") {
 			$entries = $this->catalog->getEntries($command[2]);
 			$protocol->sendSerialize($entries);
 		return;
 		}
 		if($command[0]=="CREATE" and $command[1]=="FILE") {
-			$protocol->expect(\Net\ProtocolReactive::SERIALIZED_PHP);
+			$protocol->expect(\Net\ProtocolAsync::SERIALIZED_PHP);
 			#$this->createId = $command[2];
 			$this->fileAction = "CREATE";
 		}
 
 	}
 	
-	public function onDisconnect(\Net\ProtocolReactive $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol) {
 		echo "Client ".$this->clientId." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
 		exit();
 	}
 
-	public function onMessage(\Net\ProtocolReactive $protocol, string $command) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $command) {
 		
 	}
 
-	public function onSerialized(\Net\ProtocolReactive $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
 		echo "Received serialized ".get_class($unserialized).PHP_EOL;
 		if($this->fileAction!==NULL && get_class($unserialized)=="File") {
 			$this->onSerializedFile($protocol, $unserialized, $this->fileAction);
@@ -108,7 +108,7 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 		}
 	}
 	
-	private function onSerializedFile(\Net\ProtocolReactive $protocol, \File $file, string $action) {
+	private function onSerializedFile(\Net\ProtocolAsync $protocol, \File $file, string $action) {
 		if($file->getType()== \Catalog::TYPE_DIR && $action=="CREATE") {
 			echo "new entry ".$file->getPath().PHP_EOL;
 			$entry = $this->catalog->newEntry($file);
@@ -117,7 +117,7 @@ class NodeProtocolListener implements \Net\ProtocolReactiveListener {
 	}
 	
 
-	public function onOk(\Net\ProtocolReactive $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol) {
 		
 	}
 

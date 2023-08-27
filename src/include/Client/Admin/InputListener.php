@@ -2,7 +2,7 @@
 namespace Admin;
 class InputListener implements \Net\HubClientListener {
 	private $protocol;
-	function __construct(\Net\ProtocolReactive $protocol) {
+	function __construct(\Net\ProtocolAsync $protocol) {
 		$this->protocol = $protocol;
 	}
 	public function getBinary(): bool {
@@ -23,7 +23,7 @@ class InputListener implements \Net\HubClientListener {
 
 	public function onRead(string $data) {
 		$quit = (new class() implements \Net\ProtocolSendListener {
-			public function onSent(\Net\ProtocolReactive $protocol) { exit(); }}
+			public function onSent(\Net\ProtocolAsync $protocol) { exit(); }}
 		);
 
 		if($data=="quit") {
@@ -32,10 +32,10 @@ class InputListener implements \Net\HubClientListener {
 		}
 		$this->protocol->sendCommand($data);
 		if($data=="srv") {
-			$this->protocol->expect(\Net\ProtocolReactive::SERIALIZED_PHP);
+			$this->protocol->expect(\Net\ProtocolAsync::SERIALIZED_PHP);
 		return;
 		}
-		$this->protocol->expect(\Net\ProtocolReactive::MESSAGE);
+		$this->protocol->expect(\Net\ProtocolAsync::MESSAGE);
 	}
 
 	public function onWrite(): string {

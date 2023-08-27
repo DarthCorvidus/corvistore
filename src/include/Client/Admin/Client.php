@@ -37,7 +37,7 @@ class Client {
 			echo "Password: ";
 			$password = trim(fgets(STDIN));
 		}
-		$this->protocol = new \Net\ProtocolReactive(new ProtocolListener());
+		$this->protocol = new \Net\ProtocolAsync(new ProtocolListener());
 		$this->inputListener = new InputListener($this->protocol);
 		
 		$this->hub->addClientStream("ssl", 0, $socket, $this->protocol);
