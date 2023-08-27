@@ -21,6 +21,7 @@ class Backup implements \SignalHandler {
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
+		$this->inex->addInclude("/tmp");
 		$this->protocol = $protocol;
 		/*
 		$handler = \Signal::get();
@@ -160,13 +161,10 @@ class Backup implements \SignalHandler {
 		
 		// Mark files as deleted.
 		for($i=0;$i<$diff->getDeleted()->getCount();$i++) {
-			continue;
 			#pcntl_signal_dispatch();
 			$catalogEntry = $diff->getDeleted()->getEntry($i);
-			echo "Deleting ".$catalogEntry->getName().PHP_EOL;
-			$this->protocol->sendCommand("DELETE ENTRY");
-			$this->protocol->sendSerializePHP($catalogEntry);
-			#$this->catalog->deleteEntry($catalogEntry);
+			echo "Deleting ".$catalogEntry->getDirname()."/".$catalogEntry->getName().PHP_EOL;
+			$this->protocol->sendCommand("DELETE ENTRY ".$catalogEntry->getId());
 		}
 		#$this->pdo->commit();
 		

@@ -122,15 +122,15 @@ class Catalog {
 	return $entry;
 	}
 	
-	function deleteEntry(CatalogEntry $entry) {
-		$version["dc_id"] = $entry->getId();
+	function deleteEntry(int $catalogId) {
+		$version["dc_id"] = $catalogId;
 		$version["dvs_stored"] = 1;
 		$version["dvs_type"] = self::TYPE_DELETED;
 		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
 		$version["dvs_created_epoch"] = time();
 		$version["dvs_id"] = $this->pdo->create("d_version", $version);
-		$entry->addVersion($version);
-	return $entry;
+		#$entry->addVersion($version);
+	#return $entry;
 	}
 	
 	/**

@@ -88,6 +88,12 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 			#$this->createId = $command[2];
 			$this->fileAction = "CREATE";
 		}
+		if($command[0]=="DELETE" and $command[1]=="ENTRY") {
+			#$protocol->expect(\Net\ProtocolAsync::SERIALIZED_PHP);
+			echo "Deleting entry ".$command[2].PHP_EOL;
+			$this->catalog->deleteEntry((int)$command[2]);
+			#$this->fileAction = "CREATE";
+		}
 
 	}
 	
