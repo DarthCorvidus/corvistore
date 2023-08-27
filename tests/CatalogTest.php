@@ -199,8 +199,8 @@ class CatalogTest extends TestCase {
 		$entries = $catalog->getEntries("/tmp/crow-protect");
 		$latest = $entries->getEntry(0)->getVersions()->getLatest();
 		
-		$entry = $catalog->updateEntry($entry, $file);
-		$entry->getVersions()->getLatest()->setStored(TestHelper::getEPDO());
+		$version = $catalog->updateEntry($entry->getId(), $file);
+		$version->setStored(TestHelper::getEPDO());
 		
 		$entries = $catalog->getEntries("/tmp/crow-protect");
 		
