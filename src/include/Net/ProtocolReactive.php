@@ -13,13 +13,7 @@ namespace Net;
  *
  * @author hm
  */
-class ProtocolReactive implements HubClientListener {
-	const OK = 1;
-	const MESSAGE = 2;
-	const COMMAND = 3;
-	const SERIALIZED_PHP = 4;
-	const FILE = 5;
-	const ERROR = 255;
+class ProtocolReactive extends Protocol implements HubClientListener {
 	private $sendStack = array();
 	private $listener = array();
 	private $rest = 0;
@@ -37,23 +31,6 @@ class ProtocolReactive implements HubClientListener {
 		$this->fileReceiver = $receiver;
 	}
 	
-	static function padRandom(string $string, $padlength): string {
-		$len = strlen($string);
-		if($len==$padlength) {
-			return $string;
-		}
-		if($len<$padlength) {
-			return $string.random_bytes($padlength-$len);
-		}
-		/*
-		 * Throw exception here, as a longer pad length should not happen in the
-		 * context of ProtocolBase.
-		 */
-		if($len>$padlength) {
-			throw new \RuntimeException("padlength ".$padlength." shorter than strlen ".$len);
-		}
-	}
-
 	private function getCurrentSender(): StreamSender {
 		return $this->sendStream[0];
 	}
@@ -152,7 +129,7 @@ class ProtocolReactive implements HubClientListener {
 		$data .= \IntVal::uint32LE()->putValue($sender->getSendSize());
 		$packetLength = $this->getPacketLength("X", 0);
 		if($sender->getSendLeft()<=$packetLength-5) {
-			$data .= self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-5);
+			$data .= parent::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-5);
 			#array_shift($this->sendStream);
 		return $data;
 		}
@@ -165,7 +142,7 @@ class ProtocolReactive implements HubClientListener {
 		$data .= \IntVal::uint64LE()->putValue($sender->getSendSize());
 		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength-9) {
-			$data .= self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-9);
+			$data .= parent::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-9);
 			#array_shift($this->sendStream);
 		return $data;
 		}
@@ -176,7 +153,7 @@ class ProtocolReactive implements HubClientListener {
 	private function onWriteString(StreamSender $sender) {
 		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength) {
-			$data = self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
+			$data = parent::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
 			#array_shift($this->sendStream);
 		return $data;
 		}
@@ -186,7 +163,7 @@ class ProtocolReactive implements HubClientListener {
 	private function onWriteFile(StreamSender $sender) {
 		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength) {
-			$data = self::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
+			$data = parent::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
 			#array_shift($this->sendStream);
 		return $data;
 		}

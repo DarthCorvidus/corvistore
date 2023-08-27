@@ -1,6 +1,6 @@
 <?php
 namespace Net;
-class ProtocolSync {
+class ProtocolSync extends Protocol {
 	const OK = 1;
 	const MESSAGE = 2;
 	const COMMAND = 3;
@@ -19,7 +19,7 @@ class ProtocolSync {
 		$header .= \IntVal::uint32SE()->putValue($len);
 		$padLength = (int)(ceil($len/$this->blockSize))*1024;
 		
-		$data = \Net\ProtocolReactive::padRandom($header.$string, $padLength);
+		$data = parent::padRandom($header.$string, $padLength);
 		$sender = new \Net\StringSender($type, $data);
 		while($sender->getSendLeft()>0) {
 			$this->stream->write($sender->getSendData($this->blockSize));
@@ -76,7 +76,7 @@ class ProtocolSync {
 	}
 	
 	public function sendOK() {
-		$package = random_bytes(\Net\ProtocolReactive::padRandom(chr(self::OK), $this->blockSize-2)).chr(self::OK);
+		$package = random_bytes(parent::padRandom(chr(self::OK), $this->blockSize-2)).chr(self::OK);
 		$this->stream->write($package);
 	}
 	
