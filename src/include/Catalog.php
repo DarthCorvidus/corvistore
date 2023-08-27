@@ -101,8 +101,8 @@ class Catalog {
 	return $entry;
 	}
 	
-	function updateEntry(CatalogEntry $entry, File $file) {
-		$version["dc_id"] = $entry->getId();
+	function updateEntry(int $entryId, File $file) {
+		$version["dc_id"] = $entryId;
 		$version["dvs_owner"] = $file->getOwner();
 		$version["dvs_group"] = $file->getGroup();
 		$version["dvs_stored"] = 1;
@@ -118,8 +118,8 @@ class Catalog {
 		$version["dvs_permissions"] = $file->getPerms();
 		
 		$version["dvs_id"] = $this->pdo->create("d_version", $version);
-		$entry->addVersion($version);
-	return $entry;
+		#$entry->addVersion($version);
+	#return $entry;
 	}
 	
 	function deleteEntry(int $catalogId) {

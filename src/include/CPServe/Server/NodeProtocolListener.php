@@ -7,6 +7,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	private $createId;
 	private $catalog;
 	private $fileAction;
+	private $updateId;
 	public function __construct(\EPDO $pdo, int $clientId, \Node $node) {
 		$this->clientId = $clientId;
 		$this->node = $node;
@@ -94,6 +95,13 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 			$this->catalog->deleteEntry((int)$command[2]);
 			#$this->fileAction = "CREATE";
 		}
+		if($command[0]=="UPDATE" and $command[1]=="FILE") {
+			$protocol->expect(\Net\ProtocolAsync::SERIALIZED_PHP);
+			echo "Update entry ".$command[2].PHP_EOL;
+			$this->updateId = $command[2];
+			#$this->catalog->deleteEntry((int)$command[2]);
+			##$this->fileAction = "CREATE";
+		}
 
 	}
 	
@@ -118,6 +126,9 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 		if($file->getAction()== \File::CREATE) {
 			echo "new entry ".$file->getPath().PHP_EOL;
 			$this->catalog->newEntry($file);
+		}
+		if($file->getAction()== \File::UPDATE) {
+			$this->catalog->updateEntry($this->updateId, $file);
 		}
 	}
 	
