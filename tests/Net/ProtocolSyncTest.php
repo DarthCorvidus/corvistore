@@ -2,10 +2,21 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class ProtocolSyncTest extends TestCase {
+	const FILE_SIZE = 17201;
 	function testConstruct() {
 		$stream = new StreamFake("");
 		$protocol = new \Net\ProtocolSync($stream);
 		$this->assertInstanceOf(\Net\ProtocolSync::class, $protocol);
+	}
+	
+	function tearDown() {
+		if(file_exists(self::getExamplePath())) {
+			unlink(self::getExamplePath());
+		}
+	}
+	
+	static function getExamplePath(): string {
+		return __DIR__."/example.bin";
 	}
 	
 	function testSendCommand() {
@@ -37,6 +48,89 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals($len, \IntVal::uint32LE()->getValue(substr($data, 1, 4)));
 		$this->assertEquals($serializedCats, substr($data, 5, $len));
 		$this->assertEquals(22*1024, strlen($data));
+	}
+	
+	function testSendStreamSmall() {
+		file_put_contents(self::getExamplePath(), "Hello World!");
+		$file = new File(self::getExamplePath());
+		
+		$fileStream = new \Net\FileSender($file);
+		$fakeStream = new StreamFake("");
+		
+		
+		$proto = new Net\ProtocolSync($fakeStream);
+		$proto->sendStream($fileStream);
+		$read = $fakeStream->read(1024);
+		$this->assertEquals(\Net\Protocol::FILE, ord($read[0]));
+		$this->assertEquals(12, \IntVal::uint64LE()->getValue(substr($read, 1, 8)));
+		$this->assertEquals("Hello World!", substr($read, 9, 12));
+		$this->assertEquals(1024, strlen($fakeStream->getData()));
+	}
+
+	/*
+	 * File which fits into exactly one block along with the header, ie the
+	 * payload is 1015 bytes long.
+	 */
+	function testSendBlockMinusHeader() {
+		$expected = random_bytes(1024-9);
+		file_put_contents(self::getExamplePath(), $expected);
+		$file = new File(self::getExamplePath());
+
+		$fileStream = new \Net\FileSender($file);
+		$fakeStream = new StreamFake("");
+		
+		$proto = new Net\ProtocolSync($fakeStream);
+		$proto->sendStream($fileStream);
+		$data = $fakeStream->getData();
+		
+		$this->assertEquals(1024, strlen($data));
+		$this->assertEquals(\Net\Protocol::FILE, ord($data[0]));
+		$this->assertEquals(1015, \IntVal::uint64LE()->getValue(substr($data, 1, 8)));
+		$this->assertEquals($expected, substr($data, 9, 1015));
+	}
+
+	
+	/*
+	 * Test file which is exactly the size of one block; as the header adds 9
+	 * bytes, 2048 bytes need to be transferred.
+	 */
+	function testSendBlockSized() {
+		$expected = random_bytes(1024);
+		file_put_contents(self::getExamplePath(), $expected);
+		$file = new File(self::getExamplePath());
+
+		$fileStream = new \Net\FileSender($file);
+		$fakeStream = new StreamFake("");
+		
+		$proto = new Net\ProtocolSync($fakeStream);
+		$proto->sendStream($fileStream);
+		$data = $fakeStream->getData();
+		
+		$this->assertEquals(2048, strlen($data));
+		$this->assertEquals(\Net\Protocol::FILE, ord($data[0]));
+		$this->assertEquals(1024, \IntVal::uint64LE()->getValue(substr($data, 1, 8)));
+		$this->assertEquals($expected, substr($data, 9, 1024));
+	}
+
+	
+	function testSendLarge() {
+		$expected = random_bytes(self::FILE_SIZE);
+		file_put_contents(self::getExamplePath(), $expected);
+		$file = new File(self::getExamplePath());
+
+		$padLen = (int)(ceil(self::FILE_SIZE/1024)*1024);
+		
+		$fileStream = new \Net\FileSender($file);
+		$fakeStream = new StreamFake("");
+		
+		$proto = new Net\ProtocolSync($fakeStream);
+		$proto->sendStream($fileStream);
+		$data = $fakeStream->getData();
+		
+		$this->assertEquals($padLen, strlen($data));
+		$this->assertEquals(\Net\Protocol::FILE, ord($data[0]));
+		$this->assertEquals(self::FILE_SIZE, \IntVal::uint64LE()->getValue(substr($data, 1, 8)));
+		$this->assertEquals($expected, substr($data, 9, self::FILE_SIZE));
 	}
 	
 	function testGetCommand() {
