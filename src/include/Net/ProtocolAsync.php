@@ -263,7 +263,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		$this->sendString(self::SERIALIZED_PHP, $serialized, $listener);
 	}
 	
-	public function sendFile(StreamSender $sender, ProtocolSendListener $listener = NULL) {
+	public function sendStream(StreamSender $sender, ProtocolSendListener $listener = NULL) {
 		$this->sendStream[] = $sender;
 		$this->sendListeners[] = $listener;
 		$sender->onSendStart();

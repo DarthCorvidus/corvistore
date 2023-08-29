@@ -222,7 +222,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		file_put_contents(self::getSourceName(), $payload);
 		$file = new File(self::getSourceName());
 		$sender = new ProtocolAsync($this);
-		$sender->sendFile(new \Net\FileSender($file));
+		$sender->sendStream(new \Net\FileSender($file));
 		$data = $sender->onWrite();
 		$sender->onWritten();
 		$this->assertEquals(chr(ProtocolAsync::FILE), substr($data, 0, 1));
@@ -238,7 +238,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		file_put_contents(self::getSourceName(), $payload);
 		$file = new File(self::getSourceName());
 		$sender = new ProtocolAsync($this);
-		$sender->sendFile(new \Net\FileSender($file));
+		$sender->sendStream(new \Net\FileSender($file));
 		$data = $sender->onWrite();
 		// File Type (1 Byte)
 		$this->assertEquals(chr(ProtocolAsync::FILE), substr($data, 0, 1));
@@ -262,7 +262,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		file_put_contents(self::getSourceName(), $payload);
 		$file = new File(self::getSourceName());
 		$sender = new ProtocolAsync($this);
-		$sender->sendFile(new \Net\FileSender($file));
+		$sender->sendStream(new \Net\FileSender($file));
 		$data = $sender->onWrite();
 		$this->assertEquals(chr(ProtocolAsync::FILE), substr($data, 0, 1));
 		$this->assertEquals(IntVal::uint64LE()->putValue(self::FILESIZE), substr($data, 1, 8));
@@ -282,7 +282,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		file_put_contents(self::getSourceName(), $payload);
 		$file = new File(self::getSourceName());
 		$sender = new ProtocolAsync($this);
-		$sender->sendFile(new \Net\FileSender($file));
+		$sender->sendStream(new \Net\FileSender($file));
 		$receiver = new ProtocolAsync($this);
 		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
 		$receiver->onRead($sender->onWrite());
@@ -294,7 +294,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		file_put_contents(self::getSourceName(), $payload);
 		$file = new File(self::getSourceName());
 		$sender = new ProtocolAsync($this);
-		$sender->sendFile(new \Net\FileSender($file));
+		$sender->sendStream(new \Net\FileSender($file));
 		$receiver = new ProtocolAsync($this);
 		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
 		$receiver->onRead($sender->onWrite());
@@ -311,7 +311,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		file_put_contents(self::getSourceName(), $payload);
 		$file = new File(self::getSourceName());
 		$sender = new ProtocolAsync($this);
-		$sender->sendFile(new \Net\FileSender($file));
+		$sender->sendStream(new \Net\FileSender($file));
 		
 		$receiver = new ProtocolAsync($this);
 		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
@@ -329,7 +329,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		file_put_contents(self::getSourceName(), $payload);
 		$file = new File(self::getSourceName());
 		$sender = new ProtocolAsync($this);
-		$sender->sendFile(new \Net\FileSender($file));
+		$sender->sendStream(new \Net\FileSender($file));
 		$receiver = new ProtocolAsync($this);
 		$receiver->setFileReceiver(new Net\FileReceiver(self::getTargetName()));
 		while($sender->hasWrite()) {
@@ -345,7 +345,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$payload = random_bytes(self::FILESIZE-15);
 		file_put_contents(self::getSourceName(), $payload);
 		$file = new File(self::getSourceName());
-		$sender->sendFile(new \Net\FileSender($file));
+		$sender->sendStream(new \Net\FileSender($file));
 		while($sender->hasWrite()) {
 			$receiver->onRead($sender->onWrite());
 			$sender->onWritten();
