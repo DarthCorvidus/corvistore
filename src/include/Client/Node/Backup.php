@@ -22,6 +22,8 @@ class Backup implements \SignalHandler {
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
 		$this->inex->addInclude("/tmp");
+		$this->inex->addInclude("/usr");
+		$this->inex->addInclude("/var");
 		$this->protocol = $protocol;
 		/*
 		$handler = \Signal::get();
@@ -109,9 +111,9 @@ class Backup implements \SignalHandler {
 			#pcntl_signal_dispatch();
 			$file = $diff->getNew()->getEntry($i);
 			// Skip files for now.
-			if($file->getType()!= \Catalog::TYPE_DIR) {
-				continue;
-			}
+			#if($file->getType()!= \Catalog::TYPE_DIR) {
+			#	continue;
+			#}
 			echo "Creating ".$file->getPath().PHP_EOL;
 			#$this->protocol->sendCommand("CREATE FILE ".$file->getPath());
 			$file->setAction(\File::CREATE);
@@ -119,7 +121,7 @@ class Backup implements \SignalHandler {
 			if($file->getType()== \Catalog::TYPE_FILE) {
 				echo "Sending ".$file->getPath().PHP_EOL;
 				try {
-					$this->protocol->sendFile($file);
+					$this->protocol->sendStream(new \Net\FileSender($file));
 					$this->transferred += $file->getSize();
 				} catch (\Net\UploadException $e) {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
@@ -145,14 +147,11 @@ class Backup implements \SignalHandler {
 			$file->setAction(\File::UPDATE);
 			$this->protocol->sendCommand("UPDATE FILE ".$entry->getId());
 			$this->protocol->sendSerialize($file);
-		continue;
-			
-			
 			#$this->protocol->sendSerializePHP($entry);
 			if($file->getType()==\Catalog::TYPE_FILE) {
 				echo "Sending ".$file->getPath().PHP_EOL;
 				try {
-					$this->protocol->sendFile($file);
+					$this->protocol->sendStream(new \Net\FileSender($file));
 					$this->transferred += $file->getSize();
 				} catch (\Net\UploadException $e) {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;

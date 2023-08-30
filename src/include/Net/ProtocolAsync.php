@@ -82,6 +82,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 				$this->streamReceiver->setRecvSize(\IntVal::uint64LE()->getValue(substr($data, 1, 8)));
 				$this->streamReceiver->onRecvStart();
 				$this->readFile(substr($data, 9));
+			return;
 			}
 			if($this->currentRecvType===self::OK) {
 				$this->readOk($data);
@@ -231,7 +232,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	
 	private function readFile(string $data) {
 		$current = $this->getCurrentReceiver();
-		if($current->getRecvLeft()<$this->getPacketLength()) {
+		if($current->getRecvLeft()<=$this->getPacketLength()-9) {
 			// The last packet has to be cut off.
 			$current->receiveData(substr($data, 0, $current->getRecvLeft()));
 			// As we are done, we notify the receiver, delete it and return

@@ -8,11 +8,13 @@
  *
  * @author Claus-Christoph Küthe
  */
-class StorageBasic extends Storage implements \Net\TransferListener {
+class StorageBasic extends Storage implements \Net\StreamReceiver {
 	private $versionEntry;
 	private $partition;
 	private $writeHandle;
 	private $storeId;
+	private $recvSize;
+	private $recvLeft;
 	static function getHexArray(int $id) {
 		$hex = str_pad(dechex($id), 16, 0, STR_PAD_LEFT);
 		$grouped = array();
@@ -132,7 +134,7 @@ class StorageBasic extends Storage implements \Net\TransferListener {
 		$this->versionEntry = $entry;
 	}
 	
-	public function onCancel() {
+	public function onRecvCancel() {
 		echo "Transfer cancelled, cleaning up.".PHP_EOL;
 		if(file_exists($this->getPathForIdFile($this->storeId))) {
 			unlink($this->getPathForIdFile($this->storeId));
@@ -143,12 +145,26 @@ class StorageBasic extends Storage implements \Net\TransferListener {
 		$this->storeId = NULL;
 		fclose($this->writeHandle);
 	}
-
-	public function onData(string $data) {
+	
+	public function setRecvSize(int $size) {
+		$this->recvSize = $size;
+		$this->recvLeft = $size;
+	}
+	
+	public function getRecvSize():int {
+		return $this->recvSize;
+	}
+	
+	function getRecvLeft(): int {
+		return $this->recvLeft;
+	}
+	
+	public function receiveData(string $data) {
 		fwrite($this->writeHandle, $data);
+		$this->recvLeft -= strlen($data);
 	}
 
-	public function onEnd() {
+	public function onRecvEnd() {
 		$this->pdo->update("n_version2basic", array("nvb_stored"=>1), array("nvb_id"=>$this->storeId));
 		$this->versionEntry->setStored($this->pdo);
 		$this->partition = NULL;
@@ -164,7 +180,7 @@ class StorageBasic extends Storage implements \Net\TransferListener {
 		fclose($this->writeHandle);
 	}
 
-	public function onStart(int $size) {
+	public function onRecvStart() {
 		$new["dvs_id"] = $this->versionEntry->getId();
 		$new["dst_id"] = $this->getId();
 		$new["dpt_id"] = $this->partition->getId();

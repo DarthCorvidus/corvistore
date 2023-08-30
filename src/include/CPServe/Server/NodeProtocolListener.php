@@ -8,11 +8,20 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	private $catalog;
 	private $fileAction;
 	private $updateId;
+	private $storage;
+	private $partition;
 	public function __construct(\EPDO $pdo, int $clientId, \Node $node) {
 		$this->clientId = $clientId;
 		$this->node = $node;
 		$this->pdo = $pdo;
 		$this->catalog = new \Catalog($this->pdo, $this->node);
+		$this->partition = $this->node->getPolicy()->getPartition();
+		/**
+		 * I just assume here that StorageBasic is used, which only works as long
+		 * as there is only one storage type.
+		 */
+		$this->storage = \StorageBasic::fromId($this->pdo, $this->partition->getStorageId());
+		
 	}
 	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
@@ -123,12 +132,21 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	}
 	
 	private function onSerializedFile(\Net\ProtocolAsync $protocol, \File $file) {
+		/*
+		 * This should of course be set somewhere else and is just a quick fix.
+		 */
+		$protocol->setFileReceiver($this->storage);
 		if($file->getAction()== \File::CREATE) {
 			echo "new entry ".$file->getPath().PHP_EOL;
-			$this->catalog->newEntry($file);
+			$entry = $this->catalog->newEntry($file);
+			$version = $entry->getVersions()->getLatest();
 		}
 		if($file->getAction()== \File::UPDATE) {
-			$this->catalog->updateEntry($this->updateId, $file);
+			$version = $this->catalog->updateEntry($this->updateId, $file);
+		}
+		if($file->getType()== \Catalog::TYPE_FILE) {
+			$this->storage->prepare($this->partition, $version);
+			$protocol->expect(\Net\Protocol::FILE);
 		}
 	}
 	
