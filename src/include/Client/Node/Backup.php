@@ -21,9 +21,6 @@ class Backup implements \SignalHandler {
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
-		$this->inex->addInclude("/tmp");
-		$this->inex->addInclude("/usr");
-		$this->inex->addInclude("/var");
 		$this->protocol = $protocol;
 		/*
 		$handler = \Signal::get();
@@ -31,11 +28,6 @@ class Backup implements \SignalHandler {
 		$handler->addSignalHandler(SIGTERM, $this);
 		 * 
 		 */
-		#$this->inex = new InEx();
-		#$this->inex->addInclude("/boot/");
-		#$this->inex->addInclude("/tmp/");
-		#$this->inex->addInclude("/var/log/");
-		#$this->inex->addInclude("/home/hm/kernel/");
 	}
 	
 	function onSignal(int $signal, array $info) {
