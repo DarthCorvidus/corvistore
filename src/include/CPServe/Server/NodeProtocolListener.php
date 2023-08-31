@@ -10,6 +10,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	private $updateId;
 	private $storage;
 	private $partition;
+	private $transactions = 0;
 	public function __construct(\EPDO $pdo, int $clientId, \Node $node) {
 		$this->clientId = $clientId;
 		$this->node = $node;
@@ -21,8 +22,20 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 		 * as there is only one storage type.
 		 */
 		$this->storage = \StorageBasic::fromId($this->pdo, $this->partition->getStorageId());
-		
+		$this->pdo->beginTransaction();
 	}
+	
+	public function checkTransactions() {
+		$this->transactions++;
+		#echo "Transactions: ".$this->transactions.PHP_EOL;;
+		if($this->transactions>=10) {
+			$this->pdo->commit();
+			#echo "\n\tCommitted transaction\n".PHP_EOL;
+			$this->pdo->beginTransaction();
+			$this->transactions = 0;
+		}
+	}
+
 	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
 		echo "Received ".$command.PHP_EOL;
 		$exp = explode(" ", $command, 3);
@@ -89,6 +102,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	
 	private function handleThree(\Net\ProtocolAsync $protocol, array $command) {
 		if($command[0]=="GET" and strtoupper($command[1])=="CATALOG") {
+			$this->checkTransactions();
 			$entries = $this->catalog->getEntries($command[2]);
 			$protocol->sendSerialize($entries);
 		return;
@@ -102,6 +116,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 			#$protocol->expect(\Net\ProtocolAsync::SERIALIZED_PHP);
 			echo "Deleting entry ".$command[2].PHP_EOL;
 			$this->catalog->deleteEntry((int)$command[2]);
+			$this->checkTransactions();
 			#$this->fileAction = "CREATE";
 		}
 		if($command[0]=="UPDATE" and $command[1]=="FILE") {
@@ -115,6 +130,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	}
 	
 	public function onDisconnect(\Net\ProtocolAsync $protocol) {
+		$this->pdo->commit();
 		echo "Client ".$this->clientId." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
 		exit();
 	}
@@ -148,6 +164,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 			$this->storage->prepare($this->partition, $version);
 			$protocol->expect(\Net\Protocol::FILE);
 		}
+		$this->checkTransactions();
 	}
 	
 	public function onOk(\Net\ProtocolAsync $protocol) {
