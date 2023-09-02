@@ -142,6 +142,26 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals($_SERVER, $this->lastUnserialized);
 	}
 	
+	function testReceiveStringStressTest() {
+		for($i=0;$i<2048;$i++) {
+			if($i==0) {
+				$string = "";
+			} else {
+				$string = random_bytes($i);
+			}
+			$sender = new ProtocolAsync($this);
+			$receiver = new ProtocolAsync($this);
+			$sender->sendMessage($string);
+			while($sender->hasWrite()) {
+				$data = $sender->onWrite();
+				$sender->onWritten();
+				$receiver->onRead($data);
+			}
+			$this->assertEquals(strlen($string), strlen($this->lastString));
+			$this->assertEquals($string, $this->lastString);
+		}
+	}
+	
 	function testExpectedMismatch() {
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
@@ -352,7 +372,8 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	/*
 	 * Test at fails 2031 bytes, but it seems like the sending side is buggy. It
 	 * works if ProtocolSync is sending.
-	function testReceiveStressTest() {
+	 */
+	function testReceiveFileStressTest() {
 		for($i=1;$i<=2048;$i++) {
 			$payload = random_bytes($i);
 			file_put_contents(self::getSourceName(), $payload);
@@ -372,7 +393,31 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 			unlink(self::getTargetName());
 		}
 	}
-	*/
+
+
+	function testReceiveFileStressTestString() {
+		for($i=1;$i<=2048;$i++) {
+			$payload = random_bytes($i);
+			$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
+			$sr = new Net\StringReceiver();
+
+			$sender = new ProtocolAsync($this);
+			$sender->sendStream($ss);
+			$receiver = new ProtocolAsync($this);
+			$receiver->setFileReceiver($sr);
+			while($sender->hasWrite()) {
+				$receiver->onRead($sender->onWrite());
+				$sender->onWritten();
+			}
+			#$this->assertFileExists(self::getTargetName());
+			#$this->assertEquals($i, filesize(self::getTargetName()));
+			$this->assertEquals($i, strlen($sr->getString()));
+			#$this->assertFileEquals(self::getSourceName(), self::getTargetName());
+			$this->assertEquals($payload, $sr->getString());
+			#unlink(self::getSourceName());
+			#unlink(self::getTargetName());
+		}
+	}
 	
 	
 	function testReceiveLargerFile() {

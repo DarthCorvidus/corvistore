@@ -76,17 +76,6 @@ class FileReceiverTest extends TestCase {
 		$this->assertEquals($source, $target);
 	}
 	
-	function testReceiveTooMuch() {
-		$source = file_get_contents(self::getSource());
-		$receiver = new FileReceiver(self::getTarget());
-		$receiver->setRecvSize(filesize(self::getSource()));
-		$receiver->onRecvStart();
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage("expected filesize exceeded by 1 bytes");
-		$receiver->receiveData(random_bytes(self::FILESIZE+1));
-		$receiver->onRecvEnd();
-	}
-	
 	function testWriteInvalid() {
 		$source = file_get_contents(self::getSource());
 		$receiver = new FileReceiver(self::getTarget());

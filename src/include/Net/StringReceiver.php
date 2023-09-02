@@ -34,11 +34,11 @@ class StringReceiver implements StreamReceiver {
 
 	public function receiveData(string $data) {
 		$len = strlen($data);
-		if($len>=$this->left) {
-			$this->string .= substr($data, 0, $this->left);
-			$this->left = 0;
-		return;
-		}
+		#if($len>=$this->left) {
+		#	$this->string .= substr($data, 0, $this->left);
+		#	$this->left = 0;
+		#return;
+		#}
 		$this->string .= $data;
 		$this->left = $this->left-$len;
 	}

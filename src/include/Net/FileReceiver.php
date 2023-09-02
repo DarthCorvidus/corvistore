@@ -23,11 +23,17 @@ class FileReceiver implements StreamReceiver {
 		if(!is_resource($this->handle)) {
 			throw new \RuntimeException("Resource for ".$this->filename." not available.");
 		}
-		$len = strlen($data);
-		$diff = $this->left - $len;
-		if($diff < 0) {
-			throw new \RuntimeException("expected filesize exceeded by ".abs($diff)." bytes");
-		}
+		#$len = strlen($data);
+		#$diff = $this->left - $len;
+		#if($diff < 0) {
+		#	throw new \RuntimeException("expected filesize ".$this->size." exceeded by ".abs($diff)." bytes");
+		#}
+		#if($len>=$this->left) {
+		#	fwrite($this->handle, substr($data, 0, $this->left));
+		#	$this->left = 0;
+		#return;
+		#}
+
 		$written = fwrite($this->handle, $data);
 		$this->left = $this->left - $written;
 		

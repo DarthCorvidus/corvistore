@@ -74,14 +74,16 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 			if($this->isString($this->currentRecvType)) {
 				$this->streamReceiver = new StringReceiver();
 				$this->streamReceiver->setRecvSize(\IntVal::uint32LE()->getValue(substr($data, 1, 4)));
-				$this->readString(substr($data, 5));
+				$out = substr($data, 5);
+				$this->readString($out);
 			return;
 			}
 			if($this->currentRecvType===self::FILE) {
 				$this->streamReceiver = $this->fileReceiver;
 				$this->streamReceiver->setRecvSize(\IntVal::uint64LE()->getValue(substr($data, 1, 8)));
 				$this->streamReceiver->onRecvStart();
-				$this->readFile(substr($data, 9));
+				$out = substr($data, 9);
+				$this->readFile($out);
 			return;
 			}
 			if($this->currentRecvType===self::OK) {
@@ -212,10 +214,13 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	}
 	
 	private function readString(string $data) {
-		$this->getCurrentReceiver()->receiveData($data);
-		if($this->getCurrentReceiver()->getRecvLeft()>0) {
-			return;
+		$receiver = $this->getCurrentReceiver();
+		$len = strlen($data);
+		if($len<$receiver->getRecvLeft()) {
+			$receiver->receiveData($data);
+		return;
 		}
+		$receiver->receiveData(substr($data, 0, $receiver->getRecvLeft()));
 		$type = $this->currentRecvType;
 		$this->currentRecvType = NULL;
 		if($type==self::MESSAGE) {
@@ -231,21 +236,13 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	}
 	
 	private function readFile(string $data) {
-		$current = $this->getCurrentReceiver();
-		if($current->getRecvLeft()<=$this->getPacketLength()-9) {
-			// The last packet has to be cut off.
-			$current->receiveData(substr($data, 0, $current->getRecvLeft()));
-			// As we are done, we notify the receiver, delete it and return
-			$this->getCurrentReceiver()->onRecvEnd();
-			$this->currentRecvType = NULL;
-			return;
-		} else {
-			$current->receiveData($data);
-		}
-		// continue if packages are left.
-		if($current->getRecvLeft()>0) {
+		$receiver = $this->getCurrentReceiver();
+		$len = strlen($data);
+		if($len<$receiver->getRecvLeft()) {
+			$receiver->receiveData($data);
 		return;
 		}
+		$receiver->receiveData(substr($data, 0, $receiver->getRecvLeft()));
 		// End if nothing is left.
 		$this->getCurrentReceiver()->onRecvEnd();
 		$this->currentRecvType = NULL;
