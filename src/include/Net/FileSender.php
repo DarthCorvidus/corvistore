@@ -32,6 +32,9 @@ class FileSender implements StreamSender {
 		if(!is_resource($this->handle)) {
 			throw new \RuntimeException("Resource for ".$this->file->getPath()." went away.");
 		}
+		if($amount===0) {
+			return "";
+		}
 		$read = fread($this->handle, $amount);
 		$len = strlen($read);
 		if($len!=$amount) {
