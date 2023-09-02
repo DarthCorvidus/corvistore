@@ -219,10 +219,10 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	
 	function testSendSmallFile() {
 		$payload = random_bytes(16);
-		file_put_contents(self::getSourceName(), $payload);
-		$file = new File(self::getSourceName());
+		$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
+
 		$sender = new ProtocolAsync($this);
-		$sender->sendStream(new \Net\FileSender($file));
+		$sender->sendStream($ss);
 		$data = $sender->onWrite();
 		$sender->onWritten();
 		$this->assertEquals(chr(ProtocolAsync::FILE), substr($data, 0, 1));
@@ -235,10 +235,10 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	
 	function testSendBlockSizedFile() {
 		$payload = random_bytes(1024);
-		file_put_contents(self::getSourceName(), $payload);
-		$file = new File(self::getSourceName());
+		$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
+		
 		$sender = new ProtocolAsync($this);
-		$sender->sendStream(new \Net\FileSender($file));
+		$sender->sendStream($ss);
 		$data = $sender->onWrite();
 		// File Type (1 Byte)
 		$this->assertEquals(chr(ProtocolAsync::FILE), substr($data, 0, 1));
@@ -259,10 +259,10 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	
 	function testSendLargerFile() {
 		$payload = random_bytes(self::FILESIZE);
-		file_put_contents(self::getSourceName(), $payload);
-		$file = new File(self::getSourceName());
+		$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
+		
 		$sender = new ProtocolAsync($this);
-		$sender->sendStream(new \Net\FileSender($file));
+		$sender->sendStream($ss);
 		$data = $sender->onWrite();
 		$this->assertEquals(chr(ProtocolAsync::FILE), substr($data, 0, 1));
 		$this->assertEquals(IntVal::uint64LE()->putValue(self::FILESIZE), substr($data, 1, 8));
@@ -275,6 +275,49 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals(94208, strlen($data));
 		// Payload is substring with offset 9 and length FILESIZE
 		$this->assertEquals($payload, substr($data, 9, self::FILESIZE));
+	}
+	
+	/*
+	 * 'Stress test' which creates 'files' from 0 to 2048 bytes length. Bugs
+	 * are prone to be found around the packet size equivalents.
+	 */
+	function testSendStressTest() {
+		for($i=0;$i<2048;$i++) {
+			$data = "";
+			if($i==0) {
+				$payload = "";
+			} else {
+				$payload = random_bytes($i);
+			}
+			
+			$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
+
+			$sender = new ProtocolAsync($this);
+			$sender->sendStream($ss);
+			
+			
+			while($sender->hasWrite()) {
+				$data .= $sender->onWrite();
+				$sender->onWritten();
+			}
+			// File Type (1 Byte)
+			$this->assertEquals(chr(ProtocolAsync::FILE), substr($data, 0, 1));
+			// Length as 64 bit Little Endian (8 Bytes)
+			$this->assertEquals(IntVal::uint64LE()->putValue($i), substr($data, 1, 8));
+			// Payload block is 1015 bytes long
+			$this->assertEquals($payload, substr($data, 9, $i));
+			if($i<=1015) {
+				$this->assertEquals(1024, strlen($data));
+			}
+
+			if($i>1015 and $i<=2039) {
+				$this->assertEquals(2048, strlen($data));
+			}
+	
+			if($i>2039) {
+				$this->assertEquals(3072, strlen($data));
+			}
+		}
 	}
 
 	function testReceiveSmallFile() {
