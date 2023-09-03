@@ -147,7 +147,7 @@ class ProtocolSync extends Protocol {
 		while($receiver->getRecvLeft()>=$this->blockSize) {
 			$receiver->receiveData($this->stream->read($this->blockSize));
 		}
-		if($receiver->getRecvLeft()>=0) {
+		if($receiver->getRecvLeft()>0) {
 			$rest = $receiver->getRecvLeft();
 			$last = $this->stream->read($this->blockSize);
 			$receiver->receiveData(substr($last, 0, $rest));
