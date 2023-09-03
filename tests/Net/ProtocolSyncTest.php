@@ -191,5 +191,45 @@ class ProtocolSyncTest extends TestCase {
 		$this->expectException(\Net\ProtocolMismatchException::class);
 		$protocol->getMessage();
 	}
+	
+	function testGetFile() {
+		$payload = "Hello world!";
+		$header = chr(\Net\Protocol::FILE);
+		$header .= \IntVal::uint64LE()->putValue(strlen($payload));
+		
+		$fs = new StreamFake(\Net\Protocol::padRandom($header.$payload, 1024));
+		$sr = new \Net\StringReceiver();
+		
+		$protocol = new \Net\ProtocolSync($fs);
+		$protocol->getStream($sr);
+		$this->assertEquals($payload, $sr->getString());
+	}
+	
+	function testGetFileStressTest() {
+		for($i=0;$i<=2048;$i++) {
+			if($i==0) {
+				$payload = "";
+			} else {
+				$payload = random_bytes($i);
+			}
+			
+			$stream = new StreamFake("");
+			
+			$ss = new \Net\StringSender(\Net\Protocol::FILE, $payload);
+			$sr = new \Net\StringReceiver();
+			
+			
+			
+			
+			
+			$recProto = new \Net\ProtocolSync($stream);
+			$sendProto = new \Net\ProtocolSync($stream);
+			$sendProto->sendStream($ss);
+			$recProto->getStream($sr);
+			
+			$this->assertEquals($payload, $sr->getString());
+			
+		}
+	}
 
 }

@@ -125,4 +125,35 @@ class ProtocolSync extends Protocol {
 			throw new ProtocolMismatchException("malformed OK package");
 		}
 	}
+	
+	public function getStream(\Net\StreamReceiver $receiver) {
+		$data = $this->stream->read($this->blockSize);
+		$type = ord($data[0]);
+		if($type!==self::FILE) {
+			throw new ProtocolMismatchException("received type ".$type." does not match expected type ".self::FILE);
+		}
+		$size = \IntVal::uint64LE()->getValue(substr($data, 1, 8));
+		$receiver->setRecvSize($size);
+		$receiver->onRecvStart();
+		if($size<=$this->blockSize-9) {
+			$receiver->receiveData(substr($data, 9, $size));
+			$receiver->onRecvEnd();
+		return;
+		}
+		$receiver->setRecvSize($size);
+		$receiver->onRecvStart();
+		$receiver->receiveData(substr($data, 9, $size));
+		
+		while($receiver->getRecvLeft()>=$this->blockSize) {
+			$receiver->receiveData($this->stream->read($this->blockSize));
+		}
+		if($receiver->getRecvLeft()>=0) {
+			$rest = $receiver->getRecvLeft();
+			$last = $this->stream->read($this->blockSize);
+			$receiver->receiveData(substr($last, 0, $rest));
+			$receiver->onRecvEnd();
+		} else {
+			$receiver->onRecvEnd();
+		}
+	}
 }
