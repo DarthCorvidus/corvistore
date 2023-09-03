@@ -82,7 +82,7 @@ abstract class Storage {
 	function createStoragePool() {
 		
 	}
-	abstract function store(VersionEntry $entry, Partition $partition, File $file);
+	abstract function store(VersionEntry $entry, Partition $partition): \Net\StreamReceiver;
 	abstract function restore(int $version): \Net\StreamSender;
 	abstract function getFree(): int ;
 	abstract function getUsed(Partition $partition = NULL): int;

@@ -34,21 +34,10 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		return $this->location."/".implode("/", array_slice($hexArray, 0, 7))."/";
 	}
 
-	public function store(VersionEntry $entry, Partition $partition, File $file) {
-		$new["dvs_id"] = $entry->getId();
-		$new["dst_id"] = $this->getId();
-		$new["dpt_id"] = $partition->getId();
-		$new["nvb_stored"] = 0;
-		$id = $this->pdo->create("n_version2basic", $new);
-		$location = $this->getPathForIdLocation($id);
-		if(!file_exists($location)) {
-			mkdir($location, 0700, true);
-		}
-		if(!copy($file->getPath(), $this->getPathForIdFile($id))) {
-			throw new Exception("file could not be copied");
-		}
-		$this->pdo->update("n_version2basic", array("nvb_stored"=>1), array("nvb_id"=>$id));
-		$entry->setStored($this->pdo);
+	public function store(VersionEntry $entry, Partition $partition): \Net\StreamReceiver {
+		$this->versionEntry = $entry;
+		$this->partition = $partition;
+	return $this;
 	}
 	
 	public function restore(int $version): \Net\StreamSender {
@@ -127,11 +116,6 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	return $result;
 	}
 
-	public function prepare(Partition $partition, VersionEntry $entry) {
-		$this->partition = $partition;
-		$this->versionEntry = $entry;
-	}
-	
 	public function onRecvCancel() {
 		echo "Transfer cancelled, cleaning up.".PHP_EOL;
 		if(file_exists($this->getPathForIdFile($this->storeId))) {
@@ -195,7 +179,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		if($this->writeHandle==FALSE) {
 			throw new Exception("could not open ".$path);
 		}
-		echo "Writing to ".$path.PHP_EOL;
+		#echo "Writing to ".$path.PHP_EOL;
 	}
 
 	public function getFree(): int {

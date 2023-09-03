@@ -135,7 +135,15 @@ class StorageBasicTest extends TestCase {
 		$entry = $catalog->newEntry($file);
 		#$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
 		#$versionEntry = $versions->addVersion($source);
-		$storage->store($entry->getVersions()->getLatest(), $partition, $file);
+		$sr = $storage->store($entry->getVersions()->getLatest(), $partition);
+		$sr->setRecvSize($file->getSize());
+		$sr->onRecvStart();
+		$fh = fopen($file->getPath(), "r");
+		while($sr->getRecvLeft()>0) {
+			$data = fread($fh, 1024);
+			$sr->receiveData($data);
+		}
+		$sr->onRecvEnd();
 		$this->assertFileExists(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp");
 		$this->assertEquals(md5_file("/tmp/crow-protect/image01.bin"), md5_file(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp"));
 	}
