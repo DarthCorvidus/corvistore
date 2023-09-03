@@ -83,7 +83,7 @@ abstract class Storage {
 		
 	}
 	abstract function store(VersionEntry $entry, Partition $partition, File $file);
-	abstract function restore(VersionEntry $entry, string $target);
+	abstract function restore(int $version): \Net\StreamSender;
 	abstract function getFree(): int ;
 	abstract function getUsed(Partition $partition = NULL): int;
 	

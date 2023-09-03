@@ -51,16 +51,14 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		$entry->setStored($this->pdo);
 	}
 	
-	public function restore(VersionEntry $entry, string $target) {
-		$param[] = $entry->getId();
-		$param[] = $this->getId();
+	public function restore(int $version): \Net\StreamSender {
+		$param[] = $version;
 		#$param[] = $this->getPartitionId();
 		$param[] = 1;
-		$result = $this->pdo->row("select nvb_id from n_version2basic where dvs_id = ? and dst_id = ? and nvb_stored = ? limit 1", $param);
+		$result = $this->pdo->row("select nvb_id from n_version2basic where dvs_id = ? and nvb_stored = ? limit 1", $param);
 		$path = $this->getPathForIdFile($result["nvb_id"]);
-		if(!copy($path, $target)) {
-			throw new Exception("file could not be copied");
-		}
+		$fileSender = new \Net\FileSender(new File($path));
+	return $fileSender;
 	}
 	/*
 	 * Have StorageBasic send a requested version/file,
