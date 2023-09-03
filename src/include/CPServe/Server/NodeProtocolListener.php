@@ -107,6 +107,19 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 			$protocol->sendSerialize($entries);
 		return;
 		}
+
+		if($command[0]=="GET" and $command[1]=="PATH") {
+			echo "fetching ".$command["2"].PHP_EOL;
+			$entry = $this->catalog->getEntryByPath($command[2]);
+			$protocol->sendSerialize($entry);
+		return;
+		}
+
+		if($command[0]=="GET" and $command[1]=="VERSION") {
+			$protocol->sendStream($this->storage->restore((int)$command[2]));
+		return;
+		}
+
 		if($command[0]=="CREATE" and $command[1]=="FILE") {
 			$protocol->expect(\Net\ProtocolAsync::SERIALIZED_PHP);
 			#$this->createId = $command[2];
@@ -126,7 +139,6 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 			#$this->catalog->deleteEntry((int)$command[2]);
 			##$this->fileAction = "CREATE";
 		}
-
 	}
 	
 	public function onDisconnect(\Net\ProtocolAsync $protocol) {

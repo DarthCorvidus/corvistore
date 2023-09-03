@@ -209,22 +209,24 @@ class Catalog {
 	return CatalogEntry::fromArray($this->pdo, $new);
 	}
 	
-	function getEntryByPath(Node $node, string $path) {
-		$exp = array_slice(explode("/", $path), 1);
-		$entry = NULL;
-		foreach($exp as $value) {
-			/*
-			 * trailing or double slashes can lead to an empty value within the
-			 * array. Ignore them. 
-			 */
-			if($value==NULL) {
+	function getEntryByPath(string $path): CatalogEntry {
+		$param = array();
+		$param[] = $this->node->getId();
+		$param[] = dirname($path);
+		$param[] = basename($path);
+		$param[] = 1;
+		$query[] = "select * from d_catalog JOIN d_version USING (dc_id)";
+		$query[] = "WHERE dnd_id = ? and dc_dirname = ? and dc_name = ? and dvs_stored = ?";
+		$query[] = "ORDER BY dc_id, dvs_created_epoch DESC";
+		$stmt = $this->pdo->prepare(implode(" ", $query));
+		$stmt->execute($param);
+		foreach($stmt as $key => $value) {
+			if($key == 0) {
+				$entry = new CatalogEntry($value);
+				$entry->addVersion($value);
 				continue;
 			}
-			if($entry==NULL) {
-				$entry = CatalogEntry::fromName($this->pdo, $node, $value, $entry);
-			} else {
-				$entry = CatalogEntry::fromName($this->pdo, $node, $value, $entry);
-			}
+			$entry->addVersion($value);
 		}
 	return $entry;
 	}

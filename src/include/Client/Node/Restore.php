@@ -16,7 +16,7 @@ class Restore {
 	private $replaceNewer = NULL;
 	private $replaceSmaller = NULL;
 	private $replaceLarger = NULL;
-	function __construct(\Net\Protocol $protocol, \Client\Config $config, array $argv) {
+	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvRestore($argv);
 		$this->inex = $config->getInEx();
@@ -95,19 +95,11 @@ class Restore {
 	return $input;
 	}
 
-	function recurseCatalog(string $path, int $depth, \CatalogEntry $parent = NULL) {
-		if($parent!=NULL) {
-			#$parent->getName().PHP_EOL;
-		}
-		#$entries = $this->catalog->getEntries($parent);
-		if($parent!=NULL) {
-			$this->protocol->sendCommand("GET CATALOG ".$parent->getId());
-		} else {
-			$this->protocol->sendCommand("GET CATALOG 0");
-		}
-		
-		$entries = $this->protocol->getUnserializePHP();
+	function recurseCatalog(string $path) {
+		$this->protocol->sendCommand("GET CATALOG ".$path);
+		$entries = $this->protocol->getSerialized();
 		#$entry
+		print_r($entries);
 		$directories = array();
 		$files = array();
 		for($i=0;$i<$entries->getCount();$i++) {
@@ -127,13 +119,13 @@ class Restore {
 			}
 		}
 		foreach($directories as $value) {
-			$this->restoreDirectory($path, $value);
+			$this->restoreDirectory($path."/", $value);
 		}
 		foreach($files as $value) {
-			$this->restoreFile($path, $value);
+			$this->restoreFile($path."/", $value);
 		}
 		foreach($directories as $value) {
-			$this->recurseCatalog($path.$value->getName()."/", $depth+1, $value);
+			#$this->recurseCatalog($path.$value->getName()."/", $depth+1, $value);
 		}
 	}
 
@@ -187,8 +179,8 @@ class Restore {
 		 * I opted against having Restore implement TransferListener; 
 		 * I prefer to be sure to get a clean slate on each restore.
 		 */
-		$restoreListener = new RestoreListener($filepath);
-		$this->protocol->getRaw($restoreListener);
+		$restoreListener = new \Net\FileReceiver($filepath);
+		$this->protocol->getStream($restoreListener);
 		chown($filepath, $version->getOwner());
 		chgrp($filepath, $version->getGroup());
 		touch($filepath, $version->getMtime());
@@ -204,27 +196,23 @@ class Restore {
 
 	private function restoreParents() {
 		$exp = explode("/", $this->argv->getRestorePath());
-		$i = 0;
-		$parent = 0;
-		$parentpath = "";
+		$previous = "/";
 		foreach($exp as $key => $value) {
 			if($value==NULL) {
 				continue;
 			}
-			$this->protocol->sendCommand("GET CATALOG ".$parent);
-			$entries = $this->protocol->getUnserializePHP();
-			$entry = $entries->getByName($value);
+			$this->protocol->sendCommand("GET PATH ".$previous.$value);
+			$entry = $this->protocol->getSerialized();
 			$versions = $entry->getVersions()->filterToTimestamp($this->timestamp);
 			if($versions->getLatest()->getType()== \Catalog::TYPE_DIR) {
 				#echo $parentpath.PHP_EOL;
 				#echo $entry->getName().PHP_EOL;
-				$this->restoreDirectory($parentpath."/", $entry);
-				$parent = $entry->getId();
-				$parententry = $entry;
-				$parentpath .= "/".$entry->getName();
+				$this->restoreDirectory($previous, $entry);
 			}
+			$previous .= $value."/";
 		}
-	return $parentpath;
+		$cv = new \ConvertTrailingSlash(\ConvertTrailingSlash::REMOVE);
+	return $cv->convert($previous);
 	}
 	
 	private function displaySummary() {
@@ -248,7 +236,7 @@ class Restore {
 			 */
 			// Get requested path/backup.
 			$this->protocol->sendCommand("GET PATH ".$this->argv->getRestorePath());
-			$targetEntry = $this->protocol->getUnserializePHP();
+			$targetEntry = $this->protocol->getSerialized();
 			// quit with error message if no version exists on or before timestamp.
 			$targetVersions = $targetEntry->getVersions()->filterToTimestamp($this->timestamp);
 			if($targetVersions->getCount()==0) {
@@ -259,13 +247,16 @@ class Restore {
 			$parentpath = $this->restoreParents();
 			// if the target is a file, restore single file and quit.
 			if($targetVersions->getLatest()->getType()== \Catalog::TYPE_FILE) {
-				$this->restoreFile($parentpath."/", $targetEntry);
+				$this->restoreFile(dirname($this->argv->getRestorePath())."/", $targetEntry);
 				$this->displaySummary();
 				$this->protocol->sendCommand("QUIT");
 				return;
 			}
 			// if target is a folder, recurse folder
-			$this->recurseCatalog($parentpath."/", 0, $targetEntry);
+			if($targetVersions->getLatest()->getType()== \Catalog::TYPE_DIR) {
+				echo $parentpath.PHP_EOL;
+				$this->recurseCatalog($parentpath);
+			}
 		}
 		$this->displaySummary();
 		$this->protocol->sendCommand("QUIT");
