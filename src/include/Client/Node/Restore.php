@@ -98,8 +98,6 @@ class Restore {
 	function recurseCatalog(string $path) {
 		$this->protocol->sendCommand("GET CATALOG ".$path);
 		$entries = $this->protocol->getSerialized();
-		#$entry
-		print_r($entries);
 		$directories = array();
 		$files = array();
 		for($i=0;$i<$entries->getCount();$i++) {
