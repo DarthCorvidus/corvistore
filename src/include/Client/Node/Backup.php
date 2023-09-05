@@ -205,10 +205,10 @@ class Backup implements \SignalHandler {
 	function run() {
 		#$start = hrtime();
 		\plibv4\profiler\Profiler::startTimer("recurse");
-		if($this->argv->getBackupPath()!="/") {
-			$this->createHierarchy();
-		}
-		#$this->recurseFiles("/");
+		#if($this->argv->getBackupPath()!="/") {
+		#	$this->createHierarchy();
+		#}
+		$this->recurseFiles("/");
 		$this->protocol->sendCommand("QUIT");
 		$this->displayResult();
 		\plibv4\profiler\Profiler::endTimer("recurse");
