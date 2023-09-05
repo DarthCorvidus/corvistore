@@ -186,12 +186,24 @@ class Backup implements \SignalHandler {
 				continue;
 			}
 			$dir = implode("/", $path);
-			$file = new \File($dir);
-			$file->setAction(\File::CREATE);
-			$this->protocol->sendCommand("CREATE FILE ".$dir);
-			$this->protocol->sendSerialize($file);
-			#$this->protocol->sendCommand("GET CATALOG ".$check);
-			#$entries = $this->protocol->getSerialized();
+			/**
+			 * Getting the whole directory here is somewhat wasteful, but the
+			 * alternatives aren't that much better:
+			 * - new command that checks if an directory already exists
+			 * - new command that checks if a directory already exists before
+			 *   creating it
+			 * - altering CREATE FILE to check before creating (more secure, but
+			 *   consumes more time)
+			 */
+			$this->protocol->sendCommand("GET CATALOG ".dirname($dir));
+			$entries = $this->protocol->getSerialized();
+			if(!$entries->hasName(basename($dir))) {
+				echo "Creating ".$dir.PHP_EOL;
+				$file = new \File($dir);
+				$file->setAction(\File::CREATE);
+				$this->protocol->sendCommand("CREATE FILE ".$dir);
+				$this->protocol->sendSerialize($file);
+			}
 		}
 	}
 	
@@ -205,10 +217,14 @@ class Backup implements \SignalHandler {
 	function run() {
 		#$start = hrtime();
 		\plibv4\profiler\Profiler::startTimer("recurse");
-		#if($this->argv->getBackupPath()!="/") {
-		#	$this->createHierarchy();
-		#}
-		$this->recurseFiles("/");
+		if($this->argv->getBackupPath()!="/") {
+			$this->createHierarchy();
+			echo $this->argv->getBackupPath().PHP_EOL;
+			$this->recurseFiles($this->argv->getBackupPath());
+		} else {
+			$this->recurseFiles("/");
+		}
+		echo "Sending quit...".PHP_EOL;
 		$this->protocol->sendCommand("QUIT");
 		$this->displayResult();
 		\plibv4\profiler\Profiler::endTimer("recurse");

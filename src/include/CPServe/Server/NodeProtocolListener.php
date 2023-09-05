@@ -22,16 +22,16 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 		 * as there is only one storage type.
 		 */
 		$this->storage = \StorageBasic::fromId($this->pdo, $this->partition->getStorageId());
-		$this->pdo->beginTransaction();
+		#$this->pdo->beginTransaction();
 	}
 	
 	public function checkTransactions() {
 		$this->transactions++;
 		#echo "Transactions: ".$this->transactions.PHP_EOL;;
 		if($this->transactions>=10) {
-			$this->pdo->commit();
+			#$this->pdo->commit();
 			#echo "\n\tCommitted transaction\n".PHP_EOL;
-			$this->pdo->beginTransaction();
+			#$this->pdo->beginTransaction();
 			$this->transactions = 0;
 		}
 	}
@@ -64,7 +64,8 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 		return;
 		}
 
-		if($command == "quit") {
+		if($command == "QUIT") {
+			#$this->pdo->commit();
 			echo "Terminating worker for ".$this->clientId." with PID ".posix_getpid().PHP_EOL;
 			exit();
 		}
@@ -142,7 +143,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	}
 	
 	public function onDisconnect(\Net\ProtocolAsync $protocol) {
-		$this->pdo->commit();
+		#$this->pdo->commit();
 		echo "Client ".$this->clientId." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
 		exit();
 	}
