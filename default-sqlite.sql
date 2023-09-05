@@ -91,3 +91,4 @@ CREATE INDEX d_version_index ON d_version(dvs_mtime, dvs_stored, dvs_type, dvs_s
 CREATE INDEX d_catalog_index ON d_catalog(dc_name, dnd_id, dc_parent);
 CREATE INDEX d_catalog_parent_index ON d_catalog(dc_parent, dnd_id);
 create index d_version_index_dc_id ON d_version(dc_id);
+create unique index d_catalog_unique ON d_catalog(dc_dirname, dc_name, dnd_id);
