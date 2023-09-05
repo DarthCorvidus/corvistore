@@ -19,7 +19,7 @@ class Backup implements \SignalHandler {
 	const TYPE_FILE = 2;
 	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
-		$this->argv = $argv;
+		$this->argv = new \ArgvBackup($argv);
 		$this->inex = $config->getInEx();
 		$this->protocol = $protocol;
 		/*
@@ -170,6 +170,31 @@ class Backup implements \SignalHandler {
 		}
 	}
 	
+	private function createHierarchy() {
+		$exp = explode("/", $this->argv->getBackupPath());
+		$path = array();
+		$prev = "";
+		foreach($exp as $key => $value) {
+			if($value===NULL or $value==="") {
+				$path[] = $value;
+				$check = "/";
+			} else {
+				$path[] = $value;
+				$check = implode("/", $path);
+			}
+			if($check=="/") {
+				continue;
+			}
+			$dir = implode("/", $path);
+			$file = new \File($dir);
+			$file->setAction(\File::CREATE);
+			$this->protocol->sendCommand("CREATE FILE ".$dir);
+			$this->protocol->sendSerialize($file);
+			#$this->protocol->sendCommand("GET CATALOG ".$check);
+			#$entries = $this->protocol->getSerialized();
+		}
+	}
+	
 	private function displayResult() {
 		echo "Processed:    ".number_format($this->processed).PHP_EOL;
 		echo "Directories:  ".$this->directories.PHP_EOL;
@@ -180,7 +205,10 @@ class Backup implements \SignalHandler {
 	function run() {
 		#$start = hrtime();
 		\plibv4\profiler\Profiler::startTimer("recurse");
-		$this->recurseFiles("/");
+		if($this->argv->getBackupPath()!="/") {
+			$this->createHierarchy();
+		}
+		#$this->recurseFiles("/");
 		$this->protocol->sendCommand("QUIT");
 		$this->displayResult();
 		\plibv4\profiler\Profiler::endTimer("recurse");
