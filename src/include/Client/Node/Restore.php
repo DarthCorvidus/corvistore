@@ -123,7 +123,7 @@ class Restore {
 			$this->restoreFile($path."/", $value);
 		}
 		foreach($directories as $value) {
-			#$this->recurseCatalog($path.$value->getName()."/", $depth+1, $value);
+			$this->recurseCatalog($path."/".$value->getName());
 		}
 	}
 
