@@ -102,6 +102,40 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->assertEquals($expected, $this->lastSerialized);
 	}
 	
+	function testAsyncSyncSendStream() {
+		$expected = random_bytes(self::FILE_SIZE);
+		$sf = new StreamFake("");
+		$async = new Net\ProtocolAsync($this);
+		$sync = new Net\ProtocolSync($sf);
+		
+		$async->sendStream(new \Net\StringSender(\Net\Protocol::FILE, $expected));
+		while($async->hasWrite()) {
+			$sf->write($async->onWrite());
+			$async->onWritten();
+		}
+		$sr = new \Net\StringReceiver();
+		$sync->getStream($sr);
+		$this->assertEquals($expected, $sr->getString());
+		$this->assertEquals(self::FILE_SIZE, strlen($sr->getString()));
+	}
+
+	function testSyncAsyncSendStream() {
+		$expected = random_bytes(16);
+		$sf = new StreamFake("");
+		
+		$async = new Net\ProtocolAsync($this);
+		$sr = new \Net\StringReceiver();
+		$async->setFileReceiver($sr);
+		
+		$sync = new Net\ProtocolSync($sf);
+		$sync->sendStream(new \Net\StringSender(\Net\Protocol::FILE, $expected));
+		while(!$sf->eof()) {
+			$async->onRead($sf->read(1024));
+		}
+		$this->assertEquals($expected, $sr->getString());
+	}
+	
+	
 	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
 		$this->lastString = $command;
 	}
