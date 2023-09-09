@@ -29,4 +29,18 @@ class ProtocolTest extends TestCase {
 			$this->assertEquals($i, ord($block[1023]));
 		}
 	}
+	
+	function testDetermineControlBlock() {
+		for($i=0;$i<=255;$i++) {
+			$block = Protocol::getControlBlock($i, 1024);
+			$this->assertEquals($i, Protocol::determineControlBlock($block));
+		}
+	}
+	
+	function testMalformedControlBlock() {
+		$block = "The cat is on the mat.";
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage("malformed control block, 84 does not equal 46");
+		Protocol::determineControlBlock($block);
+	}
 }

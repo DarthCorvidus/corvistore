@@ -30,4 +30,13 @@ abstract class Protocol {
 	static function getControlBlock(int $type, int $length): string {
 		return chr($type).random_bytes($length-2).chr($type);
 	}
+	
+	static function determineControlBlock(string $block): int {
+		$type1 = ord($block[0]);
+		$type2 = ord($block[strlen($block)-1]);
+		if($type1!==$type2) {
+			throw new \RuntimeException("malformed control block, ".$type1." does not equal ".$type2);
+		}
+	return $type1;
+	}
 }
