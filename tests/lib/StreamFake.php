@@ -36,5 +36,9 @@ class StreamFake implements \Net\Stream {
 	public function getData(): string {
 		return $this->data;
 	}
+	
+	public function eof() {
+		return strlen($this->data)==$this->pos;
+	}
 
 }
