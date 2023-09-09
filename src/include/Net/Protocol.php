@@ -7,6 +7,9 @@ abstract class Protocol {
 	const SERIALIZED_PHP = 4;
 	const FILE = 5;
 	const ERROR = 255;
+	const FILE_OK = 1;
+	const FILE_RESEND = 2;
+	const FILE_CANCEL = 3;
 	static function padRandom(string $string, $padlength): string {
 		$len = strlen($string);
 		if($len==$padlength) {
@@ -22,5 +25,9 @@ abstract class Protocol {
 		if($len>$padlength) {
 			throw new \RuntimeException("padlength ".$padlength." shorter than strlen ".$len);
 		}
+	}
+	
+	static function getControlBlock(int $type, int $length): string {
+		return chr($type).random_bytes($length-2).chr($type);
 	}
 }
