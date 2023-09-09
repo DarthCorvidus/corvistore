@@ -231,5 +231,60 @@ class ProtocolSyncTest extends TestCase {
 			
 		}
 	}
+	
+	function testSendGetOk() {
+		$sf = new \StreamFake("");
+		$send = new \Net\ProtocolSync($sf);
+		$receive = new \Net\ProtocolSync($sf);
+		$send->sendOK();
+		$receive->getOK();
+		$this->assertEquals(TRUE, $sf->eof());
+	}
+	
+	function testSendGetMessage() {
+		$expected = "The cat is on the mat.";
+		$sf = new \StreamFake("");
+		$send = new \Net\ProtocolSync($sf);
+		$receive = new \Net\ProtocolSync($sf);
+		$send->sendMessage($expected);
+		$message = $receive->getMessage();
+		$this->assertEquals($expected, $message);
+		$this->assertEquals(TRUE, $sf->eof());
+	}
 
+	function testSendGetCommand() {
+		$expected = "QUIT";
+		$sf = new \StreamFake("");
+		$send = new \Net\ProtocolSync($sf);
+		$receive = new \Net\ProtocolSync($sf);
+		$send->sendCommand($expected);
+		$message = $receive->getCommand();
+		$this->assertEquals($expected, $message);
+		$this->assertEquals(TRUE, $sf->eof());
+	}
+
+	function testSendGetSerialized() {
+		$expected = $_SERVER;
+		$sf = new \StreamFake("");
+		$send = new \Net\ProtocolSync($sf);
+		$receive = new \Net\ProtocolSync($sf);
+		$send->sendSerialize($expected);
+		$message = $receive->getSerialized();
+		$this->assertEquals($expected, $message);
+		$this->assertEquals(TRUE, $sf->eof());
+	}
+
+	function testSendGetStream() {
+		$expected = random_bytes(self::FILE_SIZE);
+		$sf = new \StreamFake("");
+		$send = new \Net\ProtocolSync($sf);
+		$receive = new \Net\ProtocolSync($sf);
+		$send->sendStream(new \Net\StringSender(\Net\Protocol::FILE, $expected));
+		$sr = new \Net\StringReceiver();
+		$message = $receive->getStream($sr);
+		$this->assertEquals($expected, $sr->getString());
+		$this->assertEquals(TRUE, $sf->eof());
+		
+	}
+	
 }

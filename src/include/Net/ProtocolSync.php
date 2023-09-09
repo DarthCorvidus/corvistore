@@ -110,7 +110,7 @@ class ProtocolSync extends Protocol {
 	}
 	
 	public function sendOK() {
-		$package = random_bytes(parent::padRandom(chr(self::OK), $this->blockSize-2)).chr(self::OK);
+		$package = parent::getControlBlock(self::OK, $this->blockSize);
 		$this->stream->write($package);
 	}
 	
