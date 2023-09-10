@@ -120,7 +120,7 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 	}
 
 	function testSyncAsyncSendStream() {
-		$expected = random_bytes(16);
+		$expected = random_bytes(self::FILE_SIZE);
 		$sf = new StreamFake("");
 		
 		$async = new Net\ProtocolAsync($this);

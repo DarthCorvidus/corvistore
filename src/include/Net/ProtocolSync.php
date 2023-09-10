@@ -39,6 +39,7 @@ class ProtocolSync extends Protocol {
 	}
 	
 	function sendStream(StreamSender $stream) {
+		$stream = new SafeSender($stream);
 		$header = chr(self::FILE);
 		$header .= \IntVal::uint64LE()->putValue($stream->getSendSize());
 		$stream->onSendStart();
@@ -127,6 +128,7 @@ class ProtocolSync extends Protocol {
 	}
 	
 	public function getStream(\Net\StreamReceiver $receiver) {
+		$receiver = new \Net\SafeReceiver($receiver);
 		$data = $this->stream->read($this->blockSize);
 		$type = ord($data[0]);
 		if($type!==self::FILE) {

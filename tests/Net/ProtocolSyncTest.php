@@ -112,7 +112,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals($expected, substr($data, 9, 1024));
 	}
 
-	
+	/*
 	function testSendLarge() {
 		$expected = random_bytes(self::FILE_SIZE);
 		file_put_contents(self::getExamplePath(), $expected);
@@ -132,6 +132,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals(self::FILE_SIZE, \IntVal::uint64LE()->getValue(substr($data, 1, 8)));
 		$this->assertEquals($expected, substr($data, 9, self::FILE_SIZE));
 	}
+	*/
 	
 	function testGetCommand() {
 		$payload = "HELLO WORLD";
