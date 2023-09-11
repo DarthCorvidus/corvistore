@@ -39,4 +39,17 @@ abstract class Protocol {
 		}
 	return $type1;
 	}
+	
+	/**
+	 * This ought to be much faster than, say, ($i/1024)*1024, but 1024 has to
+	 * be given as bit length, ie 2^10 = 1024. Having to convert 1024 into 10
+	 * first would kind of defeat the value of this method.
+	 * @param int $value
+	 * @param int $bit
+	 * @return type
+	 */
+	static function ceilBlock(int $value, int $bit) {
+	// Bitshift by 2^$bit
+	return ((($value-1) >> $bit)+1) << $bit;
+	}
 }

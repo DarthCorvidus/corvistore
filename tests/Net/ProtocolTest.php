@@ -25,6 +25,17 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->assertEquals($expected, substr($block, 0, 21));
 	}
 	
+	function testCeilBlock() {
+		$this->assertEquals(0, Protocol::ceilBlock(0, 10));
+		$this->assertEquals(1024, Protocol::ceilBlock(1, 10));
+		$this->assertEquals(1024, Protocol::ceilBlock(1023, 10));
+		$this->assertEquals(1024, Protocol::ceilBlock(1024, 10));
+		$this->assertEquals(2048, Protocol::ceilBlock(1025, 10));
+		$this->assertEquals(3072, Protocol::ceilBlock(3071, 10));
+		$this->assertEquals(3072, Protocol::ceilBlock(3072, 10));
+		$this->assertEquals(4096, Protocol::ceilBlock(3073, 10));
+	}
+	
 	function testGetControlBlock() {
 		for($i=0;$i<=255;$i++) {
 			$block = Protocol::getControlBlock($i, 1024);
