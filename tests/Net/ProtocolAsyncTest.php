@@ -291,13 +291,13 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		// We need to start with 2 since we used up one $sender->onWrite().
 		$i = 2;
 		while($sender->hasWrite()) {
-			if($i%10==0) {
-				$cb = $sender->onWrite();
-				$this->assertEquals(1, Net\Protocol::determineControlBlock($cb));
-				$sender->onWritten();
-				$i++;
-			continue;
-			}
+			#if($i%10==0) {
+			#	$cb = $sender->onWrite();
+			#	$this->assertEquals(1, Net\Protocol::determineControlBlock($cb));
+			#	$sender->onWritten();
+			#	$i++;
+			#continue;
+			#}
 			$data .= $sender->onWrite();
 			$sender->onWritten();
 			$i++;

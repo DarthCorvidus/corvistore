@@ -28,7 +28,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	}
 	
 	function setFileReceiver(StreamReceiver $receiver) {
-		$this->fileReceiver = new SafeReceiver($receiver);
+		$this->fileReceiver = $receiver;
 	}
 	
 	private function getCurrentSender(): StreamSender {
@@ -262,7 +262,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	}
 	
 	public function sendStream(StreamSender $sender, ProtocolSendListener $listener = NULL) {
-		$this->sendStream[] = new SafeSender($sender);
+		$this->sendStream[] = $sender;
 		$this->sendListeners[] = $listener;
 		$sender->onSendStart();
 	}
