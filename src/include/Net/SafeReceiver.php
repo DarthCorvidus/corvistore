@@ -7,24 +7,56 @@ namespace Net;
  */
 class SafeReceiver implements StreamReceiver {
 	private $receiver;
-	private $increment = 1;
-	function __construct(\Net\StreamReceiver $receiver) {
+	private $increment = 0;
+	private $left;
+	private $size;
+	private $bitsize;
+	private $blocksize;
+	function __construct(\Net\StreamReceiver $receiver, int $blocksize) {
 		$this->receiver = $receiver;
+		// Length is at least blocksize * 2: the first and the last control block.
+		$this->size = $blocksize*2;
+		$this->left = $blocksize*2;
+		$this->bitsize = log($blocksize, 2);
+		$this->blocksize = $blocksize;
 	}
 	public function receiveData(string $data) {
-		if($this->increment % 10 == 0) {
+		if($this->increment==0) {
+			$type = ord($data[0]);
+			$this->size = \IntVal::uint64LE()->getValue(substr($data, 1, 8));
+			$this->left = $this->size - $this->blocksize;
+			$this->receiver->setRecvSize(\IntVal::uint64LE()->getValue(substr($data, 9, 8)));
 			$this->increment++;
-			return;
+			//Initialize receiver
+			$this->receiver->onRecvStart();
+		return;
 		}
+		if($this->left == $this->blocksize) {
+			$this->left -= $this->blocksize;
+			$status = \Net\Protocol::determineControlBlock($data);
+			if($status== \Net\Protocol::FILE_OK) {
+				$this->receiver->onRecvEnd();
+			}
+			if($status== \Net\Protocol::FILE_CANCEL) {
+				$this->receiver->onRecvCancel();
+			}
+		return;
+		}
+		#if($this->increment % 10 == 0) {
+		#	$this->increment++;
+		#	return;
+		#}
 		$this->increment++;
 		$this->receiver->receiveData($data);
+		$this->left -= $this->blocksize;
 	}
 
 	public function getRecvLeft(): int {
-		return $this->receiver->getRecvLeft();
+		return $this->left;
 	}
 
 	public function setRecvSize(int $size) {
+		throw new \RuntimeException("Size is determined from the first data block, do not set manually.");
 		/**
 		 * As the receiver is reused in ProtocolAsync, we need to reset the
 		 * increment here.
@@ -36,7 +68,7 @@ class SafeReceiver implements StreamReceiver {
 	}
 	
 	public function getRecvSize(): int {
-		return $this->receiver->getRecvSize();
+		return $this->size;
 	}
 
 	public function onRecvCancel() {
