@@ -21,4 +21,23 @@ class StringReceiverTest extends TestCase {
 		$sr->receiveData($expected);
 		$this->assertEquals($expected, $sr->getString());
 	}
+	
+	function testCancel() {
+		$expected = "Hello World!";
+		$sr = new StringReceiver();
+		$sr->receiveData($expected);
+		$this->assertEquals($expected, $sr->getString());
+		$sr->onRecvCancel();
+		$this->assertEquals("", $sr->getString());
+	}
+	
+	function testStart() {
+		$expected = "Hello World!";
+		$sr = new StringReceiver();
+		$sr->receiveData($expected);
+		$this->assertEquals($expected, $sr->getString());
+		$sr->onRecvStart();
+		$this->assertEquals("", $sr->getString());
+	}
+
 }

@@ -21,7 +21,8 @@ class StringReceiver implements StreamReceiver {
 	}
 
 	public function onRecvCancel() {
-		
+		$this->pos = 0;
+		$this->string = "";
 	}
 
 	public function onRecvEnd() {
@@ -29,7 +30,8 @@ class StringReceiver implements StreamReceiver {
 	}
 
 	public function onRecvStart() {
-		
+		$this->pos = 0;
+		$this->string = "";
 	}
 
 	public function receiveData(string $data) {
