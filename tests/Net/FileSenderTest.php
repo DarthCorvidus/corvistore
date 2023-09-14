@@ -38,6 +38,41 @@ class FileSenderTest extends TestCase {
 		$this->assertEquals(NULL, $sender->onSendEnd());
 	}
 	
+	function testStartRemovedFile() {
+		$file = new File(__DIR__."/example/FileReader.bin");
+		$sender = new FileSender($file);
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage("unable to open ".$file->getPath()." for read.");
+		unlink($file->getPath());
+		$sender->onSendStart();
+	}
+
+	function testReadRemovedFile() {
+		$file = new File(__DIR__."/example/FileReader.bin");
+		$sender = new FileSender($file);
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage("File went away during transfer");
+		$sender->onSendStart();
+		unlink($file->getPath());
+		$sender->getSendData(1024);
+	}
+
+	function testReadChangedFile() {
+		$file = new File(__DIR__."/example/FileReader.bin");
+		$sender = new FileSender($file);
+		
+		$sender->onSendStart();
+		$fh = fopen(__DIR__."/example/FileReader.bin", "a");
+		fwrite($fh, "XYZ");
+		fclose($fh);
+		clearstatcache();
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage("Filesize has changed during transfer");
+		$sender->getSendData(1024);
+	}
+	
+	
+	
 	function testRead() {
 		$sender = new FileSender(new File(__DIR__."/example/FileReader.bin"));
 		$sender->onSendStart();
