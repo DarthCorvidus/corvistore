@@ -65,11 +65,11 @@ class SafeSender implements StreamSender {
 		if($rest!==0) {
 			$this->left -= $amount;
 			$read = $this->sender->getSendData($rest);
-			return \Net\Protocol::padRandom($read, $this->blocksize);
+		return \Net\Protocol::padRandom($read, $this->blocksize);
 		}
 		// send last control block
 		$this->left -= $amount;
-		return \Net\Protocol::getControlBlock(\Net\Protocol::FILE_OK, $this->blocksize);
+	return \Net\Protocol::getControlBlock(\Net\Protocol::FILE_OK, $this->blocksize);
 	}
 
 	public function getSendLeft(): int {
