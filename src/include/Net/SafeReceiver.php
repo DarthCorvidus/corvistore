@@ -42,10 +42,17 @@ class SafeReceiver implements StreamReceiver {
 			}
 		return;
 		}
-		#if($this->increment % 10 == 0) {
-		#	$this->increment++;
-		#	return;
-		#}
+		/*
+		 * Truncate the last block of the payload if it is smaller than one
+		 * block.
+		 */
+		if($this->receiver->getRecvLeft()<=$this->blocksize) {
+			$left = $this->receiver->getRecvLeft();
+			$this->receiver->receiveData(substr($data, 0, $left));
+			$this->increment++;
+			$this->left -= $this->blocksize;
+		return;
+		}
 		$this->increment++;
 		$this->receiver->receiveData($data);
 		$this->left -= $this->blocksize;
