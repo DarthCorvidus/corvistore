@@ -20,6 +20,7 @@ class SafeSender implements StreamSender {
 	private $size;
 	private $blocksize;
 	private $cancelled = FALSE;
+	private $payloadLeft = 0;
 	public function __construct(\Net\StreamSender $sender, int $blocksize) {
 		$this->sender = $sender;
 		/*
@@ -32,6 +33,7 @@ class SafeSender implements StreamSender {
 		$exponent = (int)log(1024, 2);
 		$this->size = \Net\Protocol::ceilBlock($sender->getSendSize(), $exponent)+($blocksize*2);
 		$this->payloadSize = $sender->getSendSize();
+		$this->payloadLeft = $sender->getSendLeft();
 		$this->left = $this->size;
 		$this->blocksize = $blocksize;
 	}
@@ -78,13 +80,13 @@ class SafeSender implements StreamSender {
 		#}
 		$this->increment++;
 		// Regular block/block sized data from $this->sender. 
-		if($this->sender->getSendLeft()>$this->blocksize) {
+		if($this->getInnerLeft()>$this->blocksize) {
 			$read = $this->getInnerData($amount);
 			$this->left -= $amount;
 		return $read;
 		}
 		// last block of payload.
-		$rest = $this->sender->getSendLeft();
+		$rest = $this->getInnerLeft();
 		if($rest!==0) {
 			$this->left -= $amount;
 			$read = $this->getInnerData($rest);
@@ -100,7 +102,12 @@ class SafeSender implements StreamSender {
 	}
 
 	private function getInnerData(int $amount): string{
+		if($this->cancelled) {
+			$this->payloadLeft -= $amount;
+		return random_bytes($amount);
+		}
 		try {
+			$this->payloadLeft -= $amount;
 			return $this->sender->getSendData($amount);
 		} catch (\RuntimeException $ex) {
 			$this->cancelled = TRUE;
@@ -111,6 +118,13 @@ class SafeSender implements StreamSender {
 			 */
 			return random_bytes($amount);
 		}
+	}
+	
+	private function getInnerLeft(): int {
+		if($this->cancelled) {
+			return $this->payloadLeft;
+		}
+		return $this->sender->getSendLeft();
 	}
 	
 	public function getSendLeft(): int {
