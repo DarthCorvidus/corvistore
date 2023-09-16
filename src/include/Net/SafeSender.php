@@ -79,7 +79,7 @@ class SafeSender implements StreamSender {
 		$this->increment++;
 		// Regular block/block sized data from $this->sender. 
 		if($this->sender->getSendLeft()>$this->blocksize) {
-			$read = $this->sender->getSendData($amount);
+			$read = $this->getInnerData($amount);
 			$this->left -= $amount;
 		return $read;
 		}
@@ -87,15 +87,32 @@ class SafeSender implements StreamSender {
 		$rest = $this->sender->getSendLeft();
 		if($rest!==0) {
 			$this->left -= $amount;
-			$read = $this->sender->getSendData($rest);
+			$read = $this->getInnerData($rest);
 			$this->sender->onSendEnd();
 		return \Net\Protocol::padRandom($read, $this->blocksize);
 		}
 		// send last control block
 		$this->left -= $amount;
+		if($this->cancelled) {
+			return \Net\Protocol::getControlBlock(\Net\Protocol::FILE_CANCEL, $this->blocksize);
+		}
 	return \Net\Protocol::getControlBlock(\Net\Protocol::FILE_OK, $this->blocksize);
 	}
 
+	private function getInnerData(int $amount): string{
+		try {
+			return $this->sender->getSendData($amount);
+		} catch (\RuntimeException $ex) {
+			$this->cancelled = TRUE;
+			$this->sender->onSendCancel();
+			/*
+			 * We need to send data until the predicted size, therefore we send
+			 * random data here. Very dangerous!
+			 */
+			return random_bytes($amount);
+		}
+	}
+	
 	public function getSendLeft(): int {
 		return $this->left;
 	}

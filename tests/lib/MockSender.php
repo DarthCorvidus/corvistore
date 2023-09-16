@@ -25,6 +25,7 @@ class MockSender implements StreamSender {
 
     public function getSendData(int $amount): string {
         if ($this->pointer + $amount > $this->exceptionAfter) {
+			$this->pointer += $amount;
             throw new \RuntimeException("Exception after {$this->exceptionAfter} Bytes");
         }
         $result = substr($this->data, $this->pointer, $amount);

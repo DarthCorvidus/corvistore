@@ -93,6 +93,8 @@ class SafeSenderTest extends TestCase {
 		#echo strlen($data)/1024;
 		#echo PHP_EOL;
 		$this->assertEquals($multiple+2048, strlen($data));
+		$this->assertEquals($expected, substr($data, 1024, self::FILESIZE));
+		$this->assertEquals(\Net\Protocol::FILE_OK, \Net\Protocol::determineControlBlock(substr($data, $multiple+1024)));
 	}
 	
 	function testExceptionOnStart() {
@@ -109,4 +111,36 @@ class SafeSenderTest extends TestCase {
 		$this->assertEquals(\Net\Protocol::FILE_CANCEL, \Net\Protocol::determineControlBlock($last));
 		$this->assertEquals(0, $sender->getSendLeft());
 	}
+
+	function testGetCancel() {
+		$expected = random_bytes(self::FILESIZE);
+		$ms = new MockSender($expected);
+		$ms->setExceptionAfter(8192);
+		$sender = new SafeSender($ms, 1024);
+		$multiple = \Net\Protocol::ceilBlock(self::FILESIZE, 10);
+		$this->assertEquals($multiple+2048, $sender->getSendSize());
+		$data = "";
+		for($i=0;$i<27+2;$i++) {
+			$data .= $sender->getSendData(1024);
+		}
+		#echo strlen($data)/1024;
+		#echo PHP_EOL;
+		$this->assertEquals($multiple+2048, strlen($data));
+		$this->assertEquals(TRUE, $ms->wasCancelled());
+		/**
+		 * The payload is the same up to 8192 bytes (we have top offset $data
+		 * by 1024 because of the header.
+		 */
+		$this->assertEquals(substr($expected, 0, 8192), substr($data, 1024, 8192));
+		/**
+		 * After that, it is different.
+		 */
+		$this->assertNotEquals(substr($expected, 8192, 1024), substr($data, 8192+1024, 1024));
+		/**
+		 * The control block indicates failure.
+		 */
+		$this->assertEquals(\Net\Protocol::FILE_CANCEL, \Net\Protocol::determineControlBlock(substr($data, $multiple+1024)));
+	}
+	
+	
 }
