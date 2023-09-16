@@ -19,6 +19,7 @@ class SafeSender implements StreamSender {
 	private $increment = 0;
 	private $size;
 	private $blocksize;
+	private $cancelled = FALSE;
 	public function __construct(\Net\StreamSender $sender, int $blocksize) {
 		$this->sender = $sender;
 		/*
@@ -44,14 +45,32 @@ class SafeSender implements StreamSender {
 		if($this->increment == 0) {
 			// call onSendStart() right at the beginning. If something goes wrong,
 			// we can change the amount of the payload size immediately to 0, as
-			// there is nothing to send (not implemented yet).
-			$this->sender->onSendStart();
-			$header = chr(\Net\Protocol::FILE);
-			$header .= \IntVal::uint64LE()->putValue($this->size);
-			$header .= \IntVal::uint64LE()->putValue($this->sender->getSendSize());
+			// there is nothing to send.
+			try {
+				$this->sender->onSendStart();
+				$header = chr(\Net\Protocol::FILE);
+				$header .= \IntVal::uint64LE()->putValue($this->size);
+				$header .= \IntVal::uint64LE()->putValue($this->sender->getSendSize());
+			} catch (\RuntimeException $e) {
+				$this->cancelled = TRUE;
+				$header = chr(\Net\Protocol::FILE);
+				$this->size = 2048;
+				$this->left = 2048;
+				$header .= \IntVal::uint64LE()->putValue($this->blocksize*2);
+				$header .= \IntVal::uint64LE()->putValue(0);
+			}
 			$this->increment++;
 			$this->left -= $amount;
 		return \Net\Protocol::padRandom($header, $this->blocksize);
+		}
+		/*
+		 * If the state is cancelled and the increment is one, we directly send
+		 * a control block and no payload, because we sent the other side a
+		 * payload length of zero.
+		 */
+		if($this->cancelled===TRUE && $this->increment == 1) {
+			$this->left -= $amount;
+			return \Net\Protocol::getControlBlock(\Net\Protocol::FILE_CANCEL, $this->blocksize);
 		}
 		#if($this->increment % 10 == 0) {
 		#	$this->increment++;

@@ -94,4 +94,19 @@ class SafeSenderTest extends TestCase {
 		#echo PHP_EOL;
 		$this->assertEquals($multiple+2048, strlen($data));
 	}
+	
+	function testExceptionOnStart() {
+		$expected = random_bytes(self::FILESIZE);
+		$ms = new MockSender($expected);
+		$ms->setExceptionAfter(0);
+		$sender = new SafeSender($ms, 1024);
+		$first = $sender->getSendData(1024);
+		$this->assertEquals(TRUE, $ms->hasStarted());
+		$this->assertEquals(2048, $sender->getSendSize());
+		$this->assertEquals(1024, $sender->getSendLeft());
+		$this->assertEquals(TRUE, $ms->wasCancelled());
+		$last = $sender->getSendData(1024);
+		$this->assertEquals(\Net\Protocol::FILE_CANCEL, \Net\Protocol::determineControlBlock($last));
+		$this->assertEquals(0, $sender->getSendLeft());
+	}
 }

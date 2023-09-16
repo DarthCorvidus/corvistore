@@ -37,6 +37,12 @@ class MockSender implements StreamSender {
     }
 
     public function onSendStart() {
+		// onSendStart should fail if $this->exceptionAfter is zero.
+		if($this->exceptionAfter==0) {
+			$this->cancelled = TRUE;
+			$this->started = true;
+			throw new \RuntimeException("Unable to start sender.");
+		}
         $this->started = true;
     }
 
