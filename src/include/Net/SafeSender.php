@@ -42,6 +42,10 @@ class SafeSender implements StreamSender {
 	public function getSendData(int $amount): string {
 		// First block: Type file, SafeSender length, StreamSender length, padded to blocksize.
 		if($this->increment == 0) {
+			// call onSendStart() right at the beginning. If something goes wrong,
+			// we can change the amount of the payload size immediately to 0, as
+			// there is nothing to send (not implemented yet).
+			$this->sender->onSendStart();
 			$header = chr(\Net\Protocol::FILE);
 			$header .= \IntVal::uint64LE()->putValue($this->size);
 			$header .= \IntVal::uint64LE()->putValue($this->sender->getSendSize());
@@ -65,6 +69,7 @@ class SafeSender implements StreamSender {
 		if($rest!==0) {
 			$this->left -= $amount;
 			$read = $this->sender->getSendData($rest);
+			$this->sender->onSendEnd();
 		return \Net\Protocol::padRandom($read, $this->blocksize);
 		}
 		// send last control block
