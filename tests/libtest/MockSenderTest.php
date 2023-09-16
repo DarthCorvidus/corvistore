@@ -9,19 +9,19 @@ class MockSenderTest extends TestCase {
         $sender = new MockSender("Hello World!");
         $sender->onSendStart();
         $this->assertTrue($sender->hasStarted());
-        $this->assertEquals(1, $sender->getSendType());
-        $this->assertEquals(10, $sender->getSendSize());
+        $this->assertEquals(\Net\Protocol::FILE, $sender->getSendType());
+        $this->assertEquals(12, $sender->getSendSize());
         $this->assertEquals("Hello", $sender->getSendData(5));
-        $this->assertEquals(5, $sender->getSendLeft());
+        $this->assertEquals(7, $sender->getSendLeft());
         $sender->onSendEnd();
         $this->assertTrue($sender->hasEnded());
     }
 
     public function testExceptionAfter() {
-        $this->expectException(\RuntimeException::class);
         $sender = new MockSender("Hello World!");
         $sender->setExceptionAfter(5);
-        $sender->getSendData(10);
+        $this->expectException(\RuntimeException::class);
+		$sender->getSendData(10);
     }
 
     public function testCancel() {

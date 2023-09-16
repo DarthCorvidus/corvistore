@@ -10,13 +10,13 @@ class MockSender implements StreamSender {
     private $started = false;
     private $ended = false;
     private $cancelled = false;
-
-    public function __construct(string $data) {
+    
+	public function __construct(string $data) {
         $this->data = $data;
     }
 
     public function getSendType(): int {
-        return 1;
+        return \Net\Protocol::FILE;
     }
 
     public function getSendSize(): int {
