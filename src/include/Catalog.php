@@ -78,13 +78,21 @@ class Catalog {
 	}
 	
 	private function newEntryFile(File $file, int $parent = 0) {
-		$create["dc_dirname"] = $file->getDirname();
-		$create["dc_name"] = $file->getBasename();
-		$create["dnd_id"] = $this->node->getId();
-		if($parent!==0) {
-			$create["dc_parent"] = $parent;
+		$param = [];
+		$param[] = $file->getDirname();
+		$param[] = $file->getBasename();
+		$param[] = $this->node->getId();
+		$create = $this->pdo->row("select * from d_catalog where dc_dirname = ? and dc_name = ? and dnd_id = ?", $param);
+		if(empty($create)) {
+			$create["dc_dirname"] = $file->getDirname();
+			$create["dc_name"] = $file->getBasename();
+			$create["dnd_id"] = $this->node->getId();
+			if($parent!==0) {
+				$create["dc_parent"] = $parent;
+			}
+			$create["dc_id"] = $this->pdo->create("d_catalog", $create);
 		}
-		$create["dc_id"] = $this->pdo->create("d_catalog", $create);
+
 		$version["dc_id"] = $create["dc_id"];
 		$version["dvs_owner"] = $file->getOwner();
 		$version["dvs_group"] = $file->getGroup();
