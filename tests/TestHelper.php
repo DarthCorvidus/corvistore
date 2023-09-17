@@ -96,4 +96,13 @@ class TestHelper {
 		$group = posix_getgrgid(filegroup($filename));
 	return $group["name"];
 	}
+	
+	static function binaryAsHex(string $string): string {
+		$hex = "0x";
+		$len = strlen($string);
+		for($i=0;$i<$len;$i++) {
+			$hex .= bin2hex($string[$i]);
+		}
+	return $hex;
+	}
 }
