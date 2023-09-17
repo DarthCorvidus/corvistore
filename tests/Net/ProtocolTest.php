@@ -119,12 +119,12 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$async = new Net\ProtocolAsync($this);
 		$sync = new Net\ProtocolSync($sf);
 		
-		$async->sendStream(new \Net\StringSender(\Net\Protocol::FILE, $expected));
-		while($async->hasWrite()) {
+		$async->sendStream(new \Net\MockSender($expected));
+		for($i=0;$i<17;$i++) {
 			$sf->write($async->onWrite());
 			$async->onWritten();
 		}
-		$sr = new \Net\StringReceiver();
+		$sr = new \Net\MockReceiver();
 		$sync->getStream($sr);
 		$this->assertEquals($expected, $sr->getString());
 		$this->assertEquals(self::FILE_SIZE, strlen($sr->getString()));
@@ -133,17 +133,20 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 	function testSyncAsyncSendStream() {
 		$expected = random_bytes(self::FILE_SIZE);
 		$sf = new StreamFake("");
+		$mr = new \Net\MockReceiver();
+		$ms = new \Net\MockSender($expected);
 		
 		$async = new Net\ProtocolAsync($this);
-		$sr = new \Net\StringReceiver();
-		$async->setFileReceiver($sr);
+		
+		$async->setFileReceiver($mr);
 		
 		$sync = new Net\ProtocolSync($sf);
-		$sync->sendStream(new \Net\StringSender(\Net\Protocol::FILE, $expected));
-		while(!$sf->eof()) {
+		
+		$sync->sendStream($ms);
+		for($i=0;$i<17;$i++) {
 			$async->onRead($sf->read(1024));
 		}
-		$this->assertEquals($expected, $sr->getString());
+		$this->assertEquals($expected, $mr->getString());
 	}
 	
 	
