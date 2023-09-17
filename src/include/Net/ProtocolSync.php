@@ -39,37 +39,10 @@ class ProtocolSync extends Protocol {
 	}
 	
 	function sendStream(StreamSender $stream) {
-		$header = chr(self::FILE);
-		$header .= \IntVal::uint64LE()->putValue($stream->getSendSize());
-		$stream->onSendStart();
-		/*
-		 * Quit early if the file size is block sized - 9, as it can be sent in
-		 * one turn.
-		 */
-		if($stream->getSendSize()<=$this->blockSize-9) {
-			$data = $header.$stream->getSendData($stream->getSendSize());
-			$this->stream->write(parent::padRandom($data, $this->blockSize));
-			$stream->onSendEnd();
-		return;
-		} else {
-			$data = $header.$stream->getSendData($this->blockSize-9);
-			$this->stream->write($data);
+		$outer = new SafeSender($stream, $this->blockSize);
+		while($outer->getSendLeft()>0) {
+			$this->stream->write($outer->getSendData($this->blockSize));
 		}
-		/*
-		 * Send as long as there are more bytes than one block.
-		 */
-		while($stream->getSendLeft()>$this->blockSize) {
-			$data = $stream->getSendData($this->blockSize);
-			$this->stream->write($data);
-		}
-		/*
-		 * If there are bytes left, pad them to the block size and write them.
-		 */
-		if($stream->getSendLeft()>0) {
-			$data = $stream->getSendData($stream->getSendLeft());
-			$this->stream->write(parent::padRandom($data, $this->blockSize));
-		}
-		$stream->onSendEnd();
 	}
 	
 	private function getString(int $expectedType): string {
@@ -127,33 +100,9 @@ class ProtocolSync extends Protocol {
 	}
 	
 	public function getStream(\Net\StreamReceiver $receiver) {
-		$data = $this->stream->read($this->blockSize);
-		$type = ord($data[0]);
-		if($type!==self::FILE) {
-			throw new ProtocolMismatchException("received type ".$type." does not match expected type ".self::FILE);
-		}
-		$size = \IntVal::uint64LE()->getValue(substr($data, 1, 8));
-		$receiver->setRecvSize($size);
-		$receiver->onRecvStart();
-		if($size<=$this->blockSize-9) {
-			$receiver->receiveData(substr($data, 9, $size));
-			$receiver->onRecvEnd();
-		return;
-		}
-		$receiver->setRecvSize($size);
-		$receiver->onRecvStart();
-		$receiver->receiveData(substr($data, 9, $size));
-		
-		while($receiver->getRecvLeft()>=$this->blockSize) {
-			$receiver->receiveData($this->stream->read($this->blockSize));
-		}
-		if($receiver->getRecvLeft()>0) {
-			$rest = $receiver->getRecvLeft();
-			$last = $this->stream->read($this->blockSize);
-			$receiver->receiveData(substr($last, 0, $rest));
-			$receiver->onRecvEnd();
-		} else {
-			$receiver->onRecvEnd();
+		$outer = new \Net\SafeReceiver($receiver, $this->blockSize);
+		while($outer->getRecvLeft()>0) {
+			$outer->receiveData($this->stream->read($this->blockSize));
 		}
 	}
 }

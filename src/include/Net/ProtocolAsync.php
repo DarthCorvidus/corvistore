@@ -79,11 +79,12 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 			return;
 			}
 			if($this->currentRecvType===self::FILE) {
-				$this->streamReceiver = $this->fileReceiver;
-				$this->streamReceiver->setRecvSize(\IntVal::uint64LE()->getValue(substr($data, 1, 8)));
-				$this->streamReceiver->onRecvStart();
-				$out = substr($data, 9);
-				$this->readFile($out);
+				$this->streamReceiver = new \Net\SafeReceiver($this->fileReceiver, $this->getPacketLength());
+				$this->streamReceiver->receiveData($data);
+				#$this->streamReceiver->setRecvSize(\IntVal::uint64LE()->getValue(substr($data, 1, 8)));
+				#$this->streamReceiver->onRecvStart();
+				#$out = substr($data, 9);
+				#$this->readFile($out);
 			return;
 			}
 			if($this->currentRecvType===self::OK) {
@@ -101,7 +102,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		}
 		
 		if($this->currentRecvType==self::FILE) {
-			$this->readFile($data);
+			$this->streamReceiver->receiveData($data);
 		return;
 		}
 	}
@@ -111,10 +112,6 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		if($this->isString($current->getSendType()) && $current->getSendSize()==$current->getSendLeft()) {
 			return $this->onWriteFirstString($current);
 		}
-		if($current->getSendType()==self::FILE && $current->getSendSize()==$current->getSendLeft()) {
-			return $this->onWriteFirstFile($current);
-		}
-		
 		
 		if($current->getSendType()==self::OK) {
 			return $this->onWriteFirstString($current);
@@ -123,7 +120,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 			return $this->onWriteString($current);
 		}
 		if($current->getSendType()==self::FILE) {
-			return $this->onWriteFile($current);
+			return $current->getSendData($this->getPacketLength());
 		}
 	}
 	
@@ -262,7 +259,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	}
 	
 	public function sendStream(StreamSender $sender, ProtocolSendListener $listener = NULL) {
-		$this->sendStream[] = $sender;
+		$this->sendStream[] = new SafeSender($sender, $this->getPacketLength());
 		$this->sendListeners[] = $listener;
 		$sender->onSendStart();
 	}

@@ -34,6 +34,7 @@ class SafeReceiver implements StreamReceiver {
 		if($this->left == $this->blocksize) {
 			$this->left -= $this->blocksize;
 			$status = \Net\Protocol::determineControlBlock($data);
+			$this->increment = 0;
 			if($status== \Net\Protocol::FILE_OK) {
 				$this->receiver->onRecvEnd();
 			}

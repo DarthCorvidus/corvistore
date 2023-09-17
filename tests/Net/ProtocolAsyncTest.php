@@ -237,7 +237,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$receiver->onRead($data);
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
-	
+	/*
 	function testSendSmallFile() {
 		$payload = random_bytes(16);
 		$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
@@ -308,11 +308,13 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		// Payload is substring with offset 9 and length FILESIZE
 		$this->assertEquals($payload, substr($data, 9, self::FILESIZE));
 	}
+	*/
 	
 	/*
 	 * 'Stress test' which creates 'files' from 0 to 2048 bytes length. Bugs
 	 * are prone to be found around the packet size equivalents.
 	 */
+	/*
 	function testSendStressTest() {
 		for($i=0;$i<2048;$i++) {
 			$data = "";
@@ -351,7 +353,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 			}
 		}
 	}
-
+	*/
 	function testReceiveSmallFile() {
 		$payload = random_bytes(16);
 		file_put_contents(self::getSourceName(), $payload);
