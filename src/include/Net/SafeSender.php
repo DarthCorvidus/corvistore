@@ -90,7 +90,9 @@ class SafeSender implements StreamSender {
 		if($rest!==0) {
 			$this->left -= $amount;
 			$read = $this->getInnerData($rest);
-			$this->sender->onSendEnd();
+			if(!$this->cancelled) {
+				$this->sender->onSendEnd();
+			}
 		return \Net\Protocol::padRandom($read, $this->blocksize);
 		}
 		// send last control block
