@@ -53,7 +53,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	}
 
 	private function handleOne(\Net\ProtocolAsync $protocol, string $command) {
-		if($command == "report") {
+		if($command == "REPORT") {
 			$report["files"] = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ? and dc_id in (select dc_id from d_version where dvs_type = ?)", array($this->node->getId(), \Catalog::TYPE_FILE));
 			$params[] = $this->node->getId();
 			$params[] = 1;
@@ -72,7 +72,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 	}
 	
 	private function handleTwo(\Net\ProtocolAsync $protocol, array $command) {
-		if($command[0]=="report") {
+		if($command[0]=="REPORT") {
 			// Report for the root directory.
 			if($command[1]=="/") {
 				$entries = $this->catalog->getEntries(0);
@@ -84,15 +84,14 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 			 * parent.
 			 */
 			if(substr($command[1], -1)=="/") {
-				$parent = $this->catalog->getEntryByPath($this->node, substr($command[1], 0, -1));
-				$entries = $this->catalog->getEntries($parent->getId());
+				$entries = $this->catalog->getEntries(substr($command[1], 0, -1));
 				$protocol->sendSerialize($entries);
 			return;
 			}
 			/*
 			 * Report for single file
 			 */
-			$entry = $this->catalog->getEntryByPath($this->node, $command[1]);
+			$entry = $this->catalog->getEntryByPath($command[1]);
 			$protocol->sendSerialize($entry);
 		return;
 		}

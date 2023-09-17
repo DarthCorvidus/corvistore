@@ -11,14 +11,14 @@ class Report {
 	private $pdo;
 	private $argv;
 	private $protocol;
-	function __construct(\Net\Protocol $protocol, \Client\Config $config, array $argv) {
+	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
 		$this->argv = $argv;
 		$this->protocol = $protocol;
 	}
 	
 	private function runGeneral() {
 		$this->protocol->sendCommand("REPORT");
-		$report = $this->protocol->getUnserializePHP();
+		$report = $this->protocol->getSerialized();
 		$model = new ReportGeneral($report);
 		$table = new \TerminalTable($model);
 		#echo "Report for node ".$this->node->getName().":".PHP_EOL;
@@ -31,10 +31,10 @@ class Report {
 		
 		$this->protocol->sendCommand("REPORT ".$argvReport->getPositionalArg(1)->getValue());
 		if(substr($argvReport->getPositionalArg(1)->getValue(), -1)=="/") {
-			$entries = $this->protocol->getUnserializePHP();
+			$entries = $this->protocol->getSerialized();
 			$model = new ReportDirectory($entries, $argv);
 		} else {
-			$entry = $this->protocol->getUnserializePHP();
+			$entry = $this->protocol->getSerialized();
 			$model = new \ReportFile($entry, $argv);
 		}
 		$table = new \TerminalTable($model);

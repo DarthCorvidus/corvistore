@@ -61,6 +61,11 @@ class Client {
 			$backup->run();
 		}
 
+		if($this->argv[1]=="report") {
+			$backup = new Report($this->protocol, $this->config, $this->argv);
+			$backup->run();
+		}
+
 		#$this->hub->listen();
 	return;
 		#if($this->argv[1]=="test") {
