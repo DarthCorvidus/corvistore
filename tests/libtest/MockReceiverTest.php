@@ -24,17 +24,17 @@ class MockReceiverTest extends TestCase {
 
 	public function testOnRecvStart() {
 		$this->mockReceiver->onRecvStart();
-		$this->assertTrue($this->mockReceiver->wasStartCalled());
+		$this->assertTrue($this->mockReceiver->hasStarted());
 	}
 
 	public function testOnRecvEnd() {
 		$this->mockReceiver->onRecvEnd();
-		$this->assertTrue($this->mockReceiver->wasEndCalled());
+		$this->assertTrue($this->mockReceiver->hasEnded());
 	}
 
 	public function testOnRecvCancel() {
 		$this->mockReceiver->onRecvCancel();
-		$this->assertTrue($this->mockReceiver->wasCancelCalled());
+		$this->assertTrue($this->mockReceiver->wasCancelled());
 	}
 
 	public function testGetString() {

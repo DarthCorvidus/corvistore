@@ -38,15 +38,15 @@ class MockReceiver implements StreamReceiver {
 		$this->cancelCalled = true;
 	}
 
-	public function wasStartCalled(): bool {
+	public function hasStarted(): bool {
 		return $this->startCalled;
 	}
 
-	public function wasEndCalled(): bool {
+	public function hasEnded(): bool {
 		return $this->endCalled;
 	}
 
-	public function wasCancelCalled(): bool {
+	public function wasCancelled(): bool {
 		return $this->cancelCalled;
 	}
 
