@@ -64,25 +64,31 @@ class SafeReceiverTest extends TestCase {
 
 	function testGetSmall() {
 		$sender = new \Net\StringSender(5, "The cat is on the mat.");
-		$inner = new \Net\StringReceiver();
+		$mr = new \Net\MockReceiver();
+		
 		
 		$header = chr(\Net\Protocol::FILE);
 		$header .= \IntVal::uint64LE()->putValue(1024*3);
 		$header .= \IntVal::uint64LE()->putValue($sender->getSendSize());
 		$control = \Net\Protocol::padRandom($header, 1024);
 			
-		$receiver = new SafeReceiver($inner, 1024);
+		$receiver = new SafeReceiver($mr, 1024);
+		$this->assertEquals(FALSE, $mr->hasStarted());
+		
 		$receiver->receiveData($control);
+		$this->assertEquals(TRUE, $mr->hasStarted());
 		$this->assertEquals(1024*3, $receiver->getRecvSize());
 		// The first block has been used up by the data block.
 		$this->assertEquals(1024*2, $receiver->getRecvLeft());
 		
 		$receiver->receiveData($sender->getSendData(1024));
 		
-		$this->assertEquals("The cat is on the mat.", $inner->getString());
+		$this->assertEquals("The cat is on the mat.", $mr->getString());
 		$this->assertEquals(1024, $receiver->getRecvLeft());
 
 		$receiver->receiveData(\Net\Protocol::getControlBlock(\Net\Protocol::FILE_OK, 1024));
+		$this->assertEquals(TRUE, $mr->hasEnded());
+		$this->assertEquals(FALSE, $mr->wasCancelled());
 	}
 
 	function testOnStart() {
@@ -182,7 +188,7 @@ class SafeReceiverTest extends TestCase {
 				
 		$random = random_bytes($size);
 		$sender = new \Net\StringSender(5, $random);
-		$inner = new \Net\StringReceiver();
+		$inner = new \Net\MockReceiver();
 		
 		$header = chr(\Net\Protocol::FILE);
 		$header .= \IntVal::uint64LE()->putValue(\Net\Protocol::ceilBlock($size, 10)+2048);
@@ -209,7 +215,8 @@ class SafeReceiverTest extends TestCase {
 		 */
 		$receiver->receiveData(\Net\Protocol::getControlBlock(\Net\Protocol::FILE_CANCEL, 1024));
 		$this->assertEquals(0, $receiver->getRecvLeft());
-		$this->assertEquals("", $inner->getString());
+		//$this->assertEquals("", $inner->getString());
+		$this->assertEquals(TRUE, $inner->wasCancelled());
 	}
 	
 

@@ -5,6 +5,8 @@ use Net\SafeReceiver;
 use Net\SafeSender;
 use Net\StringSender;
 use Net\StringReceiver;
+use Net\MockSender;
+use Net\MockReceiver;
 class SafeSRTest extends TestCase {
 	const FILESIZE = 27389;
 	static function setUpBeforeClass() {
@@ -88,5 +90,35 @@ class SafeSRTest extends TestCase {
 		}
 		$this->assertEquals(strlen($payload), strlen($sr->getString()));
 		$this->assertEquals($payload, $sr->getString());
+	}
+
+	function testCancelOnStart() {
+		$payload = random_bytes((12*1024*1024)+312);
+		$ms = new MockSender($payload);
+		$ms->setExceptionAfter(0);
+		
+		$sender = new SafeSender($ms, 1024);
+		
+		$mr = new MockReceiver();
+		$receiver = new SafeReceiver($mr, 1024);
+		for($i=0;$i<2;$i++) {
+			$receiver->receiveData($sender->getSendData(1024));
+		}
+		$this->assertEquals(TRUE, $mr->wasCancelled());
+	}
+	
+	function testCancelOnEnd() {
+		$payload = random_bytes((12*1024*1024)+312);
+		$ms = new MockSender($payload);
+		$ms->setExceptionAfter(8192);
+		
+		$sender = new SafeSender($ms, 1024);
+		
+		$mr = new MockReceiver();
+		$receiver = new SafeReceiver($mr, 1024);
+		for($i=0;$i<12289+2;$i++) {
+			$receiver->receiveData($sender->getSendData(1024));
+		}
+		$this->assertEquals(TRUE, $mr->wasCancelled());
 	}
 }
