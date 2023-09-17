@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__."/TestHelper.php";
 require_once __DIR__."/../vendor/autoload.php";
-require_once __DIR__."/lib/CPModelTesting.php";
-require_once __DIR__."/lib/MockupFiles.php";
-require_once __DIR__."/lib/StreamFake.php";
-require_once __DIR__."/lib/MockSender.php";
+foreach(glob(__DIR__."/lib/*.php") as $value) {
+	require_once $value;
+}
