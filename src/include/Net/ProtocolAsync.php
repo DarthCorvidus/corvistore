@@ -103,6 +103,9 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		
 		if($this->currentRecvType==self::FILE) {
 			$this->streamReceiver->receiveData($data);
+			if($this->streamReceiver->getRecvLeft()==0) {
+				$this->currentRecvType = NULL;
+			}
 		return;
 		}
 	}
@@ -151,16 +154,6 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	}
 	
 	private function onWriteString(StreamSender $sender) {
-		$packetLength = $this->getPacketLength();
-		if($sender->getSendLeft()<=$packetLength) {
-			$data = parent::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
-			#array_shift($this->sendStream);
-		return $data;
-		}
-	return $sender->getSendData($packetLength);
-	}
-
-	private function onWriteFile(StreamSender $sender) {
 		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength) {
 			$data = parent::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
@@ -230,19 +223,6 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 			$unserialized = unserialize($this->streamReceiver->getString());
 			$this->listener->onSerialized($this, $unserialized);
 		}
-	}
-	
-	private function readFile(string $data) {
-		$receiver = $this->getCurrentReceiver();
-		$len = strlen($data);
-		if($len<$receiver->getRecvLeft()) {
-			$receiver->receiveData($data);
-		return;
-		}
-		$receiver->receiveData(substr($data, 0, $receiver->getRecvLeft()));
-		// End if nothing is left.
-		$this->getCurrentReceiver()->onRecvEnd();
-		$this->currentRecvType = NULL;
 	}
 	
 	public function sendMessage(string $message, ProtocolSendListener $listener = NULL) {
