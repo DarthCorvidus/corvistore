@@ -21,6 +21,7 @@ class SafeSender implements StreamSender {
 	private $blocksize;
 	private $cancelled = FALSE;
 	private $payloadLeft = 0;
+	private $exception;
 	public function __construct(\Net\StreamSender $sender, int $blocksize) {
 		$this->sender = $sender;
 		/*
@@ -55,6 +56,7 @@ class SafeSender implements StreamSender {
 				$header .= \IntVal::uint64LE()->putValue($this->sender->getSendSize());
 			} catch (\RuntimeException $e) {
 				$this->cancelled = TRUE;
+				$this->exception = $e;
 				$header = chr(\Net\Protocol::FILE);
 				$this->size = 2048;
 				$this->left = 2048;
@@ -111,8 +113,9 @@ class SafeSender implements StreamSender {
 		try {
 			$this->payloadLeft -= $amount;
 			return $this->sender->getSendData($amount);
-		} catch (\RuntimeException $ex) {
+		} catch (\RuntimeException $e) {
 			$this->cancelled = TRUE;
+			$this->exception = new \Net\UploadException($e->getMessage(), 0, $e);
 			$this->sender->onSendCancel();
 			/*
 			 * We need to send data until the predicted size, therefore we send
@@ -148,5 +151,12 @@ class SafeSender implements StreamSender {
 	public function onSendStart() {
 		$this->sender->onSendStart();
 	}
-
+	
+	public function hasException(): bool {
+		return $this->exception!==NULL;
+	}
+	
+	public function getException(): \Exception {
+		return $this->exception;
+	}
 }

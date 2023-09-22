@@ -43,6 +43,9 @@ class ProtocolSync extends Protocol {
 		while($outer->getSendLeft()>0) {
 			$this->stream->write($outer->getSendData($this->blockSize));
 		}
+		if($outer->hasException()) {
+			throw $outer->getException();
+		}
 	}
 	
 	private function getString(int $expectedType): string {
