@@ -216,7 +216,7 @@ class Backup implements \SignalHandler {
 		
 	function run() {
 		#$start = hrtime();
-		\plibv4\profiler\Profiler::startTimer("recurse");
+		#\plibv4\profiler\Profiler::startTimer("recurse");
 		if($this->argv->getBackupPath()!="/") {
 			$this->createHierarchy();
 			echo $this->argv->getBackupPath().PHP_EOL;
@@ -227,8 +227,8 @@ class Backup implements \SignalHandler {
 		echo "Sending quit...".PHP_EOL;
 		$this->protocol->sendCommand("QUIT");
 		$this->displayResult();
-		\plibv4\profiler\Profiler::endTimer("recurse");
-		\plibv4\profiler\Profiler::printTimers();
+		#\plibv4\profiler\Profiler::endTimer("recurse");
+		#\plibv4\profiler\Profiler::printTimers();
 		#$end = hrtime();
 		#$elapsed = $end[0]-$start[0];
 		/*
