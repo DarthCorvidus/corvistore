@@ -1,0 +1,5 @@
+define user corvidus password=16eb8eebf26feabd9b7572c6d66156ec0f06b327294069f8659c66d3c257b622
+define storage basic01 type=basic location=/storage/basic01
+define partition backup type=common storage=basic01
+define policy standard partition=backup
+define node testnode password=16eb8eebf26feabd9b7572c6d66156ec0f06b327294069f8659c66d3c257b622 policy=standard
