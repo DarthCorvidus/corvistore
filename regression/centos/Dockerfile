@@ -5,7 +5,7 @@ FROM centos:stream8
 RUN yum update -y
 
 # Install PHP CLI
-RUN yum install -y php-cli curl git php-xml php-mbstring php-zip sqlite php-pdo sudo unzip php-curl php-json
+RUN yum install -y php-cli curl git php-xml php-mbstring php-zip sqlite php-pdo sudo unzip php-curl php-json php-process
 
 RUN useradd -m cpinst -s /bin/bash
 
