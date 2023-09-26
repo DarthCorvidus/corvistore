@@ -6,4 +6,5 @@ try {
 	$backup->run();
 } catch (Exception $e) {
 	echo $e->getMessage().PHP_EOL;
+	die(1);
 }

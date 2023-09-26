@@ -13,7 +13,13 @@ class Client {
 	private $hub;
 	private $protocol;
 	function __construct($argv) {
-	$this->config = new \Client\Config("/etc/crow-protect/client.conf");
+		$user = posix_getuid();
+		$group = posix_getgid();
+		if($user!==0 or $group!==0) {
+			throw new \RuntimeException("cpnc.php must be run as root.");
+		}
+
+		$this->config = new \Client\Config("/etc/crow-protect/client.conf");
 		$this->argv = $argv;
 		if(!isset($this->argv[1]) or !in_array($this->argv[1], array("restore", "backup", "report", "test"))) {
 			throw new \Exception("Please select operation mode: restore, backup, report, test");
