@@ -9,6 +9,8 @@ RUN apt-get -y install php-cli curl git php-xml php-mbstring php-zip sqlite3 php
 
 RUN useradd -m cpinst -s /bin/bash
 
+RUN echo 'cpinst ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/cpinst
+
 RUN mkdir /etc/crow-protect/
 RUN mkdir /storage
 RUN mkdir /storage/basic01
