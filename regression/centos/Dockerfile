@@ -2,7 +2,7 @@
 FROM centos:stream8
 
 # Update the system
-RUN yum update
+RUN yum update -y
 
 # Install PHP CLI
 RUN yum install -y php-cli curl git php-xml php-mbstring php-zip sqlite php-pdo sudo unzip php-curl
