@@ -7,7 +7,8 @@ properties(
 		)
 	]
 )
-
+// Change the display name to the selected environment.
+currentBuild.displayName = params.environment
 node {
 	def dockerId
 	stage("Checkout from git") {
@@ -55,6 +56,10 @@ node {
 
 	stage("Run Backup of /usr/bin/") {
 		sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} sudo ./src/cpnc.php backup /usr/bin/")
+		// Let the backup settle; due to the asynchronous nature of the receiving end,
+		// it may happen that the backup is not yet done when restoring. A bug
+		// to fix...
+		sleep 30
 	}
 
 	stage("Run Restore of /usr/bin/") {
