@@ -181,6 +181,12 @@ class Restore {
 		$this->protocol->getStream($restoreListener);
 		chown($filepath, $version->getOwner());
 		chgrp($filepath, $version->getGroup());
+		/*
+		 * This is one of the very rare occurrences I found a bug in PHP:
+		 * chown and chgrp reset any sticky bit, so we have to call chmod
+		 * last.
+		 */
+		chmod($filepath, $version->getPermissions());
 		touch($filepath, $version->getMtime());
 		##echo $filepath." missing, would restored".PHP_EOL;
 		$this->restored++;

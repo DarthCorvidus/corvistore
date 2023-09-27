@@ -60,6 +60,10 @@ node {
 	stage("Run Restore of /usr/bin/") {
 		sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} sudo ./src/cpnc.php restore /usr/bin/ /root/restore")
 	}
+	
+	stage("Compare backup and restore") {
+		sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} sudo ./regression/script/compare.php /usr/bin/ /root/restore/usr/bin/")
+	}
 
 	stage("Stopping and removing container") {
 		sh("podman stop ${dockerId}")
