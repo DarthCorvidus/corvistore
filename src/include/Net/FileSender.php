@@ -18,10 +18,13 @@ class FileSender implements StreamSender {
 	private $handle;
 	private $size;
 	private $left;
+	private $type;
+	private $stringSender;
 	public function __construct(\File $file) {
 		$this->file = $file;
 		$this->size = $file->getSize();
 		$this->left = $this->size;
+		$this->type = $file->getType();
 	}
 	
 	public function getSendType(): int {
