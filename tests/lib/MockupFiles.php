@@ -77,7 +77,7 @@ class MockupFiles {
 	
 	function createRandom($path, int $size, int $blocksize=1024): string {
 		$this->createDir(dirname($path));
-		exec("dd if=/dev/urandom of=".escapeshellarg($this->getInternalPath($path))." bs=".$blocksize." count=".$size." 2> /dev/zero");
+		file_put_contents($this->getInternalPath($path), random_bytes($size*$blocksize));
 		clearstatcache();
 	return $this->getInternalPath($path);
 	}
