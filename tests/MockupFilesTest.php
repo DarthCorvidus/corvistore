@@ -126,5 +126,12 @@ class MockupFilesTest extends TestCase {
 		$this->assertEquals(TRUE, is_dir("/tmp/crow-protect/images/vacation/random01.bin"));
 		$this->assertNotEquals($oldStat, $newStat);
 	}
+	
+	function testCreateLink() {
+		$mockup = new MockupFiles("/tmp/crow-protect");
+		$mockup->createRandom("/images/vacation/random01.bin", 1024*10);
+		$mockup->createLink("/images/vacation/random01.bin", "/linkto");
+		$this->assertEquals("/tmp/crow-protect/images/vacation/random01.bin", readlink("/tmp/crow-protect/linkto"));
+	}
 
 }

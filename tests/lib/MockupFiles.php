@@ -71,6 +71,10 @@ class MockupFiles {
 	return $this->getInternalPath($path);
 	}
 	
+	function createLink($target, $link) {
+		symlink($this->getInternalPath($target), $this->getInternalPath($link));
+	}
+	
 	function createRandom($path, int $size, int $blocksize=1024): string {
 		$this->createDir(dirname($path));
 		exec("dd if=/dev/urandom of=".escapeshellarg($this->getInternalPath($path))." bs=".$blocksize." count=".$size." 2> /dev/zero");
