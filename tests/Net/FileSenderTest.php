@@ -4,24 +4,16 @@ use PHPUnit\Framework\TestCase;
 use Net\FileSender;
 class FileSenderTest extends TestCase {
 	const FILESIZE = 27389;
-	static function setUpBeforeClass() {
-		mkdir(__DIR__."/example");
-		file_put_contents(__DIR__."/example/FileReader.bin", random_bytes(self::FILESIZE));
-	}
-	
 	function setUp() {
-		if(!file_exists(__DIR__."/example/FileReader.bin")) {
-			file_put_contents(__DIR__."/example/FileReader.bin", random_bytes(self::FILESIZE));
-		}
+		$mockup = new MockupFiles(__DIR__."/example/");
+		$mockup->createRandom("/FileReader.bin", self::FILESIZE, 1);
 	}
 	
-	static function tearDownAfterClass() {
-		if(file_exists(__DIR__."/example/FileReader.bin")) {
-			unlink(__DIR__."/example/FileReader.bin");
-		}
-		rmdir(__DIR__."/example");
+	function tearDown() {
+		$mockup = new MockupFiles(__DIR__."/example/");
+		$mockup->delete();
 	}
-			
+	
 	function testConstruct() {
 		$sender = new FileSender(new File(__DIR__."/example/FileReader.bin"));
 		$this->assertInstanceOf(FileSender::class, $sender);
