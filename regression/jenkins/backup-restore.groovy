@@ -1,8 +1,11 @@
+properties([parameters([])])
 properties(
 	[
 		parameters(
 			[
-				choice(choices: ['centos', 'debian'], description: 'Set the environment.', name: 'environment')
+				choice(choices: ['centos', 'debian'], description: 'Set the environment.', name: 'environment'),
+				booleanParam(description: 'Use source from local directory.', name: 'local')
+				
 			]
 		)
 	]
@@ -22,10 +25,14 @@ node {
 			println dockerId
 		}
 
-		stage("checkout from git") {
+		stage("checkout from git or copy from local") {
 			println dockerId
-			withCredentials([usernamePassword(credentialsId: 'git-token', passwordVariable: 'token', usernameVariable: 'user')]) {
-				sh('podman exec --workdir /home/cpinst '+dockerId+' git clone https://$token@github.com/DarthCorvidus/crow-protect.git')
+			if(params.local) {
+				sh('podman cp /home/jenkins/crow-protect/ '+dockerId+':/home/cpinst/crow-protect/ -av')
+			} else {
+				withCredentials([usernamePassword(credentialsId: 'git-token', passwordVariable: 'token', usernameVariable: 'user')]) {
+					sh('podman exec --workdir /home/cpinst '+dockerId+' git clone https://$token@github.com/DarthCorvidus/crow-protect.git')
+				}
 			}
 		}
 
