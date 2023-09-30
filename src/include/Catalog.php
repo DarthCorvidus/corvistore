@@ -10,6 +10,7 @@ class Catalog {
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
+	const TYPE_LINK = 3;
 	//Catchall for other types until they are implemented.
 	const TYPE_OTHER = 99;
 	function __construct(EPDO $pdo, Node $node) {

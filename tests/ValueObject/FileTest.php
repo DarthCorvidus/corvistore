@@ -8,19 +8,14 @@ class FileTest extends TestCase {
 	}
 	
 	static function setUpBeforeClass() {
-		TestHelper::createDatabase();
-		TestHelper::initServer();
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createText("/readme.txt", "Testing test file");
+		$mockup->createLink("/readme.txt", "/linkto");
 	}
 	
 	static function tearDownAfterClass() {
-		TestHelper::deleteDatabase();
-		TestHelper::deleteStorage();
-	}
-	
-	function setUp() {
-		$this->node = Node::fromName(TestHelper::getEPDO(), "test01");
+		$mockup = new MockupFiles("/tmp/crow-protect");
+		$mockup->delete();
 	}
 	
 	static function getExamplePath() {
@@ -137,6 +132,16 @@ class FileTest extends TestCase {
 		$object = new File("/tmp/");
 		$this->expectException(Exception::class);
 		$object->setAction(25);
-		
 	}
+	
+	function testGetLinkType() {
+		$object = new File("/tmp/crow-protect/linkto");
+		$this->assertEquals(Catalog::TYPE_LINK, $object->getType());
+	}
+	
+	function testGetLinkTarget() {
+		$object = new File("/tmp/crow-protect/linkto");
+		$this->assertEquals("/tmp/crow-protect/readme.txt", $object->getTarget());
+	}
+
 }

@@ -10,6 +10,7 @@ class File {
 	private $group;
 	private $type;
 	private $action = NULL;
+	private $target = NULL;
 	const CREATE = 1;
 	const UPDATE = 2;
 	const DELETE = 3;
@@ -48,12 +49,16 @@ class File {
 		$this->size = filesize($this->path);
 		$this->type = Catalog::TYPE_OTHER;
 		//usually, most files are files, so check for file first and end early.
-		if(is_file($this->path)) {
+		if(is_file($this->path) && !is_link($this->path)) {
 			$this->type = Catalog::TYPE_FILE;
 			return;
 		}
 		if(is_dir($this->path)) {
 			$this->type = Catalog::TYPE_DIR;
+		}
+		if(is_link($this->path)) {
+			$this->type = Catalog::TYPE_LINK;
+			$this->target = readlink($this->path);
 		}
 	}
 	
@@ -107,6 +112,13 @@ class File {
 			return FALSE;
 		}
 	return TRUE;
+	}
+	
+	function getTarget(): string {
+		if($this->type!=3) {
+			throw new Exception("file is not a link");
+		}
+	return $this->target;
 	}
 	
 	function getParent(): File {
