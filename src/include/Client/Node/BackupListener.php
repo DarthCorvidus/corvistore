@@ -11,7 +11,7 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 		$this->config = $config;
 		$this->argv = $argv;
 		$this->inex = $config->getInEx();
-		$this->currentDir = new \File("/");
+		$this->currentDir = \File::fromPath("/");
 	}
 
 	public function onCommand(\Net\ProtocolReactive $protocol, string $command) {
@@ -147,17 +147,17 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 			#	continue;
 			#}
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
-				$file = new \File($value);
+				$file = \File::fromPath($value);
 				$this->processed++;
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
-				$file = new \File($value);
+				$file = \File::fromPath($value);
 				$files->addEntry($file);
 				continue;
 			}
 			if(is_file($value) and $this->inex->isValid($value)) {
-				$file = new \File($value);
+				$file = \File::fromPath($value);
 				$this->processed++;
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;

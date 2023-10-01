@@ -357,7 +357,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	function testReceiveSmallFile() {
 		$payload = random_bytes(16);
 		file_put_contents(self::getSourceName(), $payload);
-		$file = new File(self::getSourceName());
+		$file = File::fromPath(self::getSourceName());
 		$sender = new ProtocolAsync($this);
 		$sender->sendStream(new \Net\FileSender($file));
 		$receiver = new ProtocolAsync($this);
@@ -369,7 +369,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	function testReceiveBlockSizedFile() {
 		$payload = random_bytes(1024);
 		file_put_contents(self::getSourceName(), $payload);
-		$file = new File(self::getSourceName());
+		$file = File::fromPath(self::getSourceName());
 		$sender = new ProtocolAsync($this);
 		$sender->sendStream(new \Net\FileSender($file));
 		$receiver = new ProtocolAsync($this);
@@ -391,7 +391,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		for($i=1;$i<=2048;$i++) {
 			$payload = random_bytes($i);
 			file_put_contents(self::getSourceName(), $payload);
-			$file = new File(self::getSourceName());
+			$file = File::fromPath(self::getSourceName());
 			$sender = new ProtocolAsync($this);
 			$sender->sendStream(new \Net\FileSender($file));
 			$receiver = new ProtocolAsync($this);
@@ -437,7 +437,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	function testReceiveLargerFile() {
 		$payload = random_bytes(self::FILESIZE);
 		file_put_contents(self::getSourceName(), $payload);
-		$file = new File(self::getSourceName());
+		$file = File::fromPath(self::getSourceName());
 		$sender = new ProtocolAsync($this);
 		$sender->sendStream(new \Net\FileSender($file));
 		
@@ -455,7 +455,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	function testReceiveMultipleFileOneByOne() {
 		$payload = random_bytes(self::FILESIZE);
 		file_put_contents(self::getSourceName(), $payload);
-		$file = new File(self::getSourceName());
+		$file = File::fromPath(self::getSourceName());
 		$sender = new ProtocolAsync($this);
 		$sender->sendStream(new \Net\FileSender($file));
 		$receiver = new ProtocolAsync($this);
@@ -472,7 +472,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		// is expected behaviour.
 		$payload = random_bytes(self::FILESIZE-15);
 		file_put_contents(self::getSourceName(), $payload);
-		$file = new File(self::getSourceName());
+		$file = File::fromPath(self::getSourceName());
 		$sender->sendStream(new \Net\FileSender($file));
 		while($sender->hasWrite()) {
 			$receiver->onRead($sender->onWrite());

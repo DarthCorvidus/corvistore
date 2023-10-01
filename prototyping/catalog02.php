@@ -422,11 +422,11 @@ class Recurse {
 			}
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {
 				$this->processed++;
-				$filesystem[basename($value)] = new FileEntry($value);
+				$filesystem[basename($value)] = File::fromPathEntry($value);
 			}
 			if(is_file($value) and $this->inex->isValid($path)) {
 				$this->processed++;
-				$filesystem[basename($value)] = new FileEntry($value);
+				$filesystem[basename($value)] = File::fromPathEntry($value);
 			}
 		continue;
 			if(is_dir($value) and ($this->inex->isValid($value) or $this->inex->transitOnly($value))) {

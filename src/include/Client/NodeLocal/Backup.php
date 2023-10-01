@@ -179,7 +179,7 @@ class Backup {
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
-				$file = new File($value);
+				$file = File::fromPath($value);
 				$files->addEntry($file);
 				continue;
 			}
@@ -188,7 +188,7 @@ class Backup {
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
-				$file = new File($value);
+				$file = File::fromPath($value);
 				$files->addEntry($file);
 				continue;
 			}

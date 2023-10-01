@@ -110,7 +110,7 @@ class Test implements \Net\TransferListener {
 		
 		if(isset($this->argv[2])) {
 			echo "Sending FILE to server: ".PHP_EOL;
-			$file = new \File($this->argv[2]);
+			$file = \File::fromPath($this->argv[2]);
 			echo " md5sum: ".md5_file($file->getPath()).PHP_EOL;
 			for($i=0;$i<5;$i++) {
 				try {

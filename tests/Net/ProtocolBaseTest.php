@@ -200,7 +200,7 @@ class ProtocolBaseTest extends TestCase {
 	function testSendSerialize() {
 		$filename = __DIR__."/example/proto.bin";
 		file_put_contents(__DIR__."/example/send.bin", "This is a small example file.");
-		$file = new File(__DIR__."/example/send.bin");
+		$file = File::fromPath(__DIR__."/example/send.bin");
 		$socket = fopen($filename, "w");
 		$proto = new ProtocolBase($socket, 16, 16);
 		$proto->sendSerializePHP($file);
@@ -216,7 +216,7 @@ class ProtocolBaseTest extends TestCase {
 	function testSendVerySmallFile() {
 		$sampleString = "Hello World.";
 		file_put_contents(__DIR__."/example/send.bin", $sampleString);
-		$file = new File(__DIR__."/example/send.bin");
+		$file = File::fromPath(__DIR__."/example/send.bin");
 		
 		$sender = new \Net\FileSender($file);
 		$filename = __DIR__."/example/proto.bin";
@@ -235,7 +235,7 @@ class ProtocolBaseTest extends TestCase {
 		$sampleString = "Hello World.";
 		file_put_contents(__DIR__."/example/send.bin", $sampleString);
 
-		$file = new File(__DIR__."/example/send.bin");
+		$file = File::fromPath(__DIR__."/example/send.bin");
 		$sender = new \Net\FileSender($file);
 
 		$filename = __DIR__."/example/proto.bin";
@@ -256,7 +256,7 @@ class ProtocolBaseTest extends TestCase {
 	function testSendLargerFile() {
 		$contents = random_bytes(self::FILESIZE);
 		file_put_contents(__DIR__."/example/send.bin", $contents);
-		$file = new File(__DIR__."/example/send.bin");
+		$file = File::fromPath(__DIR__."/example/send.bin");
 		
 		$sender = new \Net\FileSender($file);
 		$filename = __DIR__."/example/proto.bin";
@@ -276,7 +276,7 @@ class ProtocolBaseTest extends TestCase {
 	function testReceiveLargerFile() {
 		$contents = random_bytes(self::FILESIZE);
 		file_put_contents(__DIR__."/example/send.bin", $contents);
-		$file = new File(__DIR__."/example/send.bin");
+		$file = File::fromPath(__DIR__."/example/send.bin");
 
 		$sender = new \Net\FileSender($file);
 		$filename = __DIR__."/example/proto.bin";
@@ -341,7 +341,7 @@ class ProtocolBaseTest extends TestCase {
 	function testReceiveUTR() {
 		$contents = random_bytes(self::FILESIZE);
 		file_put_contents(__DIR__."/example/send.bin", $contents);
-		$file = new File(__DIR__."/example/send.bin");
+		$file = File::fromPath(__DIR__."/example/send.bin");
 
 		$sender = new \Net\FileSender($file);
 		$filename = __DIR__."/example/proto.bin";

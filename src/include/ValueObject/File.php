@@ -16,12 +16,14 @@ class File {
 	const DELETE = 3;
 	private static $userCache = array();
 	private static $groupCache = array();
-	function __construct(string $path) {
-		// removed realpath() here, as I don't see how it could be called with a
-		// relative path, apart from any initial path supplied by pesky users,
-		// on which realpath() can be called once.
-		$this->path = $path;
-		$this->reload();
+	private function __construct() {
+	}
+	
+	static function fromPath(string $path): File {
+		$obj = new File();
+		$obj->path = $path;
+		$obj->reload();
+	return $obj;
 	}
 	
 	function setAction(int $action) {
@@ -126,7 +128,7 @@ class File {
 			throw new RuntimeException("File ".$this->getPath()." has no parent.");
 			
 		}
-	return new File($this->getDirname());
+	return File::fromPath($this->getDirname());
 	}
 	
 	function getDirname() {

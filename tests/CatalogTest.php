@@ -36,7 +36,7 @@ class CatalogTest extends TestCase {
 	
 	function testAddNewDirectory() {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
-		$file = new File("/tmp/");
+		$file = File::fromPath("/tmp/");
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
 		$catalogEntry = $catalog->newEntry($file);
 		
@@ -116,8 +116,8 @@ class CatalogTest extends TestCase {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createDir("/Pictures/vacations/2023_thailand");
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
-		$catalogEntry = $catalog->newEntry(new File("/tmp/"));
-		$catalogEntry = $catalog->newEntry(new File("/tmp/crow-protect"), $catalogEntry->getId());
+		$catalogEntry = $catalog->newEntry(File::fromPath("/tmp/"));
+		$catalogEntry = $catalog->newEntry(File::fromPath("/tmp/crow-protect"), $catalogEntry->getId());
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/"), $catalogEntry);
@@ -151,9 +151,9 @@ class CatalogTest extends TestCase {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createRandom("/beach.bin", 12);
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
-		$tmp = $catalog->newEntry(new File("/tmp"));
-		$cp = $catalog->newEntry(new File("/tmp/crow-protect"), $tmp->getId());
-		$file = new File("/tmp/crow-protect/beach.bin");
+		$tmp = $catalog->newEntry(File::fromPath("/tmp"));
+		$cp = $catalog->newEntry(File::fromPath("/tmp/crow-protect"), $tmp->getId());
+		$file = File::fromPath("/tmp/crow-protect/beach.bin");
 		$entry = $catalog->newEntry($file, $cp->getId());
 		
 		$catTarget[0] = array("dc_id" => 1, "dc_dirname" => "/", "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
@@ -188,13 +188,13 @@ class CatalogTest extends TestCase {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createRandom("/beach.bin", 12);
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
-		$tmp = $catalog->newEntry(new File("/tmp"));
-		$cp = $catalog->newEntry(new File("/tmp/crow-protect"), $tmp->getId());
-		$file = new File("/tmp/crow-protect/beach.bin");
+		$tmp = $catalog->newEntry(File::fromPath("/tmp"));
+		$cp = $catalog->newEntry(File::fromPath("/tmp/crow-protect"), $tmp->getId());
+		$file = File::fromPath("/tmp/crow-protect/beach.bin");
 		$entry = $catalog->newEntry($file, $cp->getId());
 		$entry->getVersions()->getLatest()->setStored(TestHelper::getEPDO());
 		$this->mockup->createRandom("/beach.bin", 12);
-		$file = new File("/tmp/crow-protect/beach.bin");
+		$file = File::fromPath("/tmp/crow-protect/beach.bin");
 		
 		$entries = $catalog->getEntries("/tmp/crow-protect");
 		$latest = $entries->getEntry(0)->getVersions()->getLatest();

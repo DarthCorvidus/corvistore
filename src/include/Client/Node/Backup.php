@@ -70,7 +70,7 @@ class Backup implements \SignalHandler {
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
-				$file = new \File($value);
+				$file = \File::fromPath($value);
 				$files->addEntry($file);
 				continue;
 			}
@@ -79,7 +79,7 @@ class Backup implements \SignalHandler {
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
 				}
-				$file = new \File($value);
+				$file = \File::fromPath($value);
 				$files->addEntry($file);
 				continue;
 			}
@@ -199,7 +199,7 @@ class Backup implements \SignalHandler {
 			$entries = $this->protocol->getSerialized();
 			if(!$entries->hasName(basename($dir))) {
 				echo "Creating ".$dir.PHP_EOL;
-				$file = new \File($dir);
+				$file = \File::fromPath($dir);
 				$file->setAction(\File::CREATE);
 				$this->protocol->sendCommand("CREATE FILE ".$dir);
 				$this->protocol->sendSerialize($file);

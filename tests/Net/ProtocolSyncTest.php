@@ -53,7 +53,7 @@ class ProtocolSyncTest extends TestCase {
 	/*
 	function testSendStreamSmall() {
 		file_put_contents(self::getExamplePath(), "Hello World!");
-		$file = new File(self::getExamplePath());
+		$file = File::fromPath(self::getExamplePath());
 		
 		$fileStream = new \Net\FileSender($file);
 		$fakeStream = new StreamFake("");
@@ -76,7 +76,7 @@ class ProtocolSyncTest extends TestCase {
 	function testSendBlockMinusHeader() {
 		$expected = random_bytes(1024-9);
 		file_put_contents(self::getExamplePath(), $expected);
-		$file = new File(self::getExamplePath());
+		$file = File::fromPath(self::getExamplePath());
 
 		$fileStream = new \Net\FileSender($file);
 		$fakeStream = new StreamFake("");
@@ -100,7 +100,7 @@ class ProtocolSyncTest extends TestCase {
 	function testSendBlockSized() {
 		$expected = random_bytes(1024);
 		file_put_contents(self::getExamplePath(), $expected);
-		$file = new File(self::getExamplePath());
+		$file = File::fromPath(self::getExamplePath());
 
 		$fileStream = new \Net\FileSender($file);
 		$fakeStream = new StreamFake("");
@@ -119,7 +119,7 @@ class ProtocolSyncTest extends TestCase {
 	function testSendLarge() {
 		$expected = random_bytes(self::FILE_SIZE);
 		file_put_contents(self::getExamplePath(), $expected);
-		$file = new File(self::getExamplePath());
+		$file = File::fromPath(self::getExamplePath());
 
 		$padLen = (int)(ceil(self::FILE_SIZE/1024)*1024);
 		

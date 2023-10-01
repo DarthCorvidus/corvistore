@@ -19,37 +19,37 @@ class ExtentMainTest extends TestCase {
 	}
 
 	function testFromInstance() {
-		$file = new File(self::getPath());
+		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertInstanceOf(ExtentMain::class, $extent);
 	}
 	
 	function testGetTotalSize() {
-		$file = new File(self::getPath());
+		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertEquals($file->getSize(), $extent->getTotalSize());
 	}
 	
 	function testGetVersion() {
-		$file = new File(self::getPath());
+		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertEquals(1, $extent->getVersion());
 	}
 	
 	function testGetMtime() {
-		$file = new File(self::getPath());
+		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertEquals($file->getMTime(), $extent->getMtime());
 	}
 	
 	function testToBinary() {
-		$file = new File(self::getPath());
+		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertEquals(4914, strlen($extent->toBinary()));
 	}
 	
 	function testFromBinary() {
-		$file = new File(self::getPath());
+		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$new = ExtentMain::fromBinary($extent->toBinary());
 		$this->assertEquals($extent, $new);

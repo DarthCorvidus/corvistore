@@ -126,7 +126,7 @@ class StorageBasicTest extends TestCase {
 		
 		$files = new MockupFiles("/tmp/crow-protect");
 		$files->createRandom("image01.bin", 12);
-		$file = new File("/tmp/crow-protect/image01.bin");
+		$file = File::fromPath("/tmp/crow-protect/image01.bin");
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
 		/*
 		 * This is not correct, since we create the entry below / instead of
