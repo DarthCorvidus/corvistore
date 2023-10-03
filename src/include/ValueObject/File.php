@@ -11,6 +11,7 @@ class File {
 	private $type;
 	private $action = NULL;
 	private $target = NULL;
+	private $version = 1;
 	const CREATE = 1;
 	const UPDATE = 2;
 	const DELETE = 3;
@@ -24,6 +25,37 @@ class File {
 		$obj->path = $path;
 		$obj->reload();
 	return $obj;
+	}
+	
+	static function fromBinary(string $binary): File {
+		$reader = new \plibv4\Binary\StringReader($binary, \plibv4\Binary\StringReader::LE);
+		$file = new File();
+		$file->version = $reader->getUInt8();
+		$file->size = $reader->getUInt64();
+		$file->atime = $reader->getUInt64();
+		$file->ctime = $reader->getUInt64();
+		$file->mtime = $reader->getUInt64();
+		$file->permissions = $reader->getUInt16();
+		$file->type = $reader->getUInt8();
+		$file->owner = $reader->getIndexedString(8, 255);
+		$file->group = $reader->getIndexedString(8, 255);
+		$file->path = $reader->getIndexedString(16, 4096);
+	return $file;
+	}
+	
+	function toBinary(): string {
+		$writer = new \plibv4\Binary\StringWriter(\plibv4\Binary\StringWriter::LE);
+		$writer->addUInt8($this->version);
+		$writer->addUInt64($this->size);
+		$writer->addUInt64($this->atime);
+		$writer->addUInt64($this->ctime);
+		$writer->addUInt64($this->mtime);
+		$writer->addUInt16($this->permissions);
+		$writer->addUInt8($this->type);
+		$writer->addIndexedString(8, $this->owner, 255);
+		$writer->addIndexedString(8, $this->group, 255);
+		$writer->addIndexedString(16, $this->path, 4096);
+	return $writer->getBinary();
 	}
 	
 	function setAction(int $action) {

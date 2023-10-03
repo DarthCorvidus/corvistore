@@ -143,5 +143,13 @@ class FileTest extends TestCase {
 		$object = File::fromPath("/tmp/crow-protect/linkto");
 		$this->assertEquals("/tmp/crow-protect/readme.txt", $object->getTarget());
 	}
+	
+	function testBinary() {
+		$object = File::fromPath("/tmp/crow-protect/readme.txt");
+		$binary = $object->toBinary();
+		$object2 = File::fromBinary($binary);
+		$this->assertEquals($object, $object2);
+		$this->assertEquals(4646, strlen($binary));
+	}
 
 }
