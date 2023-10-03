@@ -86,13 +86,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-binary",
-                "reference": "59f416da7d40968d8f1354c6391dce701853e1cc"
+                "reference": "3fa1a60afbabda2e03a1a40b63903d2214eaf38a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-binary/zipball/59f416da7d40968d8f1354c6391dce701853e1cc",
-                "reference": "59f416da7d40968d8f1354c6391dce701853e1cc",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-binary/zipball/3fa1a60afbabda2e03a1a40b63903d2214eaf38a",
+                "reference": "3fa1a60afbabda2e03a1a40b63903d2214eaf38a",
                 "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7"
             },
             "default-branch": true,
             "type": "library",
@@ -101,7 +104,15 @@
                     "src/"
                 ]
             },
-            "time": "2023-06-16T19:12:44+00:00"
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
+                ],
+                "testdox": [
+                    "./vendor/bin/phpunit --bootstrap vendor/autoload.php --testdox --colors=always tests"
+                ]
+            },
+            "time": "2023-10-03T15:37:42+00:00"
         },
         {
             "name": "plibv4/convert",
@@ -842,12 +853,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpspec/prophecy.git",
-                "reference": "e0ae0992aafbc5dee4337a700a44a8d04fbd2ccf"
+                "reference": "098f8850e4bd800b7734c65b2c8c10b28d87f10e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/e0ae0992aafbc5dee4337a700a44a8d04fbd2ccf",
-                "reference": "e0ae0992aafbc5dee4337a700a44a8d04fbd2ccf",
+                "url": "https://api.github.com/repos/phpspec/prophecy/zipball/098f8850e4bd800b7734c65b2c8c10b28d87f10e",
+                "reference": "098f8850e4bd800b7734c65b2c8c10b28d87f10e",
                 "shasum": ""
             },
             "require": {
@@ -894,6 +905,7 @@
             "keywords": [
                 "Double",
                 "Dummy",
+                "dev",
                 "fake",
                 "mock",
                 "spy",
@@ -903,7 +915,7 @@
                 "issues": "https://github.com/phpspec/prophecy/issues",
                 "source": "https://github.com/phpspec/prophecy/tree/master"
             },
-            "time": "2023-06-21T12:00:53+00:00"
+            "time": "2023-08-31T13:58:35+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
