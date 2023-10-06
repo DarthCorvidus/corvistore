@@ -28,7 +28,7 @@ node {
 		stage("checkout from git or copy from local") {
 			println dockerId
 			if(params.local) {
-				sh('podman cp /home/jenkins/crow-protect/ '+dockerId+':/home/cpinst/crow-protect/ -av')
+				sh('podman cp /home/jenkins/crow-protect/ '+dockerId+':/home/cpinst/')
 			} else {
 				withCredentials([usernamePassword(credentialsId: 'git-token', passwordVariable: 'token', usernameVariable: 'user')]) {
 					sh('podman exec --workdir /home/cpinst '+dockerId+' git clone https://$token@github.com/DarthCorvidus/crow-protect.git')
