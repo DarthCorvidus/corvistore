@@ -4,8 +4,8 @@ properties(
 		parameters(
 			[
 				choice(choices: ['centos', 'debian'], description: 'Set the environment.', name: 'environment'),
-				booleanParam(description: 'Use source from local directory.', name: 'local')
-				
+				booleanParam(description: 'Use source from local directory.', name: 'local'),
+				booleanParam(description: 'Skip unit tests.', name: 'noUnit')
 			]
 		)
 	]
@@ -41,7 +41,9 @@ node {
 		}
 
 		stage("Composer Unit Test") {
-			sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} composer run-script testdox")
+			if(!params.noUnit) {
+				sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} composer run-script testdox")
+			}
 		}
 
 		stage("Initialize and configure server") {
