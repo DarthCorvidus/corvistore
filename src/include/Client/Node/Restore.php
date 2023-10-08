@@ -99,6 +99,7 @@ class Restore {
 		$this->protocol->sendCommand("GET CATALOG ".$path);
 		$entries = $this->protocol->getSerialized();
 		$directories = array();
+		$links = array();
 		$files = array();
 		for($i=0;$i<$entries->getCount();$i++) {
 			$entry = $entries->getEntry($i);
@@ -115,6 +116,9 @@ class Restore {
 			if($latest->getType()==\Catalog::TYPE_FILE) {
 				$files[] = $entry;
 			}
+			if($latest->getType()==\Catalog::TYPE_LINK) {
+				$links[] = $entry;
+			}
 		}
 		foreach($directories as $value) {
 			$this->restoreDirectory($path."/", $value);
@@ -122,6 +126,10 @@ class Restore {
 		foreach($files as $value) {
 			$this->restoreFile($path."/", $value);
 		}
+		foreach($links as $value) {
+			$this->restoreLink($path."/", $value);
+		}
+		
 		foreach($directories as $value) {
 			$this->recurseCatalog($path."/".$value->getName());
 		}
@@ -138,6 +146,30 @@ class Restore {
 			chgrp($filepath, $version->getGroup());
 			return;
 		}
+	}
+	
+	private function restoreLink($path, \CatalogEntry $entry) {
+		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
+		$filepath = $this->target.$path.$entry->getName();
+		if(is_link($filepath)) {
+			echo "Link ".$filepath." exists.".PHP_EOL;
+		return;
+		}
+		#echo "Restore link ".$entry->getDirname()."/".$entry->getName().PHP_EOL;
+		$this->protocol->sendCommand("GET VERSION ".$version->getId());
+		/*
+		 * I opted against having Restore implement TransferListener; 
+		 * I prefer to be sure to get a clean slate on each restore.
+		 */
+		$restoreListener = new \Net\StringReceiver();
+		$this->protocol->getStream($restoreListener);
+		echo $restoreListener->getString().PHP_EOL;
+		#echo "Restore link ".$filepath." → ".$this->target.$path.$restoreListener->getString().PHP_EOL;
+		#symlink($this->target.$restoreListener->getString(), $filepath);
+		symlink($restoreListener->getString(), $filepath);
+		#chown($filepath, $version->getOwner());
+		#chgrp($filepath, $version->getGroup());
+		#touch($filepath, $version->getMtime());
 	}
 	
 	private function restoreFile($path, \CatalogEntry $entry) {

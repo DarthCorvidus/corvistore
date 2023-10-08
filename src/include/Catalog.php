@@ -49,7 +49,7 @@ class Catalog {
 		if($file->getType() == Catalog::TYPE_DIR) {
 			return $this->newEntryDir($file, $parent);
 		}
-		if($file->getType() == Catalog::TYPE_FILE) {
+		if($file->getType() == Catalog::TYPE_FILE or $file->getType() == Catalog::TYPE_LINK) {
 			return $this->newEntryFile($file, $parent);
 		}
 
@@ -99,7 +99,7 @@ class Catalog {
 		$version["dvs_group"] = $file->getGroup();
 		$version["dvs_mtime"] = $file->getMTime();
 		$version["dvs_size"] = $file->getSize();
-		$version["dvs_type"] = Catalog::TYPE_FILE;
+		$version["dvs_type"] = $file->getType();
 		$version["dvs_created_local"] = date("Y-m-d H:i:sP");
 		$version["dvs_created_epoch"] = time();
 		$version["dvs_permissions"] = $file->getPerms();

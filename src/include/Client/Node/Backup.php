@@ -59,9 +59,9 @@ class Backup implements \SignalHandler {
 				continue;
 			}
 			
-			if(is_link($value)) {
-				continue;
-			}
+			#if(is_link($value)) {
+			#	continue;
+			#}
 			#if(in_array($value, $this->exclude)) {
 			#	continue;
 			#}
@@ -74,7 +74,7 @@ class Backup implements \SignalHandler {
 				$files->addEntry($file);
 				continue;
 			}
-			if(is_file($value) and $this->inex->isValid($path)) {
+			if((is_file($value) or is_link($value)) and $this->inex->isValid($path)) {
 				$this->processed++;
 				if($this->processed%5000==0) {
 					echo "Processed ".$this->processed." files.".PHP_EOL;
@@ -119,6 +119,16 @@ class Backup implements \SignalHandler {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
 			}
+			if($file->getType()== \Catalog::TYPE_LINK) {
+				echo "Sending link ".$file->getPath().PHP_EOL;
+				try {
+					$this->protocol->sendStream(new \Net\LinkSender($file));
+					$this->transferred += $file->getSize();
+				} catch (\Net\UploadException $e) {
+					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
+				}
+			}
+
 			#$entry = $this->protocol->getSerialized();
 			
 			#$entry = $this->catalog->newEntry($file, $parent);
@@ -144,6 +154,15 @@ class Backup implements \SignalHandler {
 				echo "Sending ".$file->getPath().PHP_EOL;
 				try {
 					$this->protocol->sendStream(new \Net\FileSender($file));
+					$this->transferred += $file->getSize();
+				} catch (\Net\UploadException $e) {
+					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
+				}
+			}
+			if($file->getType()==\Catalog::TYPE_FILE) {
+				echo "Sending link ".$file->getPath().PHP_EOL;
+				try {
+					$this->protocol->sendStream(new \Net\LinkSender($file));
 					$this->transferred += $file->getSize();
 				} catch (\Net\UploadException $e) {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
