@@ -84,6 +84,26 @@ class FileSenderTest extends TestCase {
 		
 		$sender->onSendEnd();
 	}
+
+	function testReadOffset() {
+		$sender = new FileSender(File::fromPath(__DIR__."/example/FileReader.bin"), 1024);
+		$sender->onSendStart();
+		$rest = 27389-1024;
+		$total = 27389-1024;
+		$i=0;
+		$contents = "";
+		while($rest>4096) {
+			$load = $sender->getSendData(4096);
+			$contents .= $load;
+			$this->assertEquals($load, file_get_contents(__DIR__."/example/FileReader.bin", FALSE, NULL, ($i*4096)+1024, 4096));
+			$rest -= 4096;
+			$i++;
+		}
+		$load = file_get_contents(__DIR__."/example/FileReader.bin", FALSE, NULL, ($i*4096)+1024, $rest);
+		$this->assertEquals($load, $sender->getSendData($rest));
+		
+		$sender->onSendEnd();
+	}
 	
 	function testRemoveBeforeStart() {
 		$sender = new FileSender(File::fromPath(__DIR__."/example/FileReader.bin"));

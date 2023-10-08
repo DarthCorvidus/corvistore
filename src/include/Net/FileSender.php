@@ -19,12 +19,14 @@ class FileSender implements StreamSender {
 	private $size;
 	private $left;
 	private $type;
-	private $stringSender;
-	public function __construct(\File $file) {
+	private $offset;
+	private $started = FALSE;
+	public function __construct(\File $file, int $offset = 0) {
 		$this->file = $file;
-		$this->size = $file->getSize();
+		$this->size = $file->getSize()-$offset;
 		$this->left = $this->size;
 		$this->type = $file->getType();
+		$this->offset = $offset;
 	}
 	
 	public function getSendType(): int {
@@ -38,7 +40,7 @@ class FileSender implements StreamSender {
 		if(!file_exists($this->file->getPath())) {
 			throw new \RuntimeException("File went away during transfer.");
 		}
-		if(filesize($this->file->getPath())!=$this->size) {
+		if(filesize($this->file->getPath())-$this->offset!=$this->size) {
 			throw new \RuntimeException("Filesize has changed during transfer");
 		}
 		if($amount===0) {
@@ -58,8 +60,7 @@ class FileSender implements StreamSender {
 	}
 
 	public function getSendSize(): int {
-		$this->file->reload();
-	return $this->file->getSize();
+		return $this->size;
 	}
 
 	public function onSendCancel() {
@@ -75,6 +76,8 @@ class FileSender implements StreamSender {
 		if($this->handle===FALSE) {
 			throw new \RuntimeException("unable to open ".$this->file->getPath()." for read.");
 		}
+		fseek($this->handle, $this->offset);
+		$this->started = true;
 	}
 
 }
