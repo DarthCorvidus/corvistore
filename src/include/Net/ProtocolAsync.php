@@ -241,7 +241,6 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	public function sendStream(StreamSender $sender, ProtocolSendListener $listener = NULL) {
 		$this->sendStream[] = new SafeSender($sender, $this->getPacketLength());
 		$this->sendListeners[] = $listener;
-		$sender->onSendStart();
 	}
 	
 	public function expect(int $type) {
