@@ -173,7 +173,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 			$version = $this->catalog->updateEntry($this->updateId, $file);
 		}
 		if($file->getType()== \Catalog::TYPE_FILE) {
-			$protocol->setFileReceiver($this->storage->store($version, $this->partition));
+			$protocol->setFileReceiver($this->storage->store($version, $this->partition, $file));
 			$protocol->expect(\Net\Protocol::FILE);
 		}
 		$this->checkTransactions();

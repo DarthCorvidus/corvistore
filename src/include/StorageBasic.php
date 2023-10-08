@@ -15,6 +15,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	private $storeId;
 	private $recvSize;
 	private $recvLeft;
+	private $file;
 	static function getHexArray(int $id) {
 		$hex = str_pad(dechex($id), 16, 0, STR_PAD_LEFT);
 		$grouped = array();
@@ -34,9 +35,10 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		return $this->location."/".implode("/", array_slice($hexArray, 0, 7))."/";
 	}
 
-	public function store(VersionEntry $entry, Partition $partition): \Net\StreamReceiver {
+	public function store(VersionEntry $entry, Partition $partition, File $file): \Net\StreamReceiver {
 		$this->versionEntry = $entry;
 		$this->partition = $partition;
+		$this->file = $file;
 	return $this;
 	}
 	
@@ -46,7 +48,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		$param[] = 1;
 		$result = $this->pdo->row("select nvb_id from n_version2basic where dvs_id = ? and nvb_stored = ? limit 1", $param);
 		$path = $this->getPathForIdFile($result["nvb_id"]);
-		$fileSender = new \Net\FileSender(File::fromPath($path));
+		$fileSender = new \Net\FileSender(File::fromPath($path), 8192);
 	return $fileSender;
 	}
 	
@@ -57,6 +59,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		}
 		$this->pdo->delete("n_version2basic", array("nvb_id"=>$this->storeId));
 		$this->partition = NULL;
+		$this->file = NULL;
 		$this->versionEntry = NULL;
 		$this->storeId = NULL;
 		fclose($this->writeHandle);
@@ -84,6 +87,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		$this->pdo->update("n_version2basic", array("nvb_stored"=>1), array("nvb_id"=>$this->storeId));
 		$this->versionEntry->setStored($this->pdo);
 		$this->partition = NULL;
+		$this->file = NULL;
 		$this->versionEntry = NULL;
 		$this->storeId = NULL;
 		fclose($this->writeHandle);
@@ -110,6 +114,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 			mkdir($location, 0700, true);
 		}
 		$this->writeHandle = fopen($path, "w");
+		fwrite($this->writeHandle, str_pad($this->file->toBinary(), 8192, "\0"));
 		if($this->writeHandle==FALSE) {
 			throw new Exception("could not open ".$path);
 		}
