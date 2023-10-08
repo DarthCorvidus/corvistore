@@ -35,7 +35,7 @@ class MockupFiles {
 			if(is_dir($value)) {
 				$this->deleteRecurse($value);
 			}
-			if(is_file($value)) {
+			if(is_file($value) || is_link($value)) {
 				unlink($value);
 			}
 		}
