@@ -1,0 +1,27 @@
+Sure, here is a simple Podmanfile that uses CentOS 8 as a base and installs php-cli and composer:
+
+```Dockerfile
+# Use CentOS 8 as the base image
+FROM centos:8
+
+# Update the system
+RUN yum -y update
+
+# Install PHP CLI
+RUN yum -y install php-cli
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Verify that php and composer are installed
+RUN php -v && composer --version
+```
+
+You can build and run this Podman container using the following commands:
+
+```bash
+podman build -t my-php-app .
+podman run -it my-php-app
+```
+
+This will create a new container image named `my-php-app` and then run it in an interactive terminal. The `php -v` and `composer --version` commands at the end of the Podmanfile will output the installed versions of PHP and Composer when the container is run. Please replace `my-php-app` with your preferred image name. Remember to run these commands in the directory where your Podmanfile is located.

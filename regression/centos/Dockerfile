@@ -6,7 +6,7 @@ RUN yum update -y
 
 # Install PHP CLI
 RUN yum install -y php-cli curl git php-xml php-mbstring php-zip sqlite php-pdo sudo unzip php-curl php-json php-process
-
+RUN sed -i 's/display_errors = Off/display_errors = On/g' /etc/php.ini
 RUN useradd -m cpinst -s /bin/bash
 
 RUN echo 'cpinst ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/cpinst

@@ -1,0 +1,13 @@
+node {
+    try {
+        // Your build steps here
+    } catch (Exception e) {
+        // If there was an exception thrown, the build failed
+        echo "Failed to run build steps: ${e.getMessage()}"
+        currentBuild.result = 'FAILURE'
+    } finally {
+        // Perform cleanup tasks here
+        echo 'Cleaning up...'
+    }
+}
+
