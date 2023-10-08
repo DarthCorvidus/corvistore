@@ -54,7 +54,7 @@ class FileReceiver implements StreamReceiver {
 
 	public function onRecvCancel() {
 		fclose($this->handle);
-		unlink($this->handle);
+		unlink($this->filename);
 	}
 
 	public function onRecvEnd() {
