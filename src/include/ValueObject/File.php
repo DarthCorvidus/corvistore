@@ -93,6 +93,14 @@ class File {
 		if(is_link($this->path)) {
 			$this->type = Catalog::TYPE_LINK;
 			$this->target = readlink($this->path);
+			/*
+			 * The size of a link is the length of the target path it is
+			 * pointing to.
+			 * This is not what you get when you use filesize(link), but the
+			 * amount which will be used up in the backup storage, as a link
+			 * is a file containing the link target.
+			 */
+			$this->size = strlen($this->target);
 		}
 	}
 	
