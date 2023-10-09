@@ -149,7 +149,7 @@ class FileTest extends TestCase {
 		$binary = $object->toBinary();
 		$object2 = File::fromBinary($binary);
 		$this->assertEquals($object, $object2);
-		$this->assertEquals(4646, strlen($binary));
+		$this->assertEquals(4654, strlen($binary));
 	}
 
 }

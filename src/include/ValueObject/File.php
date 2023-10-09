@@ -6,6 +6,8 @@ class File {
 	private $mtime;
 	private $size;
 	private $permissions;
+	private $gid;
+	private $uid;
 	private $owner;
 	private $group;
 	private $type;
@@ -37,7 +39,9 @@ class File {
 		$file->mtime = $reader->getUInt64();
 		$file->permissions = $reader->getUInt16();
 		$file->type = $reader->getUInt8();
+		$file->uid = $reader->getUInt32();
 		$file->owner = $reader->getIndexedString(8, 255);
+		$file->gid = $reader->getUInt32();
 		$file->group = $reader->getIndexedString(8, 255);
 		$file->path = $reader->getIndexedString(16, 4096);
 	return $file;
@@ -52,7 +56,9 @@ class File {
 		$writer->addUInt64($this->mtime);
 		$writer->addUInt16($this->permissions);
 		$writer->addUInt8($this->type);
+		$writer->addUint32($this->uid);
 		$writer->addIndexedString(8, $this->owner, 255);
+		$writer->addUint32($this->gid);
 		$writer->addIndexedString(8, $this->group, 255);
 		$writer->addIndexedString(16, $this->path, 4096);
 	return $writer->getBinary();
@@ -78,7 +84,9 @@ class File {
 		$this->mtime = $stat["mtime"];
 		$this->permissions = fileperms($this->path);
 		// group & user names are cached
+		$this->uid = $stat["uid"];
 		$this->owner = $this->getOwnerName($stat["uid"]);
+		$this->gid = $stat["gid"];
 		$this->group = $this->getGroupName($stat["gid"]); 
 		$this->size = filesize($this->path);
 		$this->type = Catalog::TYPE_OTHER;
@@ -189,6 +197,14 @@ class File {
 	
 	function getPerms(): int {
 		return $this->permissions;
+	}
+	
+	function getUID(): int {
+		return $this->uid;
+	}
+	
+	function getGID(): int {
+		return $this->gid;
 	}
 	
 	function getOwner(): string {
