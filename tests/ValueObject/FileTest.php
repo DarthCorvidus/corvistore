@@ -149,7 +149,19 @@ class FileTest extends TestCase {
 		$binary = $object->toBinary();
 		$object2 = File::fromBinary($binary);
 		$this->assertEquals($object, $object2);
-		$this->assertEquals(4654, strlen($binary));
+		$this->assertEquals(4736, strlen($binary));
+	}
+
+	function testBinaryExtended() {
+		$object = File::fromPath("/tmp/crow-protect/readme.txt");
+		$object->setServerNodeName("ulysses");
+		$object->setServerStoreType(File::BACK_MAIN);
+		$object->setServerVersionId(73291);
+		$object->setServerCreated(time());
+		$binary = $object->toBinary();
+		$object2 = File::fromBinary($binary);
+		$this->assertEquals($object, $object2);
+		$this->assertEquals(4736, strlen($binary));
 	}
 
 }

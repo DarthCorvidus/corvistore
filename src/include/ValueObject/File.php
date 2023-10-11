@@ -14,9 +14,17 @@ class File {
 	private $action = NULL;
 	private $target = NULL;
 	private $version = 1;
+	private $srvNodeName = "";
+	private $srvStoreType = 0;
+	private $srvVersionId = 0;
+	private $srvCreated = 0;
 	const CREATE = 1;
 	const UPDATE = 2;
 	const DELETE = 3;
+	const BACK_MAIN = 1;
+	const BACK_COPY = 2;
+	const ARCH_MAIN = 3;
+	const ARCH_COPY = 4;
 	private static $userCache = array();
 	private static $groupCache = array();
 	private function __construct() {
@@ -33,6 +41,12 @@ class File {
 		$reader = new \plibv4\Binary\StringReader($binary, \plibv4\Binary\StringReader::LE);
 		$file = new File();
 		$file->version = $reader->getUInt8();
+		
+		$file->srvNodeName = $reader->getIndexedString(8, 64);
+		$file->srvCreated = $reader->getUInt64();
+		$file->srvVersionId = $reader->getUInt64();
+		$file->srvStoreType = $reader->getUInt8();
+		
 		$file->size = $reader->getUInt64();
 		$file->atime = $reader->getUInt64();
 		$file->ctime = $reader->getUInt64();
@@ -50,6 +64,12 @@ class File {
 	function toBinary(): string {
 		$writer = new \plibv4\Binary\StringWriter(\plibv4\Binary\StringWriter::LE);
 		$writer->addUInt8($this->version);
+		
+		$writer->addIndexedString(8, $this->srvNodeName, 64);
+		$writer->addUInt64($this->srvCreated);
+		$writer->addUInt64($this->srvVersionId);
+		$writer->addUInt8($this->srvStoreType);
+		
 		$writer->addUInt64($this->size);
 		$writer->addUInt64($this->atime);
 		$writer->addUInt64($this->ctime);
@@ -71,6 +91,23 @@ class File {
 	
 	function getAction(): int {
 		return $this->action;
+	}
+	
+	function setServerNodeName(string $name) {
+		$this->srvNodeName = $name;
+	}
+	
+	function setServerVersionId(int $versionId) {
+		$this->srvVersionId = $versionId;
+	}
+	
+	function setServerStoreType(int $storeType) {
+		Assert::isEnum($storeType, array(self::BACK_MAIN, self::BACK_COPY, self::ARCH_MAIN, self::ARCH_COPY));
+		$this->srvStoreType = $storeType;
+	}
+	
+	function setServerCreated(int $created) {
+		$this->srvCreated = $created;
 	}
 	
 	function reload() {

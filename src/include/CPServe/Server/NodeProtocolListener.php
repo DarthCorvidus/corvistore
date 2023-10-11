@@ -173,6 +173,15 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 			$version = $this->catalog->updateEntry($this->updateId, $file);
 		}
 		if($file->getType()== \Catalog::TYPE_FILE || $file->getType() == \Catalog::TYPE_LINK) {
+			/**
+			 * Adds Server meta information to the 8k meta block in front of a
+			 * file. In case of a catastrophic database loss, this should allow
+			 * recovery to a new server; however, there is no concept yet.
+			 */
+			$file->setServerCreated($version->getCreated());
+			$file->setServerNodeName($this->node->getName());
+			$file->setServerVersionId($version->getId());
+			$file->setServerStoreType(\File::BACK_MAIN);
 			$protocol->setFileReceiver($this->storage->store($version, $this->partition, $file));
 			$protocol->expect(\Net\Protocol::FILE);
 		}
