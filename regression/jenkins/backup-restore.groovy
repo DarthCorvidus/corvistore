@@ -65,19 +65,19 @@ node {
 		}
 
 		stage("Run Backup of /usr/bin/") {
-			sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} sudo ./src/cpnc.php backup /usr/bin/")
+			sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} sudo ./src/cpnc.php backup /etc/")
 			// Let the backup settle; due to the asynchronous nature of the receiving end,
 			// it may happen that the backup is not yet done when restoring. A bug
 			// to fix...
-			sleep 30
+			//sleep 30
 		}
 
 		stage("Run Restore of /usr/bin/") {
-			sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} sudo ./src/cpnc.php restore /usr/bin/ /root/restore")
+			sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} sudo ./src/cpnc.php restore /etc/ /root/restore")
 		}
 
 		stage("Compare backup and restore") {
-			sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} sudo ./regression/script/compare.php /usr/bin/ /root/restore/usr/bin/")
+			sh("podman exec --workdir /home/cpinst/crow-protect ${dockerId} sudo ./regression/script/compare.php /etc/ /root/restore/etc/")
 		}
 	} catch (Exception e) {
 		echo "Failed to run build steps: ${e.getMessage()}"
