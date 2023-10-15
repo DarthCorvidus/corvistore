@@ -19,9 +19,14 @@ class Directory {
 			if(is_link($filepath)) {
 				continue;
 			}
+			if(is_dir($filepath)) {
+				#echo $filepath.PHP_EOL;
+				$this->recurse($filepath."/", $prefix.$file);
+				continue;
+			}
 			
 			#echo $file.PHP_EOL;
-			$this->files[$prefix.$file] = new DirEntry($path.$file);
+			$this->files[$prefix."/".$file] = new DirEntry($path.$file);
 		}
 		closedir($dh);
 	}
@@ -29,6 +34,7 @@ class Directory {
 	function checkEqual(Directory $directory) {
 		$ret = TRUE;
 		echo "Comparing ".$this->path." vs ".$directory->path.PHP_EOL;
+		#print_r($this->files);
 		foreach($this->files as $key => $value) {
 			if(!isset($directory->files[$key])) {
 				echo "\t".$key." does not exist other directory.".PHP_EOL;
