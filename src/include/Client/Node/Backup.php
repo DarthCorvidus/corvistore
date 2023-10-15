@@ -59,9 +59,9 @@ class Backup implements \SignalHandler {
 				continue;
 			}
 			
-			#if(is_link($value)) {
-			#	continue;
-			#}
+			if(is_link($value)) {
+				continue;
+			}
 			#if(in_array($value, $this->exclude)) {
 			#	continue;
 			#}
