@@ -32,6 +32,8 @@ class Backup implements \SignalHandler {
 	
 	function onSignal(int $signal, array $info) {
 		if($signal==SIGINT or $signal==SIGTERM) {
+			$this->protocol->sendCommand("DONE");
+			$this->protocol->sendOK();
 			$this->protocol->sendCommand("QUIT");
 			echo "Exit after signal.".PHP_EOL;
 			$this->displayResult();
@@ -244,6 +246,8 @@ class Backup implements \SignalHandler {
 			$this->recurseFiles("/");
 		}
 		echo "Sending quit...".PHP_EOL;
+		$this->protocol->sendCommand("DONE");
+		$this->protocol->getOK();
 		$this->protocol->sendCommand("QUIT");
 		$this->displayResult();
 		#\plibv4\profiler\Profiler::endTimer("recurse");

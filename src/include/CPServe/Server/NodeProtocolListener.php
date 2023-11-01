@@ -1,6 +1,6 @@
 <?php
 namespace Server;
-class NodeProtocolListener implements \Net\ProtocolAsyncListener {
+class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolSendListener {
 	private $clientId;
 	private $node;
 	private $pdo;
@@ -64,11 +64,19 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener {
 		return;
 		}
 
-		if($command == "QUIT") {
+		if($command == "DONE") {
 			#$this->pdo->commit();
+			$protocol->sendOK();
+		}
+		if($command == "QUIT") {
 			echo "Terminating worker for ".$this->clientId." with PID ".posix_getpid().PHP_EOL;
 			exit();
 		}
+	}
+	
+	function onSent(\Net\ProtocolAsync $protocol) {
+		echo "Terminating worker for ".$this->clientId." with PID ".posix_getpid().PHP_EOL;
+		exit();
 	}
 	
 	private function handleTwo(\Net\ProtocolAsync $protocol, array $command) {
