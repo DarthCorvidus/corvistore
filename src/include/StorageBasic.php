@@ -16,6 +16,12 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	private $recvSize;
 	private $recvLeft;
 	private $file;
+	private $sem;
+	function __construct() {
+		parent::__construct();
+		$this->sem = sem_get(posix_getppid());
+		
+	}
 	static function getHexArray(int $id) {
 		$hex = str_pad(dechex($id), 16, 0, STR_PAD_LEFT);
 		$grouped = array();
@@ -101,7 +107,14 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 
 	public function onRecvStart() {
-		$this->pdo->beginTransaction();
+		// First try on sem_acquire will not block.
+		while(sem_acquire($this->sem, TRUE)===FALSE) {
+			// Show debug message here.
+			echo "Mutex for Process ".posix_getpid().PHP_EOL;
+			// Block until semaphore is acquired, then quit.
+			sem_acquire($this->sem);
+			break;
+		}
 		$param = array();
 		$param[] = $this->getId();
 		$serial = $this->pdo->result("select coalesce(max(dco_serial), 0)+1 from d_content where dst_id = ?", $param);
@@ -111,7 +124,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		$new["dco_serial"] = $serial;
 		$new["dco_stored"] = 0;
 		$this->storeId = $this->pdo->create("d_content", $new);
-		$this->pdo->commit();
+		sem_release($this->sem);
 		
 		$path = $this->getPathForIdFile($serial);
 		$location = $this->getPathForIdLocation($serial);
