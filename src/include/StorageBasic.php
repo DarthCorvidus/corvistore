@@ -46,8 +46,8 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		$param[] = $version;
 		#$param[] = $this->getPartitionId();
 		$param[] = 1;
-		$result = $this->pdo->row("select nvb_id from n_version2basic where dvs_id = ? and nvb_stored = ? limit 1", $param);
-		$path = $this->getPathForIdFile($result["nvb_id"]);
+		$result = $this->pdo->row("select dco_serial from d_content where dvs_id = ? and dco_stored = ? limit 1", $param);
+		$path = $this->getPathForIdFile($result["dco_serial"]);
 		$fileSender = new \Net\FileSender(File::fromPath($path), 8192);
 	return $fileSender;
 	}
@@ -84,7 +84,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 
 	public function onRecvEnd() {
-		$this->pdo->update("n_version2basic", array("nvb_stored"=>1), array("nvb_id"=>$this->storeId));
+		$this->pdo->update("d_content", array("dco_stored"=>1), array("dco_id"=>$this->storeId));
 		$this->versionEntry->setStored($this->pdo);
 		$this->partition = NULL;
 		$this->file = NULL;
@@ -101,14 +101,20 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 
 	public function onRecvStart() {
+		$this->pdo->beginTransaction();
+		$param = array();
+		$param[] = $this->getId();
+		$serial = $this->pdo->result("select coalesce(max(dco_serial), 0)+1 from d_content where dst_id = ?", $param);
 		$new["dvs_id"] = $this->versionEntry->getId();
 		$new["dst_id"] = $this->getId();
 		$new["dpt_id"] = $this->partition->getId();
-		$new["nvb_stored"] = 0;
-		$this->storeId = $this->pdo->create("n_version2basic", $new);
+		$new["dco_serial"] = $serial;
+		$new["dco_stored"] = 0;
+		$this->storeId = $this->pdo->create("d_content", $new);
+		$this->pdo->commit();
 		
-		$path = $this->getPathForIdFile($this->storeId);
-		$location = $this->getPathForIdLocation($this->storeId);
+		$path = $this->getPathForIdFile($serial);
+		$location = $this->getPathForIdLocation($serial);
 		#echo "Target Path: ".$path.PHP_EOL;
 		if(!file_exists($location)) {
 			mkdir($location, 0700, true);

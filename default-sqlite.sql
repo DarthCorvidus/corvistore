@@ -79,12 +79,13 @@ CREATE TABLE `d_version` (
 `dc_id` INTEGER
 );
 
-CREATE TABLE `n_version2basic` (
-`nvb_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE `d_content` (
+`dco_id` INTEGER PRIMARY KEY AUTOINCREMENT,
 `dvs_id` INTEGER,
 `dst_id` INTEGER,
 `dpt_id` INTEGER,
-`nvb_stored` INTEGER
+`dco_serial` INTEGER,
+`dco_stored` INTEGER
 );
 
 CREATE INDEX d_version_index ON d_version(dvs_mtime, dvs_stored, dvs_type, dvs_size, dvs_mtime, dc_id);
