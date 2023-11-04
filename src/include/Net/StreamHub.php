@@ -12,6 +12,7 @@ class StreamHub {
 	private $detach = array();
 	private $forward = array();
 	private $forwardLength = array();
+	private $forwardData = array();
 	function __construct() {
 		;
 	}
@@ -71,6 +72,7 @@ class StreamHub {
 	function addForward(string $sourceName, int $sourceId, string $targetName, int $targetId, int $length) {
 		$this->forward[$sourceName.":".$sourceId] = $targetName.":".$targetId;
 		$this->forwardLength[$sourceName.":".$sourceId] = $length;
+		$this->forwardData[$sourceName.":".$sourceId] = array();
 	}
 	
 	#function addStreamHubListener(string $name, StreamHubListener $listener) {
@@ -189,8 +191,13 @@ class StreamHub {
 		if($listener != NULL) {
 			$listener->onRead($data);
 		}
+		/*
+		 * If read data is to be forwarded, put it into a queue for forward
+		 * data.
+		 */
 		if(isset($this->forward[$key])) {
-			$this->write($this->forward[$key], $data);
+			$this->forwardData[$key][] = $data;
+			#$this->write($this->forward[$key], $data);
 		}
 	}
 	
@@ -287,6 +294,14 @@ class StreamHub {
 			if(in_array($key, array_keys($this->server), TRUE)) {
 				continue;
 			}
+			/*
+			 * If data is to be forwarded, do it here and continue.
+			 */
+			if(!empty($this->forwardData[$key])) {
+				fwrite($this->clients[$this->forward[$key]], array_shift($this->forwardData[$key]));
+				continue;
+			}
+
 			/*
 			 * this is necessary, because the client listener could have
 			 * gone away as part of some read action.
