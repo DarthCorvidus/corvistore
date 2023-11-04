@@ -256,6 +256,48 @@ class StreamHub {
 		
 	}
 	
+	private function readAllActive(array $read) {
+		foreach($read as $key => $value) {
+			if(in_array($key, array_keys($this->server), TRUE)) {
+				$client = stream_socket_accept($value);
+				$next = $this->counters[$key];
+				$this->counters[$key]++;
+				$this->clients[$key.":".$next] = $client;
+				$this->serverListeners[$key]->onConnect($key, $next, $client);
+				if($this->serverListeners[$key]->hasClientListener($key, $next)) {
+					$listener = $this->serverListeners[$key]->getClientListener($key, $next);
+					$this->clientListeners[$key.":".$next] = $listener;
+				}
+				#if($this->serverListeners[$key]->hasClientNamedListener($key, $next)) {
+				#	$listener = $this->serverListeners[$key]->getClientNamedListener($key, $next);
+				#	$this->clientNamedListeners[$key.":".$next] = $listener;
+				#}
+				$this->zeroCounter[$key.":".$next] = 0;
+				#$this->streamHubListeners[$key]->onConnect($key, $next, $client);
+				continue;
+			}
+			$this->read($key);
+
+			#$this->streamHubListeners[$exp[0]]->onRead($exp[0], (int)$exp[1], $value);
+		}
+	}
+	
+	private function writeAllActive(array $write) {
+		foreach($write as $key => $value) {
+			if(in_array($key, array_keys($this->server), TRUE)) {
+				continue;
+			}
+			/*
+			 * this is necessary, because the client listener could have
+			 * gone away as part of some read action.
+			 */
+			if(!isset($this->clientListeners[$key]) and !isset($this->clientNamedListeners[$key]) and !isset($this->forward[$key])) {
+				continue;
+			}
+			$this->write($key);
+		}
+	}
+	
 	function listen() {
 		while(TRUE) {
 			$read = array();
@@ -278,43 +320,8 @@ class StreamHub {
 				#}
 				continue;
 			}
-			foreach($read as $key => $value) {
-				if(in_array($key, array_keys($this->server), TRUE)) {
-					$client = stream_socket_accept($value);
-					$next = $this->counters[$key];
-					$this->counters[$key]++;
-					$this->clients[$key.":".$next] = $client;
-					$this->serverListeners[$key]->onConnect($key, $next, $client);
-					if($this->serverListeners[$key]->hasClientListener($key, $next)) {
-						$listener = $this->serverListeners[$key]->getClientListener($key, $next);
-						$this->clientListeners[$key.":".$next] = $listener;
-					}
-					#if($this->serverListeners[$key]->hasClientNamedListener($key, $next)) {
-					#	$listener = $this->serverListeners[$key]->getClientNamedListener($key, $next);
-					#	$this->clientNamedListeners[$key.":".$next] = $listener;
-					#}
-					$this->zeroCounter[$key.":".$next] = 0;
-					#$this->streamHubListeners[$key]->onConnect($key, $next, $client);
-					continue;
-				}
-				$this->read($key);
-				
-				#$this->streamHubListeners[$exp[0]]->onRead($exp[0], (int)$exp[1], $value);
-			}
-			
-			foreach($write as $key => $value) {
-				if(in_array($key, array_keys($this->server), TRUE)) {
-					continue;
-				}
-				/*
-				 * this is necessary, because the client listener could have
-				 * gone away as part of some read action.
-				 */
-				if(!isset($this->clientListeners[$key]) and !isset($this->clientNamedListeners[$key]) and !isset($this->forward[$key])) {
-					continue;
-				}
-				$this->write($key);
-			}
+			$this->readAllActive($read);
+			$this->writeAllActive($write);
 		}
 	}
 }
