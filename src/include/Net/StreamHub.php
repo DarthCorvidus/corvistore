@@ -313,49 +313,53 @@ class StreamHub {
 			$this->write($key);
 		}
 	}
+
+	private function getWriteStreams(): array {
+		$write = array();
+		foreach($this->clients as $key => $value) {
+			if(!empty($this->forwardData[$key])) {
+				$write[$key] = $value;
+				continue;
+			}
+			if(!$this->hasClientListener($key)) {
+				continue;
+			}
+			$hasWrite = $this->getClientListener($key)->hasWrite();
+
+			if(!$hasWrite and empty($this->clientBuffers[$key]) && isset($this->detach[$key])) {
+				unset($this->clients[$key]);
+				unset($this->detach[$key]);
+				$exp = explode(":", $key);
+				$name = $exp[0];
+				$id = (int)$exp[1];
+				$this->serverListeners[$name]->onDetach($name, $id);
+			continue;
+			}
+
+			if($hasWrite) {
+				$write[$key] = $value;
+				continue;
+			}
+			if(!empty($this->clientBuffers[$key])) {
+				$write[$key] = $value;
+				continue;
+			}
+		}
+	return $write;
+	}
 	
 	function listen() {
 		$i = 0;
 		while(TRUE) {
 			$read = array();
-			$write = array();
+			$write = $this->getWriteStreams();
 			foreach($this->clients as $key => $value) {
 				if(isset($this->detach[$key])) {
 					continue;
 				}
 				$read[$key] = $value;
 			}
-		
-			foreach($this->clients as $key => $value) {
-				if(!empty($this->forwardData[$key])) {
-					$write[$key] = $value;
-					continue;
-				}
-				if(!$this->hasClientListener($key)) {
-					continue;
-				}
-				$hasWrite = $this->getClientListener($key)->hasWrite();
-				
-				if(!$hasWrite and empty($this->clientBuffers[$key]) && isset($this->detach[$key])) {
-					unset($this->clients[$key]);
-					unset($this->detach[$key]);
-					$exp = explode(":", $key);
-					$name = $exp[0];
-					$id = (int)$exp[1];
-					$this->serverListeners[$name]->onDetach($name, $id);
-				continue;
-				}
-
-				if($hasWrite) {
-					$write[$key] = $value;
-					continue;
-				}
-				if(!empty($this->clientBuffers[$key])) {
-					$write[$key] = $value;
-					continue;
-				}
-			}
-				
+			
 			foreach($this->server as $key => $value) {
 				$read[$key] = $value;
 			}
