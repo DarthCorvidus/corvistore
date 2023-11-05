@@ -194,9 +194,10 @@ class StreamHub {
 		/*
 		 * If read data is to be forwarded, put it into a queue for forward
 		 * data.
+		 * The queue of the target stream is used.
 		 */
 		if(isset($this->forward[$key])) {
-			$this->forwardData[$key][] = $data;
+			$this->forwardData[$this->forward[$key]][] = $data;
 			#$this->write($this->forward[$key], $data);
 		}
 	}
@@ -298,7 +299,7 @@ class StreamHub {
 			 * If data is to be forwarded, do it here and continue.
 			 */
 			if(!empty($this->forwardData[$key])) {
-				fwrite($this->clients[$this->forward[$key]], array_shift($this->forwardData[$key]));
+				fwrite($value, array_shift($this->forwardData[$key]));
 				continue;
 			}
 
@@ -314,29 +315,56 @@ class StreamHub {
 	}
 	
 	function listen() {
+		$i = 0;
 		while(TRUE) {
 			$read = array();
 			$write = array();
 			foreach($this->clients as $key => $value) {
+				if(isset($this->detach[$key])) {
+					continue;
+				}
 				$read[$key] = $value;
 			}
 		
 			foreach($this->clients as $key => $value) {
-				$write[$key] = $value;
-			}
+				if(!empty($this->forwardData[$key])) {
+					$write[$key] = $value;
+					continue;
+				}
+				if(!$this->hasClientListener($key)) {
+					continue;
+				}
+				$hasWrite = $this->getClientListener($key)->hasWrite();
+				
+				if(!$hasWrite and empty($this->clientBuffers[$key]) && isset($this->detach[$key])) {
+					unset($this->clients[$key]);
+					unset($this->detach[$key]);
+					$exp = explode(":", $key);
+					$name = $exp[0];
+					$id = (int)$exp[1];
+					$this->serverListeners[$name]->onDetach($name, $id);
+				continue;
+				}
 
+				if($hasWrite) {
+					$write[$key] = $value;
+					continue;
+				}
+				if(!empty($this->clientBuffers[$key])) {
+					$write[$key] = $value;
+					continue;
+				}
+			}
+				
 			foreach($this->server as $key => $value) {
 				$read[$key] = $value;
 			}
 			if(@stream_select($read, $write, $except, $tv_sec = 5) < 1) {
-				#$error = socket_last_error($this->socket);
-				#if($error!==0) {
-				#	echo sprintf("socket_select() failed: %d %s", $error, socket_strerror($error)).PHP_EOL;
-				#}
 				continue;
 			}
+			$i++;
+			$this->writeAllActive($write);		
 			$this->readAllActive($read);
-			$this->writeAllActive($write);
 		}
 	}
 }
