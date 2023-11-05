@@ -161,7 +161,7 @@ class Backup implements \SignalHandler {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
 			}
-			if($file->getType()==\Catalog::TYPE_FILE) {
+			if($file->getType()==\Catalog::TYPE_LINK) {
 				echo "Sending link ".$file->getPath().PHP_EOL;
 				try {
 					$this->protocol->sendStream(new \Net\LinkSender($file));
