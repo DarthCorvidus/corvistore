@@ -63,7 +63,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		if(file_exists($this->getPathForIdFile($this->storeId))) {
 			unlink($this->getPathForIdFile($this->storeId));
 		}
-		$this->pdo->delete("n_version2basic", array("nvb_id"=>$this->storeId));
+		$this->pdo->delete("d_content", array("dco_id"=>$this->storeId));
 		$this->partition = NULL;
 		$this->file = NULL;
 		$this->versionEntry = NULL;
@@ -148,12 +148,12 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		if($partition==NULL) {
 			$param[] = 1;
 			$param[] = $this->id;
-			return $this->pdo->result("select coalesce(sum(dvs_size), 0) from d_version JOIN n_version2basic USING (dvs_id) where dvs_stored = ? and dst_id = ?", $param);
+			return $this->pdo->result("select coalesce(sum(dvs_size), 0) from d_version JOIN d_content USING (dvs_id) where dvs_stored = ? and dst_id = ?", $param);
 		} else {
 			$param[] = 1;
 			$param[] = $this->id;
 			$param[] = $partition->getId();
-			return $this->pdo->result("select coalesce(sum(dvs_size), 0) from d_version JOIN n_version2basic USING (dvs_id) where dvs_stored = ? and dst_id = ? and dpt_id = ?", $param);
+			return $this->pdo->result("select coalesce(sum(dvs_size), 0) from d_version JOIN d_content USING (dvs_id) where dvs_stored = ? and dst_id = ? and dpt_id = ?", $param);
 		}
 	}
 
