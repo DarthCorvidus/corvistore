@@ -202,18 +202,7 @@ class StreamHub {
 		}
 	}
 	
-	private function write(string $key, $data = NULL) {
-		$exp = explode(":", $key);
-		$name = $exp[0];
-		$id = (int)$exp[1];
-		if(isset($this->forward[$key])) {
-			if($data==NULL) {
-				return;
-			}
-			fwrite($this->clients[$key], $data);
-		return;
-		}
-		
+	private function write(string $key) {
 		if(!$this->hasClientListener($key) && !isset($this->forward[$key])) {
 			print_r($this->forward);
 			throw new Exception("no listener to write event for ".$key);
@@ -221,45 +210,18 @@ class StreamHub {
 
 		if($this->hasClientListener($key)) {
 			$listener = $this->getClientListener($key);
-			$hasWrite = $listener->hasWrite();
 		}
-		
-		#if($this->hasClientNamedListener($key)) {
-		#	
-		#	$listener = $this->getClientNamedListener($key);
-		#	$hasWrite = $listener->hasWrite($name, $id);
-		#}
 
-		/*
-		 * If detach was called on a stream, detach it here once everything in
-		 * the pipeline has been written; otherwise, data would be lost.
-		 * Call onDetach on the server listener afterwards.
-		 */
-		if(!$hasWrite and empty($this->clientBuffers[$key]) && isset($this->detach[$key])) {
-			unset($this->clients[$key]);
-			unset($this->detach[$key]);
-			$this->serverListeners[$name]->onDetach($name, $id);
-		return;
-		}
-		if(!$hasWrite and empty($this->clientBuffers[$key])) {
-			return;
-		}
-		
-		$this->clientBuffers[$key][] = $listener->onWrite($name, $id);
-		/*
-		 *  Java would kick me in the b… for using $name and $id regardless of
-		 *  the listener type, but sometimes it is ok to use the privileges of
-		 *  PHP...
-		 */
-		if(!$listener->getBinary($name, $id)) {
+		$this->clientBuffers[$key][] = $listener->onWrite();
+		if(!$listener->getBinary()) {
 			$write = array_shift($this->clientBuffers[$key]);
-			fwrite($this->clients[$key], $listener->onWrite($name, $id).PHP_EOL);
-			$listener->onWritten($key, $id);
+			fwrite($this->clients[$key], $listener->onWrite().PHP_EOL);
+			$listener->onWritten($key);
 		}
-		if($listener->getBinary($name, $id)) {
+		if($listener->getBinary()) {
 			$write = array_shift($this->clientBuffers[$key]);
 			fwrite($this->clients[$key], $write);
-			$listener->onWritten($key, $id);
+			$listener->onWritten($key);
 		}
 		
 	}
@@ -324,8 +286,21 @@ class StreamHub {
 			if(!$this->hasClientListener($key)) {
 				continue;
 			}
-			$hasWrite = $this->getClientListener($key)->hasWrite();
+			if(!empty($this->clientBuffers[$key])) {
+				$write[$key] = $value;
+				continue;
+			}
 
+			$hasWrite = $this->getClientListener($key)->hasWrite();
+			if($hasWrite) {
+				$write[$key] = $value;
+				continue;
+			}
+			/*
+			 * If detach was called on a stream, detach it here once everything in
+			 * the pipeline has been written; otherwise, data would be lost.
+			 * Call onDetach on the server listener afterwards.
+			*/
 			if(!$hasWrite and empty($this->clientBuffers[$key]) && isset($this->detach[$key])) {
 				unset($this->clients[$key]);
 				unset($this->detach[$key]);
@@ -336,14 +311,6 @@ class StreamHub {
 			continue;
 			}
 
-			if($hasWrite) {
-				$write[$key] = $value;
-				continue;
-			}
-			if(!empty($this->clientBuffers[$key])) {
-				$write[$key] = $value;
-				continue;
-			}
 		}
 	return $write;
 	}
