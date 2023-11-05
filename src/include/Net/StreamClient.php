@@ -22,7 +22,7 @@ class StreamClient implements Stream {
 		}
 	}
 
-	public function write($string) {
+	public function write($string): int {
 		while(true) {
 			$write = array($this->socket);
 			$read = array();
@@ -30,7 +30,7 @@ class StreamClient implements Stream {
 				echo "Stream not ready to write.".PHP_EOL;
 				continue;
 			}
-			fwrite($this->socket, $string);
+			return fwrite($this->socket, $string);
 		}
 	}
 
