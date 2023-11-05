@@ -57,7 +57,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$report["files"] = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ? and dc_id in (select dc_id from d_version where dvs_type = ?)", array($this->node->getId(), \Catalog::TYPE_FILE));
 			$params[] = $this->node->getId();
 			$params[] = 1;
-			$report["occupancy"] = $this->pdo->result("select sum(dvs_size) from d_catalog JOIN d_version USING (dc_id) JOIN n_version2basic USING (dvs_id) WHERE dnd_id = ? and dvs_stored = ?", $params);
+			$report["occupancy"] = $this->pdo->result("select sum(dvs_size) from d_catalog JOIN d_version USING (dc_id) JOIN d_content USING (dvs_id) WHERE dnd_id = ? and dvs_stored = ?", $params);
 			$report["oldest"] = $this->pdo->result("select min(dvs_created_epoch) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ?", array($this->node->getId()));
 			$report["newest"] = $this->pdo->result("select max(dvs_created_epoch) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ?", array($this->node->getId()));
 			$protocol->sendSerialize($report);
@@ -83,7 +83,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		if($command[0]=="REPORT") {
 			// Report for the root directory.
 			if($command[1]=="/") {
-				$entries = $this->catalog->getEntries(0);
+				$entries = $this->catalog->getEntries("/");
 				$protocol->sendSerialize($entries);
 			return;
 			}
