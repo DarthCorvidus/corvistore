@@ -108,12 +108,12 @@ class Backup implements \SignalHandler {
 			#if($file->getType()!= \Catalog::TYPE_DIR) {
 			#	continue;
 			#}
-			echo "Creating ".$file->getPath().PHP_EOL;
+			#echo "Creating ".$file->getPath().PHP_EOL;
 			#$this->protocol->sendCommand("CREATE FILE ".$file->getPath());
 			$file->setAction(\File::CREATE);
 			$this->protocol->sendSerialize($file);
 			if($file->getType()== \Catalog::TYPE_FILE) {
-				echo "Sending ".$file->getPath().PHP_EOL;
+				echo "Sending new file ".$file->getPath()." [".number_format($file->getSize())."]".PHP_EOL;
 				try {
 					$this->protocol->sendStream(new \Net\FileSender($file));
 					$this->transferred += $file->getSize();
@@ -147,13 +147,13 @@ class Backup implements \SignalHandler {
 			#pcntl_signal_dispatch();
 			$file = $diff->getChanged()->getEntry($i);
 			$entry = $catalogEntries->getByName($file->getBasename());
-			echo "Updating ".$file->getPath().PHP_EOL;
+			#echo "Updating ".$file->getPath().PHP_EOL;
 			$file->setAction(\File::UPDATE);
 			$this->protocol->sendCommand("UPDATE FILE ".$entry->getId());
 			$this->protocol->sendSerialize($file);
 			#$this->protocol->sendSerializePHP($entry);
 			if($file->getType()==\Catalog::TYPE_FILE) {
-				echo "Sending ".$file->getPath().PHP_EOL;
+				echo "Updating ".$file->getPath().PHP_EOL;
 				try {
 					$this->protocol->sendStream(new \Net\FileSender($file));
 					$this->transferred += $file->getSize();
