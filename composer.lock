@@ -52,12 +52,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-assert",
-                "reference": "9aebc115d75b869b0380e13d721b06ef0733d5f1"
+                "reference": "2a2f0bb1578baad6b96b1c7f7022b713c4633a9c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-assert/zipball/9aebc115d75b869b0380e13d721b06ef0733d5f1",
-                "reference": "9aebc115d75b869b0380e13d721b06ef0733d5f1",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-assert/zipball/2a2f0bb1578baad6b96b1c7f7022b713c4633a9c",
+                "reference": "2a2f0bb1578baad6b96b1c7f7022b713c4633a9c",
                 "shasum": ""
             },
             "require-dev": {
@@ -78,7 +78,7 @@
                     "./vendor/bin/phpunit --bootstrap vendor/autoload.php --testdox --colors=always tests"
                 ]
             },
-            "time": "2023-07-08T15:18:06+00:00"
+            "time": "2023-12-09T19:48:52+00:00"
         },
         {
             "name": "plibv4/binary",
