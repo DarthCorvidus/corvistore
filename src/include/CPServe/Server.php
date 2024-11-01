@@ -7,20 +7,25 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 	private $authMode = array();
 	private $authFail = array();
 	private $workers = array();
+	private plibv4\process\Timeshare $ts;
+	private Server\TaskServer $workerServer;
 	function __construct(EPDO $pdo) {
 		set_time_limit(0);
 		ob_implicit_flush();
 		pcntl_async_signals(true);
 		$signal = Signal::get();
 		$this->pdo = $pdo;
+		$this->ts = new plibv4\process\Timeshare();
+		$this->workerServer = new Server\TaskServer($this->ts);
+		$this->ts->addTask($this->workerServer);
 		#$signal->addSignalHandler(SIGINT, $this);
 		#$signal->addSignalHandler(SIGTERM, $this);
 		if(file_exists(Shared::getIPCSocket())) {
 			unlink(Shared::getIPCSocket());
 		}
 		$ipcServer = stream_socket_server("unix://".Shared::getIPCSocket(), $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
-		$this->hub = new StreamHub();
-		$this->hub->addServer("ipc", $ipcServer, $this);
+		#$this->hub = new StreamHub();
+		#$this->hub->addServer("ipc", $ipcServer, $this);
 	}
 	
 	function onSignal(int $signal, array $info) {
@@ -32,12 +37,17 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 	}
 
 	function run() {
+		/*
 		$runner = new \Server\RunnerSSL();
 		$sslProcess = new Process($runner);
 		$sslProcess->addProcessListener($this);
 		$sslProcess->run();
 		
 		$this->hub->listen();
+		 * 
+		 */
+		$this->ts->run();
+		echo "Server shutdown.".PHP_EOL;
 	}
 
 	public function onEnd(Process $process) {
