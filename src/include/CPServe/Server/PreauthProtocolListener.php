@@ -21,6 +21,7 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 	}
 	
 	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
+		echo $command.PHP_EOL;
 		if($this->mode === "") {
 			$this->modeSelect($protocol, $command);
 		return;
@@ -29,7 +30,7 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 			$this->authenticate($protocol, $command);
 		return;
 		}
-		echo $command.PHP_EOL;
+		//echo $command.PHP_EOL;
 		if($command=="quit") {
 			echo "Terminating session for ".$this->id.PHP_EOL;
 			//$protocol->sendMessage("Ended session on ".date("Y-m-d H:i:s"));
@@ -90,6 +91,7 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 	private function authenticate(\Net\ProtocolAsync $protocol, string $command) {
 		$exp = explode(" ", $command);
 		if(count($exp)!=2) {
+			echo $command.PHP_EOL;
 			echo "Malformed authentication from ".$this->id.PHP_EOL;
 			$this->sched->terminate($this->task);
 		return;
@@ -105,6 +107,11 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 			$this->password = $cred[1];
 			$this->authenticateAdmin($protocol);
 		}
+		if($this->mode == "node") {
+			$this->username = $cred[0];
+			$this->password = $cred[1];
+			$this->authenticateNode($protocol);
+		}
 	}
 	
 	private function authenticateAdmin(\Net\ProtocolAsync $protocol) {
@@ -118,6 +125,20 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 		$this->listener->switchAdmin($this->user);
 		//$protocol->sendMessage("Corviprotect v0.0.1 Alpha");
 	}
+
+	private function authenticateNode(\Net\ProtocolAsync $protocol) {
+		try {
+			$node = \Node::authenticate($this->pdo, $this->username.":".$this->password);
+			echo "Authentication for client ".$this->id.", node ".$this->username." suceeded".PHP_EOL;
+		} catch (Exception $ex) {
+			echo "Authentication for client ".$this->id.", node ".$this->username." failed".PHP_EOL;
+			$this->sched->terminate($this->task);
+		}
+		$this->listener->switchNode($node);
+		//$protocol->sendMessage("Corviprotect v0.0.1 Alpha");
+	}
+	
+	
 	
 
 	public function onDisconnect(\Net\ProtocolAsync $protocol) {

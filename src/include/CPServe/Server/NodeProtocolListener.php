@@ -1,5 +1,7 @@
 <?php
 namespace Server;
+use plibv4\process\Scheduler;
+use plibv4\process\Task;
 class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolSendListener {
 	private $clientId;
 	private $node;
@@ -11,12 +13,16 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 	private $storage;
 	private $partition;
 	private $transactions = 0;
-	public function __construct(\EPDO $pdo, int $clientId, \Node $node) {
+	private Scheduler $sched;
+	private Task $task;
+	public function __construct(Scheduler $sched, Task $task, \EPDO $pdo, int $clientId, \Node $node) {
 		$this->clientId = $clientId;
 		$this->node = $node;
 		$this->pdo = $pdo;
 		$this->catalog = new \Catalog($this->pdo, $this->node);
 		$this->partition = $this->node->getPolicy()->getPartition();
+		$this->sched = $sched;
+		$this->task = $task;
 		/**
 		 * I just assume here that StorageBasic is used, which only works as long
 		 * as there is only one storage type.
@@ -69,8 +75,9 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$protocol->sendOK();
 		}
 		if($command == "QUIT") {
-			echo "Terminating worker for ".$this->clientId." with PID ".posix_getpid().PHP_EOL;
-			exit();
+			echo "Terminating worker for ".$this->clientId.PHP_EOL;
+			$this->sched->terminate($this->task);
+			//exit();
 		}
 	}
 	
