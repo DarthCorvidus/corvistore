@@ -3,8 +3,11 @@ namespace Server;
 class TaskClient implements \plibv4\process\Task {
 	private \plibv4\process\Timeshare $ts;
 	private $socket;
+	private \Net\ProtocolAsync $protocol;
+	private bool $terminated = false;
 	function __construct(\plibv4\process\Timeshare $ts, $socket) {
 		$this->ts = $ts;
+		$this->protocol = new \Net\ProtocolAsync(new PreauthProtocolListener($this->ts, $this));
 		$this->socket = $socket;
 		stream_set_blocking($this->socket, false);
 	}
@@ -23,12 +26,23 @@ class TaskClient implements \plibv4\process\Task {
 	}
 
 	public function __tsLoop(): bool {
-		$value = fread($this->socket, 1024);
-		//$value = trim(fgets($this->socket));
-		if($value === "" or $value === false) {
+		if($this->protocol->hasWrite()) {
+			$write = $this->protocol->onWrite();
+			$written = fwrite($this->socket, $write);
+			$this->protocol->onWritten();
+		return true;
+		}
+		/*
+		 * Do not read data if terminated. Just send out what's left.
+		 */
+		if($this->terminated) {
 			return true;
 		}
-		var_dump($value);
+		$data = fread($this->socket, $this->protocol->getPacketLength());
+		if($data === "" or $data === false) {
+			return true;
+		}
+		$this->protocol->onRead($data);
 	return true;
 	}
 
@@ -45,6 +59,12 @@ class TaskClient implements \plibv4\process\Task {
 	}
 
 	public function __tsTerminate(): bool {
+		/*
+		 * Do not terminate as long Protocol has data left in buffer.
+		 */
+		if($this->protocol->hasWrite()) {
+			return false;
+		}
 		fclose($this->socket);
 	return true;
 	}
