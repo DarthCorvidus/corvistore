@@ -7,7 +7,7 @@ class TaskClient implements \plibv4\process\Task {
 	private bool $terminated = false;
 	function __construct(\plibv4\process\Timeshare $ts, $socket) {
 		$this->ts = $ts;
-		$this->protocol = new \Net\ProtocolAsync(new PreauthProtocolListener($this->ts, $this));
+		$this->protocol = new \Net\ProtocolAsync(new FacadeProtocolListener($this->ts, $this));
 		$this->socket = $socket;
 		stream_set_blocking($this->socket, false);
 	}

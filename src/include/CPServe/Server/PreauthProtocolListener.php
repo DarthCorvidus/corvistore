@@ -11,11 +11,13 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 	private \EPDO $pdo;
 	private $username;
 	private $password;
-	function __construct(Scheduler $sched, Task $task) {
+	private FacadeProtocolListener $listener;
+	function __construct(Scheduler $sched, Task $task, FacadeProtocolListener $listener) {
 		$this->sched = $sched;
 		$this->task = $task;
 		$this->id = 0;
 		$this->pdo = \Shared::getEPDO();
+		$this->listener = $listener;
 	}
 	
 	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
@@ -113,7 +115,8 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 			echo "Authentication for client ".$this->id.", username ".$this->username." failed".PHP_EOL;
 			$this->sched->terminate($this->task);
 		}
-		$protocol->sendMessage("Corviprotect v0.0.1 Alpha");
+		$this->listener->switchAdmin($this->user);
+		//$protocol->sendMessage("Corviprotect v0.0.1 Alpha");
 	}
 	
 
