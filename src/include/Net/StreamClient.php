@@ -4,6 +4,19 @@ class StreamClient implements Stream {
 	private $socket;
 	function __construct($socket) {
 		$this->socket = $socket;
+		// Make sure stream is blocking.
+		stream_set_blocking($this->socket, true);
+		/**
+		 * There's currently a bug which sometimes blocks reading for the
+		 * amount of a timeout. It happens if serialized GET CATALOG results
+		 * are ($length + 5) % 1024 = 0, ie if the serialized string + 5 bytes
+		 * for payload are an exact multiple of 1024. I was not able to determine
+		 * the cause.
+		 * StreamClient is able to recover after timeout is reached. I don't
+		 * understand why, but currently I'm considering to go for another approach
+		 * regarding client/server communication.
+		 */
+		stream_set_timeout($this->socket, 5);
 	}
 	public function close() {
 		fclose($this->socket);
@@ -13,11 +26,13 @@ class StreamClient implements Stream {
 		while(true) {
 			$write = array();
 			$read = array($this->socket);
-			if(@stream_select($read, $write, $except, $tv_sec = 1) < 1) {
-				echo "Stream not ready to read.".PHP_EOL;
-				continue;
-			}
-			
+			/*
+			 * stream_select should/must not be used with blocking streams.
+			 */
+			#if(@stream_select($read, $write, $except, $tv_sec = 1) < 1) {
+			#	echo "Stream not ready to read.".PHP_EOL;
+			#	continue;
+			#}
 			return fread($this->socket, $amount);
 		}
 	}
@@ -26,10 +41,10 @@ class StreamClient implements Stream {
 		while(true) {
 			$write = array($this->socket);
 			$read = array();
-			if(@stream_select($read, $write, $except, $tv_sec = 1) < 1) {
-				echo "Stream not ready to write.".PHP_EOL;
-				continue;
-			}
+			#if(@stream_select($read, $write, $except, $tv_sec = 1) < 1) {
+			#	echo "Stream not ready to write.".PHP_EOL;
+			#	continue;
+			#}
 			return fwrite($this->socket, $string);
 		}
 	}
