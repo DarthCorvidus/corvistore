@@ -33,7 +33,20 @@ class StreamClient implements Stream {
 			#	echo "Stream not ready to read.".PHP_EOL;
 			#	continue;
 			#}
-			return fread($this->socket, $amount);
+			$data = fread($this->socket, $amount);
+			if($data === false) {
+				echo "Read false instead of data, continuing.".PHP_EOL;
+				continue;
+			}
+			$received = strlen($data);
+			if($received === 0) {
+				continue;
+			}
+			if($received<$amount) {
+				throw new \Exception("Received less data than expected, ".$received." instead of ".$amount);
+			}
+			return $data;
+			// fread($this->socket, $amount);
 		}
 	}
 

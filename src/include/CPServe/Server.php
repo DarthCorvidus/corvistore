@@ -9,6 +9,7 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 	private $workers = array();
 	private plibv4\process\Timeshare $ts;
 	private Server\TaskServer $workerServer;
+	private Server\Input $input;
 	function __construct(EPDO $pdo) {
 		set_time_limit(0);
 		ob_implicit_flush();
@@ -17,7 +18,9 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 		$this->pdo = $pdo;
 		$this->ts = new plibv4\process\Timeshare();
 		$this->workerServer = new Server\TaskServer($this->ts);
+		$this->input = new Server\Input($pdo, $this->ts);
 		$this->ts->addTask($this->workerServer);
+		$this->ts->addTask($this->input);
 		#$signal->addSignalHandler(SIGINT, $this);
 		#$signal->addSignalHandler(SIGTERM, $this);
 		if(file_exists(Shared::getIPCSocket())) {
