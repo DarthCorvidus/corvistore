@@ -1,5 +1,8 @@
 <?php
 namespace Server;
+use plibv4\process\Task;
+use Net\ProtocolAsync;
+use Net\AsyncStream;
 class TaskServer implements \plibv4\process\Task {
 	private \plibv4\process\Timeshare $ts;
 	private $socket;
@@ -35,7 +38,8 @@ class TaskServer implements \plibv4\process\Task {
 		}
 		echo "Connection to Server.".PHP_EOL;
 		$clientSocket = stream_socket_accept($this->socket);
-		$clientTask = new TaskClient($this->ts, $clientSocket);
+		$clientTask = new AsyncStream($clientSocket);
+		$clientTask->setProtocol(new ProtocolAsync(new FacadeProtocolListener($this->ts, $clientTask)));
 		$this->ts->addTask($clientTask);
 	return true;
 	}
