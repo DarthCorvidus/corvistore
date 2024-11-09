@@ -1,6 +1,7 @@
 <?php
 namespace Node;
 use plibv4\process\Task;
+use plibv4\process\Scheduler;
 class DirectoryWalk implements Task {
 	private $path;
 	private $currentPath;
@@ -30,21 +31,21 @@ class DirectoryWalk implements Task {
 		$this->observer = $observer;
 	}
 
-	public function __tsError(\Exception $e, int $step): void {
+	public function __tsError(Scheduler $sched, \Exception $e, int $step): void {
 		echo $e::class.PHP_EOL;
 		print $e->getTraceAsString().PHP_EOL;
 		throw $e;
 	}
 
-	public function __tsFinish(): void {
+	public function __tsFinish(Scheduler $sched): void {
 		echo "Processed: ".$this->processed.PHP_EOL;
 	}
 
-	public function __tsKill(): void {
+	public function __tsKill(Scheduler $sched): void {
 		
 	}
 
-	public function __tsLoop(): bool {
+	public function __tsLoop(Scheduler $sched): bool {
 		if(!$this->currentDir->valid() && empty($this->dirStack)) {
 			$this->observer->onEnd($this);
 			return false;
@@ -89,19 +90,19 @@ class DirectoryWalk implements Task {
 		return $info;
 	}
 
-	public function __tsPause(): void {
+	public function __tsPause(Scheduler $sched): void {
 		
 	}
 
-	public function __tsResume(): void {
+	public function __tsResume(Scheduler $sched): void {
 		
 	}
 
-	public function __tsStart(): void {
+	public function __tsStart(Scheduler $sched): void {
 		
 	}
 
-	public function __tsTerminate(): bool {
+	public function __tsTerminate(Scheduler $sched): bool {
 		
 	}
 }
