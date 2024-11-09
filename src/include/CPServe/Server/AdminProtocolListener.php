@@ -29,7 +29,7 @@ class AdminProtocolListener implements \Net\ProtocolAsyncListener {
 		if($command == "halt") {
 			$protocol->sendMessage("Not yet implemented");
 			echo "Halting SSL server on client ".$this->clientId." request.".PHP_EOL;
-			$this->sched->__tsTerminate();
+			$this->sched->terminateAll();
 		return;
 		}
 		

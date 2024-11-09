@@ -2,6 +2,7 @@
 namespace Net;
 use \plibv4\process\Task;
 use \Net\ProtocolAsync;
+use plibv4\process\Scheduler;
 class AsyncStream implements Task {
 	private $socket;
 	private ProtocolAsync $protocol;
@@ -16,21 +17,21 @@ class AsyncStream implements Task {
 	}
 	
 
-	public function __tsError(\Exception $e, int $step): void {
+	public function __tsError(Scheduler $sched, \Exception $e, int $step): void {
 		echo $e->getMessage().PHP_EOL;
 		fclose($this->socket);
 	}
 
-	public function __tsFinish(): void {
+	public function __tsFinish(Scheduler $sched): void {
 		fclose($this->socket);
 		echo "Socket closed.".PHP_EOL;
 	}
 
-	public function __tsKill(): void {
+	public function __tsKill(Scheduler $sched): void {
 		fclose($this->socket);
 	}
 
-	public function __tsLoop(): bool {
+	public function __tsLoop(Scheduler $sched): bool {
 		if($this->protocol->hasWrite()) {
 			$write = $this->protocol->onWrite();
 			$written = fwrite($this->socket, $write);
@@ -65,19 +66,19 @@ class AsyncStream implements Task {
 	return true;
 	}
 
-	public function __tsPause(): void {
+	public function __tsPause(Scheduler $sched): void {
 		
 	}
 
-	public function __tsResume(): void {
+	public function __tsResume(Scheduler $sched): void {
 		
 	}
 
-	public function __tsStart(): void {
+	public function __tsStart(Scheduler $sched): void {
 		
 	}
 
-	public function __tsTerminate(): bool {
+	public function __tsTerminate(Scheduler $sched): bool {
 		/*
 		 * Do not terminate as long Protocol has data left in buffer.
 		 */

@@ -38,8 +38,8 @@ class TaskServer implements Task {
 		echo "Connection to Server.".PHP_EOL;
 		$clientSocket = stream_socket_accept($this->socket);
 		$clientTask = new AsyncStream($clientSocket);
-		$clientTask->setProtocol(new ProtocolAsync(new FacadeProtocolListener($this->ts, $clientTask)));
-		$this->ts->addTask($clientTask);
+		$clientTask->setProtocol(new ProtocolAsync(new FacadeProtocolListener($sched, $clientTask)));
+		$sched->addTask($clientTask);
 	return true;
 	}
 
