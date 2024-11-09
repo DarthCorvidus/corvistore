@@ -1,7 +1,7 @@
 <?php
 namespace Node;
 use plibv4\process\Task;
-class WalkDirectory implements Task {
+class DirectoryWalk implements Task {
 	private $path;
 	private $currentPath;
 	private array $directories = array();
@@ -14,7 +14,10 @@ class WalkDirectory implements Task {
 	private array $dirStack = array();
 	private \InEx $inex;
 	private $repeat = 0;
-	function __construct(string $path, \InEx $inex) {
+	private \DirectoryIterator $currentDir;
+	private \Files $currentFiles;
+	private DirectoryWalkObserver $observer;
+	function __construct(string $path, \InEx $inex, DirectoryWalkObserver $observer) {
 		$this->path = $path;
 		$this->dirStack[] = $this->path;
 		$this->inex = $inex;
@@ -22,7 +25,9 @@ class WalkDirectory implements Task {
 		$this->inex->addExclude("/proc");
 		$this->inex->addExclude("/dev");
 		$this->inex->addExclude("/sys");
-
+		$this->currentFiles = new \Files();
+		$this->currentDir = new \DirectoryIterator($this->path);
+		$this->observer = $observer;
 	}
 
 	public function __tsError(\Exception $e, int $step): void {
@@ -40,27 +45,35 @@ class WalkDirectory implements Task {
 	}
 
 	public function __tsLoop(): bool {
-		if(empty($this->dirStack)) {
+		if(!$this->currentDir->valid() && empty($this->dirStack)) {
+			$this->observer->onEnd($this);
 			return false;
 		}
-		$next = array_shift($this->dirStack);
-		$files = new \Files();
-		$iterator = new \DirectoryIterator($next);
-		foreach($iterator as $object) {
+		
+		if(!$this->currentDir->valid()) {
+			$this->observer->onFiles($this, $this->currentDir->getPath(),  $this->currentFiles);
+			$next = array_shift($this->dirStack);
+			$this->currentFiles = new \Files();
+			$this->currentDir = new \DirectoryIterator($next);
+		}
+		$object = $this->currentDir->current();
 			if($object->getBasename()==="." or $object->getBasename()==="..") {
-				continue;
+				$this->currentDir->next();
+			return true;
 			}
 			$this->processed++;
 			$realPath = $object->getRealPath();
 			if(!$this->inex->isValid($realPath)) {
-				continue;
+				$this->currentDir->next();
+				return true;
 			}
 			if($object->isLink()) {
-				continue;
+				$this->currentDir->next();
+				return true;
 			}
 			try {
 				$file = \File::fromPath($object->getPath());
-				$files->addEntry($file);
+				$this->currentFiles->addEntry($file);
 			} catch(\Exception $e) {
 				echo $e::class.PHP_EOL;
 				echo $e->getMessage().PHP_EOL;
@@ -68,7 +81,7 @@ class WalkDirectory implements Task {
 			if($object->isDir() && $object->getPath()!=="") {
 				$this->dirStack[] = $realPath;
 			}
-		}
+			$this->currentDir->next();
 	return true;
 	}
 	
