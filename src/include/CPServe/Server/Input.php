@@ -4,10 +4,8 @@ use plibv4\process\Task;
 use plibv4\process\Scheduler;
 use Server\AdminProtocolListener;
 class Input implements \plibv4\process\Task {
-	private Scheduler $sched;
 	private \EPDO $pdo;
-	function __construct(\EPDO $pdo, Scheduler $sched) {
-		$this->sched = $sched;
+	function __construct(\EPDO $pdo) {
 		$this->pdo = $pdo;
 		stream_set_blocking(STDIN, false);
 		$this->addBuffer("Corviprotect 0.0.1 Alpha ready.");
@@ -17,22 +15,22 @@ class Input implements \plibv4\process\Task {
 		$this->listener = $listener;
 	}
 	
-	public function __tsError(\Exception $e, int $step): void {
+	public function __tsError(Scheduler $sched, \Exception $e, int $step): void {
 		/**
 		 * Let the server die if an exception can't be handled.
 		 */
 		echo $e->getMessage();
 	}
 
-	public function __tsFinish(): void {
+	public function __tsFinish(Scheduler $sched): void {
 		
 	}
 
-	public function __tsKill(): void {
+	public function __tsKill(Scheduler $sched): void {
 		
 	}
 
-	public function __tsLoop(): bool {
+	public function __tsLoop(Scheduler $sched): bool {
 		if(!empty($this->buffer)) {
 			echo array_shift($this->buffer).PHP_EOL;
 			if(empty($this->buffer)) {
@@ -54,7 +52,7 @@ class Input implements \plibv4\process\Task {
 		return true;
 		}
 		if($read === "halt") {
-			$this->sched->__tsTerminate();
+			$sched->terminateAll();
 		}
 
 		$parser = new \CommandHandler($this->pdo, new \CommandParser($read));
@@ -71,19 +69,19 @@ class Input implements \plibv4\process\Task {
 		$this->buffer[] = $string;
 	}
 
-	public function __tsPause(): void {
+	public function __tsPause(Scheduler $sched): void {
 		
 	}
 
-	public function __tsResume(): void {
+	public function __tsResume(Scheduler $sched): void {
 		
 	}
 
-	public function __tsStart(): void {
+	public function __tsStart(Scheduler $sched): void {
 		
 	}
 
-	public function __tsTerminate(): bool {
+	public function __tsTerminate(Scheduler $sched): bool {
 		echo "Shutting down server from server shell.".PHP_EOL;
 		return true;
 	}

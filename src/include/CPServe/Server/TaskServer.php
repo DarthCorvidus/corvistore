@@ -1,13 +1,12 @@
 <?php
 namespace Server;
 use plibv4\process\Task;
+use plibv4\process\Scheduler;
 use Net\ProtocolAsync;
 use Net\AsyncStream;
-class TaskServer implements \plibv4\process\Task {
-	private \plibv4\process\Timeshare $ts;
+class TaskServer implements Task {
 	private $socket;
-	function __construct(\plibv4\process\Timeshare $ts) {
-		$this->ts = $ts;
+	function __construct() {
 		$context = new \Net\SSLContext();
 		echo \Shared::getSSLAuthorityFile();
 		$context->setCAFile(\Shared::getSSLAuthorityFile());
@@ -17,19 +16,19 @@ class TaskServer implements \plibv4\process\Task {
 		#$this->socket = stream_socket_server("tcp://0.0.0.0:4096", $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
 	}
 	
-	public function __tsError(\Exception $e, int $step): void {
+	public function __tsError(Scheduler $sched, \Exception $e, int $step): void {
 		
 	}
 
-	public function __tsFinish(): void {
+	public function __tsFinish(Scheduler $sched): void {
 		
 	}
 
-	public function __tsKill(): void {
+	public function __tsKill(Scheduler $sched): void {
 		
 	}
 
-	public function __tsLoop(): bool {
+	public function __tsLoop(Scheduler $sched): bool {
 		$read = array();
 		$write = array();
 		$read[] = $this->socket;
@@ -44,19 +43,19 @@ class TaskServer implements \plibv4\process\Task {
 	return true;
 	}
 
-	public function __tsPause(): void {
+	public function __tsPause(Scheduler $sched): void {
 		
 	}
 
-	public function __tsResume(): void {
+	public function __tsResume(Scheduler $sched): void {
 		
 	}
 
-	public function __tsStart(): void {
+	public function __tsStart(Scheduler $sched): void {
 		
 	}
 
-	public function __tsTerminate(): bool {
+	public function __tsTerminate(Scheduler $sched): bool {
 		echo "Terminating server process.".PHP_EOL;
 		return true;
 	}

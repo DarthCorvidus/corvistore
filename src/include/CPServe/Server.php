@@ -17,7 +17,7 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 		$signal = Signal::get();
 		$this->pdo = $pdo;
 		$this->ts = new plibv4\process\Timeshare();
-		$this->workerServer = new Server\TaskServer($this->ts);
+		$this->workerServer = new Server\TaskServer();
 		$this->input = new Server\Input($pdo, $this->ts);
 		$this->ts->addTask($this->workerServer);
 		$this->ts->addTask($this->input);
