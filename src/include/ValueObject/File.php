@@ -154,6 +154,10 @@ class File {
 			return self::$userCache[$uid];
 		}
 		$owner = posix_getpwuid($uid);
+		// Fall back to uid if there is no entry for uid
+		if($owner===false) {
+			$owner["name"] = $uid;
+		}
 		self::$userCache[$uid] = $owner["name"];
 	return $owner["name"];
 	}
@@ -163,6 +167,10 @@ class File {
 			return self::$groupCache[$gid];
 		}
 		$group = posix_getgrgid($gid);
+		// Fall back to gid if there is no entry for gid
+		if($group===false) {
+			$group["name"] = $gid;
+		}
 		self::$groupCache[$gid] = $group["name"];
 	return $group["name"];
 	}
