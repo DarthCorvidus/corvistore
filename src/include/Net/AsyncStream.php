@@ -7,6 +7,7 @@ class AsyncStream implements Task {
 	private $socket;
 	private ProtocolAsync $protocol;
 	private bool $terminated = false;
+	private string $localBuffer = "";
 	function __construct($socket) {
 		$this->socket = $socket;
 		stream_set_blocking($this->socket, false);
@@ -18,7 +19,8 @@ class AsyncStream implements Task {
 	
 
 	public function __tsError(Scheduler $sched, \Exception $e, int $step): void {
-		echo $e->getMessage().PHP_EOL;
+		echo "Exception: ".$e->getMessage().PHP_EOL;
+		echo "Closing socket due to error".PHP_EOL;
 		fclose($this->socket);
 	}
 
@@ -32,9 +34,34 @@ class AsyncStream implements Task {
 	}
 
 	public function __tsLoop(Scheduler $sched): bool {
+		/**
+		 * If 'local' buffer is not empty - previous write failed - retry until
+		 * local buffer was written, before asking protocol for data again.
+		 */
+		if($this->localBuffer !== "") {
+			$written = fwrite($this->socket, $this->localBuffer);
+			$error = error_get_last();
+			if(!empty($error)) {
+				var_dump($error);
+				throw new \Exception($error["message"]);
+			}
+			if($written===0) {
+				return true;
+			} else {
+				$this->localBuffer = "";
+			}
+		return true;
+		}
 		if($this->protocol->hasWrite()) {
 			$write = $this->protocol->onWrite();
 			$written = fwrite($this->socket, $write);
+			/**
+			 * If fwrite is unable to write, but data on 'local' buffer.
+			 */
+			if($written===0) {
+				#echo "Could not write, buffering".PHP_EOL;
+				$this->localBuffer = $write;
+			}
 			$this->protocol->onWritten();
 		return true;
 		}
@@ -52,7 +79,11 @@ class AsyncStream implements Task {
 		#	return true;
 		#}
 		$data = fread($this->socket, $this->protocol->getPacketLength());
-		$this->bytes = strlen($this->protocol->getPacketLength());
+		#$this->bytes = strlen($this->protocol->getPacketLength());
+		/**
+		 * I need to look into feof again. feof is not necessarily an error if
+		 * the other side was expected to close the connection.
+		 */
 		if(feof($this->socket)) {
 			throw new \Exception("Connection closed.");
 		}
