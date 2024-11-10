@@ -1,5 +1,7 @@
 <?php
 namespace Node;
+use plibv4\process\Scheduler;
+use plibv4\process\Timeshare;
 class Backup implements \SignalHandler {
 	private $config;
 	private $argv;
@@ -14,14 +16,48 @@ class Backup implements \SignalHandler {
 	private $processed;
 	private $socket;
 	private $protocol;
+	private Timeshare $timeshare;
+	private Timeshare $timeshare02;
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
-	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
+	function __construct($socket, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvBackup($argv);
 		$this->inex = $config->getInEx();
-		$this->protocol = $protocol;
+		$protocolNodeListener = new ProtocolNode();
+		$this->protocol = new \Net\ProtocolAsync($protocolNodeListener);
+		$protocolNodeListener->setProtocol($this->protocol);
+		$client = new \Net\AsyncStream($socket);
+		$client->setProtocol($this->protocol);
+		$this->timeshare = new Timeshare();
+		$protocolNodeListener->setScheduler($this->timeshare);
+		$this->timeshare->addTask($client);
+		$this->timeshare->addTask(new DirectoryWalk($this->argv->getBackupPath(), $this->inex, $protocolNodeListener));
+		
+		/*
+		$this->timeshare = new Timeshare();
+		$measure = new MeasureTask();
+		$this->timeshare->addTimeshareObserver($measure);
+		$this->timeshare->addTask(new IterateDirectory($this->argv->getBackupPath(), $this->inex));
+		#$this->timeshare->addTask(new RecurseDirectory($this->argv->getBackupPath(), $this->inex));
+		$this->timeshare->addTask($measure);
+		
+		$this->timeshare02 = new Timeshare();
+		$measure02 = new MeasureTask();
+		$this->timeshare02->addTimeshareObserver($measure02);
+		#$this->timeshare->addTask(new IterateDirectory($this->argv->getBackupPath(), $this->inex));
+		$this->timeshare02->addTask(new RecurseDirectory($this->argv->getBackupPath(), $this->inex));
+		$this->timeshare02->addTask($measure02);
+		
+		$this->timeshare03 = new Timeshare();
+		$measure03 = new MeasureTask();
+		$this->timeshare03->addTimeshareObserver($measure03);
+		#$this->timeshare->addTask(new IterateDirectory($this->argv->getBackupPath(), $this->inex));
+		$this->timeshare03->addTask(new WalkDirectory($this->argv->getBackupPath(), $this->inex));
+		$this->timeshare03->addTask($measure03);
+		*/
+		
 		/*
 		$handler = \Signal::get();
 		$handler->addSignalHandler(SIGINT, $this);
@@ -236,6 +272,25 @@ class Backup implements \SignalHandler {
 	}
 		
 	function run() {
+		echo "---Iterator---".PHP_EOL;
+		$start = microtime(true);
+		$this->timeshare->run();
+		echo "Time: ".(microtime(true)-$start).PHP_EOL;
+		/*
+		echo "---glob---".PHP_EOL;
+		$start = microtime(true);
+		$this->timeshare02->run();
+		echo "Time: ".(microtime(true)-$start).PHP_EOL;
+
+		echo "---walk---".PHP_EOL;
+		$start = microtime(true);
+		$this->timeshare03->run();
+		echo "Time: ".(microtime(true)-$start).PHP_EOL;
+		$this->protocol->sendCommand("DONE");
+		$this->protocol->getOK();
+		$this->protocol->sendCommand("QUIT");
+		*/
+	return;
 		#$start = hrtime();
 		#\plibv4\profiler\Profiler::startTimer("recurse");
 		if($this->argv->getBackupPath()!="/") {

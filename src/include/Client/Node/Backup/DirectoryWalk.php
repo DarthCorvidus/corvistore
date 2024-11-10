@@ -23,9 +23,7 @@ class DirectoryWalk implements Task {
 		$this->dirStack[] = $this->path;
 		$this->inex = $inex;
 		$this->inex = new \InEx();
-		$this->inex->addExclude("/proc");
-		$this->inex->addExclude("/dev");
-		$this->inex->addExclude("/sys");
+		$this->inex->addInclude("/etc");
 		$this->currentFiles = new \Files();
 		$this->currentDir = new \DirectoryIterator($this->path);
 		$this->observer = $observer;
@@ -52,12 +50,16 @@ class DirectoryWalk implements Task {
 		}
 		
 		if(!$this->currentDir->valid()) {
+			#echo "Sending ".$this->currentDir->getPath()." to observer.".PHP_EOL;
 			$this->observer->onFiles($this, $this->currentDir->getPath(),  $this->currentFiles);
 			$next = array_shift($this->dirStack);
+			#echo "Got ".$next." from stack".PHP_EOL;
 			$this->currentFiles = new \Files();
 			$this->currentDir = new \DirectoryIterator($next);
+		return true;
 		}
 		$object = $this->currentDir->current();
+		$info = $this->getSplFileInfo($object->getFileInfo());
 			if($object->getBasename()==="." or $object->getBasename()==="..") {
 				$this->currentDir->next();
 			return true;
@@ -68,18 +70,32 @@ class DirectoryWalk implements Task {
 				$this->currentDir->next();
 				return true;
 			}
+			// Links are ignored for the moment.
 			if($object->isLink()) {
+				#echo "Link: ".PHP_EOL;
+				#echo "\tPath:   ".$info->getPath()."/".$info->getFilename().PHP_EOL;
+				#echo "\tTarget: ".$info->getLinkTarget().PHP_EOL;
+				#echo "\t: ".$info->getRealPath().PHP_EOL;
 				$this->currentDir->next();
 				return true;
 			}
 			try {
-				$file = \File::fromPath($object->getPath());
+				#echo $realPath.PHP_EOL;
+				$file = \File::fromPath($realPath);
 				$this->currentFiles->addEntry($file);
 			} catch(\Exception $e) {
 				echo $e::class.PHP_EOL;
 				echo $e->getMessage().PHP_EOL;
 			}
+			
+			if(isset($this->processedDirs[$realPath])) {
+				echo "Skipping ".$realPath.", already processed".PHP_EOL;
+				$this->currentDir->next();
+			return true;
+			}
+			
 			if($object->isDir() && $object->getPath()!=="") {
+				#echo "Adding ".$realPath." to stack".PHP_EOL;
 				$this->dirStack[] = $realPath;
 			}
 			$this->currentDir->next();

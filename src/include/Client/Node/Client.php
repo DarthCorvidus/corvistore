@@ -12,6 +12,8 @@ class Client {
 	private $config;
 	private $hub;
 	private $protocol;
+	private $socket;
+	private array $argv;
 	function __construct($argv) {
 		$user = posix_getuid();
 		$group = posix_getgid();
@@ -34,8 +36,8 @@ class Client {
 		$context = new \Net\SSLContext();
 		$context->setCAFile("/etc/crow-protect/ca.crt");
 		
-		$socket = stream_socket_client("ssl://".$this->config->getHost().":4096", $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $context->getContextClient());
-		if($socket===FALSE) {
+		$this->socket = stream_socket_client("ssl://".$this->config->getHost().":4096", $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $context->getContextClient());
+		if($this->socket===FALSE) {
 			throw new \RuntimeException("Unable to connect to ".$this->config->getHost().":4096: ".$errstr.".");
 		}
 		#$this->hub = new \StreamHub();
@@ -47,7 +49,7 @@ class Client {
 		#if($argv[1]=="backup") {
 		#	$this->protocol = new \Net\ProtocolReactive(new BackupListener($this->config, $argv));
 		#}
-		$this->protocol = new \Net\ProtocolSync(new \Net\StreamClient($socket));
+		$this->protocol = new \Net\ProtocolSync(new \Net\StreamClient($this->socket));
 		#$this->hub->addClientStream("ssl", 0, $socket);
 		#$this->hub->addClientListener("ssl", 0, $this->protocol);
 		$this->protocol->sendCommand("mode node");
@@ -58,7 +60,7 @@ class Client {
 	
 	function run() {
 		if($this->argv[1]=="backup") {
-			$backup = new Backup($this->protocol, $this->config, $this->argv);
+			$backup = new Backup($this->socket, $this->config, $this->argv);
 			$backup->run();
 		}
 	

@@ -16,11 +16,16 @@ class IterateDirectory implements Task {
 		$this->path = $path;
 		$this->currentPath = $path;
 		$this->rdi = new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS | ~\RecursiveDirectoryIterator::FOLLOW_SYMLINKS);
+		/*
+		 * Hardcoded for now as long as evaluations are done.
+		 */
+		$inex = new \InEx();
+		$inex->addInclude("/etc");
 		$this->filtered = new DirFilter($this->rdi, $inex);
 		$this->rii = new \RecursiveIteratorIterator($this->filtered, \RecursiveIteratorIterator::SELF_FIRST);
 		$this->rii->rewind();
 	}
-
+	
 	public function __tsError(\Exception $e, int $step): void {
 		
 	}
