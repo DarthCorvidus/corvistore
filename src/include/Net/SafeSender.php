@@ -22,6 +22,7 @@ class SafeSender implements StreamSender {
 	private $cancelled = FALSE;
 	private $payloadLeft = 0;
 	private $exception;
+	private $left = 0;
 	public function __construct(\Net\StreamSender $sender, int $blocksize) {
 		$this->sender = $sender;
 		/*
