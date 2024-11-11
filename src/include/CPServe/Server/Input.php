@@ -5,14 +5,11 @@ use plibv4\process\Scheduler;
 use Server\AdminProtocolListener;
 class Input implements \plibv4\process\Task {
 	private \EPDO $pdo;
+	private array $buffer;
 	function __construct(\EPDO $pdo) {
 		$this->pdo = $pdo;
 		stream_set_blocking(STDIN, false);
 		$this->addBuffer("Corviprotect 0.0.1 Alpha ready.");
-	}
-	
-	public function setProtocolListener(\Net\ProtocolAsyncListener $listener) {
-		$this->listener = $listener;
 	}
 	
 	public function __tsError(Scheduler $sched, \Exception $e, int $step): void {
