@@ -24,7 +24,7 @@ class Backup implements \SignalHandler {
 	function __construct($socket, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvBackup($argv);
-		$this->inex = $config->getInEx();
+		$this->inex = $this->getInEx();
 		$protocolNodeListener = new ProtocolNode();
 		$this->protocol = new \Net\ProtocolAsync($protocolNodeListener);
 		$protocolNodeListener->setProtocol($this->protocol);
@@ -33,8 +33,8 @@ class Backup implements \SignalHandler {
 		$this->timeshare = new Timeshare();
 		$protocolNodeListener->setScheduler($this->timeshare);
 		$this->timeshare->addTask($client);
-		$this->timeshare->addTask(new DirectoryWalk($this->argv->getBackupPath(), $this->inex, $protocolNodeListener));
-		
+		#$this->timeshare->addTask(new DirectoryWalk($this->argv->getBackupPath(), $this->inex, $protocolNodeListener));
+		$this->timeshare->addTask(new RecurseDirectory($this->argv->getBackupPath(), $this->inex, $protocolNodeListener));
 		/*
 		$this->timeshare = new Timeshare();
 		$measure = new MeasureTask();
@@ -64,6 +64,34 @@ class Backup implements \SignalHandler {
 		$handler->addSignalHandler(SIGTERM, $this);
 		 * 
 		 */
+	}
+	/**
+	 * Determines/creates Include/Exclude-List. Command line parameters have
+	 * precedence.
+	 * @return \InEx
+	 */
+	private function getInEx(): \InEx {
+		if(!$this->argv->hasExcludeList() && $this->argv->hasIncludeList()) {
+			$inex = $this->config->getInEx();
+		return $inex;
+		}
+		$inex = new \InEx();
+		if($this->argv->hasExcludeList()) {
+			$excludeList = $this->argv->getExcludeList();
+			$excludes = file($excludeList);
+			foreach($excludes as $value) {
+				$inex->addExclude(trim($value));
+			}
+		}
+
+		if($this->argv->hasIncludeList()) {
+			$includeList = $this->argv->getIncludeList();
+			$includes = file($includeList);
+			foreach($includes as $value) {
+				$inex->addInclude(trim($value));
+			}
+		}
+	return $inex;
 	}
 	
 	function onSignal(int $signal, array $info) {
