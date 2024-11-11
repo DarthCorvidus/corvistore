@@ -16,6 +16,12 @@ class ArgvBackupModel implements ArgvModel {
 		$this->positional[1]->setConvert(new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE));
 		
 		$this->posNames = array("mode", "path", "target");
+		
+		$this->named["include-list"] = UserValue::asOptional();
+		$this->named["include-list"]->setValidate(new ValidatePath(ValidatePath::FILE));
+		
+		$this->named["exclude-list"] = UserValue::asOptional();
+		$this->named["exclude-list"]->setValidate(new ValidatePath(ValidatePath::FILE));
 	}
 
 	public function getArgNames(): array {

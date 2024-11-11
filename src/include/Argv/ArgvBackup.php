@@ -17,4 +17,21 @@ class ArgvBackup {
 		}
 		return $this->argv->getPositional(1);
 	}
+	
+	function hasExcludeList(): bool {
+		return $this->argv->hasValue("exclude-list");
+	}
+
+	function getExcludeList(): string {
+		return $this->argv->getValue("exclude-list");
+	}
+	
+	function hasIncludeList(): bool {
+		return $this->argv->hasValue("include-list");
+	}
+	
+	function getIncludeList(): string {
+		return $this->argv->getValue("include-list");
+	}
+
 }
