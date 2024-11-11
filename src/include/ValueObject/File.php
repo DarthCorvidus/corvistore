@@ -147,6 +147,9 @@ class File {
 			 */
 			$this->size = strlen($this->target);
 		}
+		if($this->type == Catalog::TYPE_OTHER) {
+			throw new \Exception("File type FILE_OTHER for ".$this->path);
+		}
 	}
 	
 	private function getOwnerName(int $uid) {
