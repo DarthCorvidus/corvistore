@@ -16,39 +16,39 @@ class BackupStat implements \TerminalTableModel {
 		$this->startTime = microtime(true);
 	}
 	
-	public function addBytes(int $bytes) {
+	public function addBytes(int $bytes): void {
 		$this->bytes += $bytes;
 	}
 	
-	public function incrProcDir() {
+	public function incrProcDir(): void {
 		$this->processedDirs++;
 	}
 	
-	public function incrProcFile() {
+	public function incrProcFile(): void {
 		$this->processedFiles++;
 	}
 	
-	public function incrNewDir() {
+	public function incrNewDir(): void {
 		$this->newDirs++;
 	}
 	
-	public function incrNewFile() {
+	public function incrNewFile(): void {
 		$this->newFiles++;
 	}
 
-	public function incrChangeDir() {
+	public function incrChangeDir(): void {
 		$this->updatedDirs++;
 	}
 	
-	public function incrChangeFile() {
+	public function incrChangeFile(): void {
 		$this->updatedFiles++;
 	}
 
-	public function incrDelDir() {
+	public function incrDelDir(): void {
 		$this->deletedDirs++;
 	}
 	
-	public function incrDelFile() {
+	public function incrDelFile(): void {
 		$this->deletedFiles++;
 	}
 	
