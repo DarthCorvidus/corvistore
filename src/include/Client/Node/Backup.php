@@ -2,6 +2,7 @@
 namespace Node;
 use plibv4\process\Scheduler;
 use plibv4\process\Timeshare;
+use plibv4\process\TimeshareObserver;
 class Backup implements \SignalHandler {
 	private $config;
 	private $argv;
@@ -18,6 +19,7 @@ class Backup implements \SignalHandler {
 	private $protocol;
 	private Timeshare $timeshare;
 	private Timeshare $timeshare02;
+	private ProtocolNode $protocolNodeListener;
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
@@ -25,16 +27,16 @@ class Backup implements \SignalHandler {
 		$this->config = $config;
 		$this->argv = new \ArgvBackup($argv);
 		$this->inex = $this->getInEx();
-		$protocolNodeListener = new ProtocolNode();
-		$this->protocol = new \Net\ProtocolAsync($protocolNodeListener);
-		$protocolNodeListener->setProtocol($this->protocol);
+		$this->protocolNodeListener = new ProtocolNode();
+		$this->protocol = new \Net\ProtocolAsync($this->protocolNodeListener);
+		$this->protocolNodeListener->setProtocol($this->protocol);
 		$client = new \Net\AsyncStream($socket);
 		$client->setProtocol($this->protocol);
 		$this->timeshare = new Timeshare();
-		$protocolNodeListener->setScheduler($this->timeshare);
+		$this->protocolNodeListener->setScheduler($this->timeshare);
 		$this->timeshare->addTask($client);
 		#$this->timeshare->addTask(new DirectoryWalk($this->argv->getBackupPath(), $this->inex, $protocolNodeListener));
-		$this->timeshare->addTask(new RecurseDirectory($this->argv->getBackupPath(), $this->inex, $protocolNodeListener));
+		$this->timeshare->addTask(new RecurseDirectory($this->argv->getBackupPath(), $this->inex, $this->protocolNodeListener));
 		/*
 		$this->timeshare = new Timeshare();
 		$measure = new MeasureTask();
@@ -304,6 +306,8 @@ class Backup implements \SignalHandler {
 		$start = microtime(true);
 		$this->timeshare->run();
 		echo "Time: ".(microtime(true)-$start).PHP_EOL;
+		$table = new \TerminalTable($this->protocolNodeListener->getBackupStat());
+		$table->printTable();
 		/*
 		echo "---glob---".PHP_EOL;
 		$start = microtime(true);

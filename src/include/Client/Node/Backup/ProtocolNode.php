@@ -12,8 +12,9 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	private array $files;
 	private int $transferred = 0;
 	private \plibv4\process\Task $task;
+	private BackupStat $stat;
 	function __construct() {
-		;
+		$this->stat = new BackupStat();
 	}
 	
 	public function setProtocol(\Net\ProtocolAsync $protocol) {
@@ -74,7 +75,9 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 				echo "Updating ".$file->getPath().PHP_EOL;
 				try {
 					$this->protocol->sendStream(new \Net\FileSender($file));
-					$this->transferred += $file->getSize();
+					$this->stat->incrChangeFile();
+					$this->stat->addBytes($file->getSize());
+					//$this->transferred += $file->getSize();
 				} catch (\Net\UploadException $e) {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
@@ -83,7 +86,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 				echo "Sending link ".$file->getPath().PHP_EOL;
 				try {
 					$this->protocol->sendStream(new \Net\LinkSender($file));
-					$this->transferred += $file->getSize();
+					//$this->transferred += $file->getSize();
 				} catch (\Net\UploadException $e) {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
@@ -112,6 +115,8 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 				try {
 					$this->protocol->sendStream(new \Net\FileSender($file));
 					$this->transferred += $file->getSize();
+					$this->stat->addBytes($file->getSize());
+					$this->stat->incrNewFile();
 				} catch (\Net\UploadException $e) {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
@@ -157,5 +162,9 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 			$this->paused = true;
 		}
 		$this->task = $task;
+	}
+	
+	public function getBackupStat(): BackupStat {
+		return $this->stat;
 	}
 }
