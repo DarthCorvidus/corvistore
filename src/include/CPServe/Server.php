@@ -1,5 +1,7 @@
 <?php
-class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \Net\ProtocolAsyncListener {
+use plibv4\process\TimeshareObserver;
+use Net\AsyncStream;
+class Server implements SignalHandler, Net\HubServerListener, \Net\ProtocolAsyncListener, TimeshareObserver {
 	private $hub;
 	private $workerProcess = array();
 	private $pdo;
@@ -7,6 +9,8 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 	private $authMode = array();
 	private $authFail = array();
 	private $workers = array();
+	private int $clientCount = 0;
+	private \Idle $idle;
 	private plibv4\process\Timeshare $ts;
 	private Server\TaskServer $workerServer;
 	private Server\Input $input;
@@ -16,10 +20,17 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 		pcntl_async_signals(true);
 		$signal = Signal::get();
 		$this->pdo = $pdo;
+		/**
+		 * Add a delay of 50 milliseconds, so the server does not gobble up all
+		 * available resources.
+		 */
+		$this->idle = new Idle(0, 50);
 		$this->ts = new plibv4\process\Timeshare();
+		$this->ts->addTimeshareObserver($this);
 		$this->workerServer = new Server\TaskServer();
 		$this->input = new Server\Input($pdo, $this->ts);
 		$this->ts->addTask($this->workerServer);
+		$this->ts->addTask($this->idle);
 		$this->ts->addTask($this->input);
 		#$signal->addSignalHandler(SIGINT, $this);
 		#$signal->addSignalHandler(SIGTERM, $this);
@@ -77,14 +88,14 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 			Signal::get()->clearHandler($process);
 		}
 	}
-
+	/*
 	public function onStart(Process $process) {
 		if($process->getRunner() instanceof RunnerServer) {
 			$id = $process->getRunner()->getId();
 			echo "Thread for client ".$id." spawned.".PHP_EOL;
 		}
 	}
-
+	*/
 	public function onConnect(string $name, int $id, $newClient) {
 		echo "Connection from ".$name." ".$id.PHP_EOL;
 		#echo "New IPC connection - forking off...";
@@ -221,4 +232,46 @@ class Server implements ProcessListener, SignalHandler, Net\HubServerListener, \
 		
 	}
 
+	public function onAdd(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
+		/*
+		 * If a client connects, pause idle, in order to give full power to the
+		 * client process.
+		 */
+		if($task instanceof AsyncStream) {
+			$this->clientCount++;
+			$scheduler->pause($this->idle);
+		}
+	}
+
+	public function onError(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task, \Exception $e, int $step): void {
+		
+	}
+
+	public function onPause(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
+		
+	}
+
+	public function onRemove(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task, int $step): void {
+		/*
+		 * If the last client disconnects, reactivate Idle process
+		 */
+		if($task instanceof AsyncStream) {
+			$this->clientCount--;
+		}
+		/*
+		 * Resume if clientCount. As Idle may vanish first on server shutdown,
+		 * only end it if it is still there.
+		 */
+		if($this->clientCount==0 && $scheduler->hasTask($this->idle)) {
+			$scheduler->resume($this->idle);
+		}
+	}
+
+	public function onResume(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
+		
+	}
+
+	public function onStart(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
+		
+	}
 }
