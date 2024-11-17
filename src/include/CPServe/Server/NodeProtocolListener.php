@@ -207,4 +207,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		
 	}
 
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+		
+	}
 }

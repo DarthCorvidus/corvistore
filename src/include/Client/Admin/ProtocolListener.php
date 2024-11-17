@@ -23,4 +23,7 @@ class ProtocolListener implements \Net\ProtocolAsyncListener {
 		
 	}
 
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+		
+	}
 }

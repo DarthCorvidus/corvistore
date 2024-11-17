@@ -177,4 +177,7 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->lastSerialized = $unserialized;
 	}
 
+	public function onBinaryClass(Net\ProtocolAsync $protocol, $instance) {
+		
+	}
 }

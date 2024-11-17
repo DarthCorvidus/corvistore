@@ -5,6 +5,7 @@ use Net\ProtocolAsync;
 class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \Net\ProtocolSendListener {
 	private $lastString;
 	private $lastUnserialized;
+	private $lastBinaryClass;
 	private $lastOK = TRUE;
 	private $sent = NULL;
 	#const FILESIZE = 93821;
@@ -237,6 +238,20 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$receiver->onRead($data);
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
+	
+	function testReceiveBinaryClass() {
+		$sender = new ProtocolAsync($this);
+		$receiver = new ProtocolAsync($this);
+		$file = File::fromPath(__DIR__."/ProtocolAsyncTest.php");
+		$sender->sendBinaryClass($file);
+		while($sender->hasWrite()) {
+			$data = $sender->onWrite();
+			$sender->onWritten();
+			$receiver->onRead($data);
+		}
+		$this->assertEquals($file, $this->lastBinaryClass);
+	}
+
 	/*
 	function testSendSmallFile() {
 		$payload = random_bytes(16);
@@ -521,4 +536,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->sent = TRUE;
 	}
 
+	public function onBinaryClass(ProtocolAsync $protocol, $instance) {
+		$this->lastBinaryClass = $instance;
+	}
 }

@@ -44,4 +44,8 @@ class FacadeProtocolListener implements ProtocolAsyncListener {
 	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
 		$this->current->onSerialized($protocol, $unserialized);
 	}
+
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+		
+	}
 }

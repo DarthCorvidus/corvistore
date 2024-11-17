@@ -157,4 +157,8 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
 		
 	}
+
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+		
+	}
 }

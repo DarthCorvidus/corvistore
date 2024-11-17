@@ -167,4 +167,8 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	public function getBackupStat(): BackupStat {
 		return $this->stat;
 	}
+
+	public function onBinaryClass(ProtocolAsync $protocol, $instance) {
+		
+	}
 }

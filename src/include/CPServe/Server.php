@@ -274,4 +274,8 @@ class Server implements SignalHandler, Net\HubServerListener, \Net\ProtocolAsync
 	public function onStart(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
 		
 	}
+
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+		
+	}
 }

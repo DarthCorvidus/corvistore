@@ -6,6 +6,7 @@ abstract class Protocol {
 	const COMMAND = 3;
 	const SERIALIZED_PHP = 4;
 	const FILE = 5;
+	const BINARY_CLASS = 6;
 	const ERROR = 255;
 	const FILE_OK = 1;
 	const FILE_RESEND = 2;

@@ -60,7 +60,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	}
 	
 	private function isString(int $type) {
-		return in_array($type, array(self::MESSAGE, self::COMMAND, self::SERIALIZED_PHP));
+		return in_array($type, array(self::MESSAGE, self::COMMAND, self::SERIALIZED_PHP, self::BINARY_CLASS));
 	}
 
 	public function onRead(string $data) {
@@ -223,6 +223,22 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 			$unserialized = unserialize($this->streamReceiver->getString());
 			$this->listener->onSerialized($this, $unserialized);
 		}
+		/*
+		 * Unpack a class from binary data using <class>::fromBinary.
+		 */
+		
+		if($type==self::BINARY_CLASS) {
+			$raw = $this->streamReceiver->getString();
+			$br = new \plibv4\Binary\StringReader($raw, \plibv4\Binary\StringReader::LE);
+			$classname = $br->getIndexedString(16);
+			$classdata = $br->getIndexedString(32);
+			/*
+			 * This actually works.
+			 */
+			$instance = $classname::fromBinary($classdata);
+			$this->listener->onBinaryClass($this, $instance);
+		}
+
 	}
 	
 	public function sendMessage(string $message, ProtocolSendListener $listener = NULL) {
@@ -236,6 +252,19 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	public function sendSerialize($serialize, ProtocolSendListener $listener = NULL) {
 		$serialized = serialize($serialize);
 		$this->sendString(self::SERIALIZED_PHP, $serialized, $listener);
+	}
+	
+	/*
+	 * Pack a class to binary using $class->toBinary(). Currently, no proper
+	 * interface like 'Binaryable' exists.
+	 */
+	public function sendBinaryClass($instance, ProtocolSendListener $listener = NULL) {
+		$binaryClass = $instance->toBinary();
+		$classname = $instance::class;
+		$bw = new \plibv4\Binary\StringWriter(\plibv4\Binary\StringWriter::LE);
+		$bw->addIndexedString(16, $classname);
+		$bw->addIndexedString(32, $binaryClass);
+		$this->sendString(self::BINARY_CLASS, $bw->getBinary(), $listener);
 	}
 	
 	public function sendStream(StreamSender $sender, ProtocolSendListener $listener = NULL) {
