@@ -7,9 +7,9 @@ clear
 
 result=$(dirname $0)
 if [ -n "$1" ]; then
-	phpunit --bootstrap $result/tests/autoload-composer.php $result/tests --filter $1
+	./vendor/bin/phpunit --bootstrap $result/tests/autoload-composer.php $result/tests --filter $1
 else
-	phpunit --bootstrap $result/tests/autoload-composer.php $result/tests
+	./vendor/bin/phpunit --bootstrap $result/tests/autoload-composer.php $result/tests
 fi
 
 #phpunit --bootstrap $result/tests/autoload-composer.php $result/tests
