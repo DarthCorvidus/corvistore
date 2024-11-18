@@ -142,6 +142,9 @@ class StorageBasicTest extends TestCase {
 		while($sr->getRecvLeft()>0) {
 			$data = fread($fh, 1024);
 			$sr->receiveData($data);
+			$tableVersion = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
+			// Testing here that dvs_stored is not set while transfer is running.
+			$this->assertEquals(0, $tableVersion[0]["dvs_stored"]);
 		}
 		$sr->onRecvEnd();
 		$this->assertFileExists(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp");
@@ -149,6 +152,49 @@ class StorageBasicTest extends TestCase {
 		 * 
 		 */
 		$this->assertEquals(md5_file("/tmp/crow-protect/image01.bin"), md5(file_get_contents(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp", false, NULL, 8192)));
+		$tableVersion = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
+		// Testing here that dvs_stored is set after has completed
+		$this->assertEquals(1, $tableVersion[0]["dvs_stored"]);
+	}
+
+	function testStore() {
+		TestHelper::deleteStorage();
+		TestHelper::initServer();
+		$node = Node::fromName(TestHelper::getEPDO(), "test01");
+		$partition = $node->getPolicy()->getPartition();
+		$storage = Storage::fromId(TestHelper::getEPDO(), $partition->getStorageId());
+		
+		$files = new MockupFiles("/tmp/crow-protect");
+		$files->createRandom("image01.bin", 12);
+		$file = File::fromPath("/tmp/crow-protect/image01.bin");
+		$catalog = new Catalog(TestHelper::getEPDO(), $node);
+		/*
+		 * This is not correct, since we create the entry below / instead of
+		 * /tmp/crow-protect/, but this is irrelevant for this test.
+		 */
+		$entry = $catalog->newEntry($file);
+		#$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
+		#$versionEntry = $versions->addVersion($source);
+		$sr = $storage->store($entry->getVersions()->getLatest(), $partition, $file);
+		$sr->setRecvSize($file->getSize());
+		$sr->onRecvStart();
+		$fh = fopen($file->getPath(), "r");
+		while($sr->getRecvLeft()>0) {
+			$data = fread($fh, 1024);
+			$sr->receiveData($data);
+			$tableVersion = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
+			// Testing here that dvs_stored is not set while transfer is running.
+			$this->assertEquals(0, $tableVersion[0]["dvs_stored"]);
+		}
+		$sr->onRecvEnd();
+		$this->assertFileExists(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp");
+		/**
+		 * 
+		 */
+		$this->assertEquals(md5_file("/tmp/crow-protect/image01.bin"), md5(file_get_contents(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp", false, NULL, 8192)));
+		$tableVersion = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
+		// Testing here that dvs_stored is set after has completed
+		$this->assertEquals(1, $tableVersion[0]["dvs_stored"]);
 	}
 	
 	#function testRestore() {
