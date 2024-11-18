@@ -13,8 +13,10 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	private int $transferred = 0;
 	private \plibv4\process\Task $task;
 	private BackupStat $stat;
+	private \FileGroup $filegroup;
 	function __construct() {
 		$this->stat = new BackupStat();
+		$this->filegroup = new \FileGroup();
 	}
 	
 	public function setProtocol(\Net\ProtocolAsync $protocol) {
@@ -108,9 +110,23 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 			#	continue;
 			#}
 			#$this->protocol->sendCommand("CREATE FILE ".$file->getPath());
+
+			if($file->getType()== \Catalog::TYPE_FILE && $file->getSize()<=1024*1024) {
+				$file->setAction(\File::CREATE);
+				$this->filegroup->addFile($file);
+				if($this->filegroup->getFileCount()==255 or $this->filegroup->getPayloadSize()>=1024*1024*10) {
+					echo "Sending filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
+					//$this->protocol->sendBinaryClass($this->filegroup);
+					$this->protocol->sendSerialize($this->filegroup);
+					$this->filegroup = new \FileGroup();
+				}
+			continue;
+			}
+
 			$file->setAction(\File::CREATE);
 			$this->protocol->sendSerialize($file);
-			if($file->getType()== \Catalog::TYPE_FILE) {
+			if($file->getType()== \Catalog::TYPE_FILE && $file->getSize()>1024*1024) {
+			#if($file->getType()== \Catalog::TYPE_FILE) {
 				echo "Sending new file ".$file->getPath()." [".number_format($file->getSize())."]".PHP_EOL;
 				try {
 					$this->protocol->sendStream(new \Net\FileSender($file));
@@ -121,6 +137,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
 			}
+			
 			if($file->getType()== \Catalog::TYPE_LINK) {
 				echo "Sending link ".$file->getPath().PHP_EOL;
 				try {
@@ -148,6 +165,11 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	
 
 	public function onEnd(\plibv4\process\Task $task): void {
+		if($this->filegroup->getFileCount()!=10) {
+			echo "Sending last filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
+			$this->protocol->sendBinaryClass($this->filegroup);
+		}
+
 		$this->protocol->sendCommand("DONE");
 		$this->done = true;
 	}

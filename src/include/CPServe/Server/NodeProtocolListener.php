@@ -172,6 +172,9 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$this->onSerializedFile($protocol, $unserialized, $this->fileAction);
 			$this->fileAction = NULL;
 		}
+		if(get_class($unserialized)=="FileGroup") {
+			$this->onSerializedFileGroup($protocol, $unserialized);
+		}
 	}
 	
 	private function onSerializedFile(\Net\ProtocolAsync $protocol, \File $file) {
@@ -202,12 +205,29 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 		$this->checkTransactions();
 	}
+
+	private function onSerializedFilegroup(\Net\ProtocolAsync $protocol, \FileGroup $fg) {
+		for($i = 0; $i<$fg->getFileCount(); $i++) {
+			$file = $fg->getFile($i);
+			$data = $fg->getFileData($i);
+			$entry = $this->catalog->newEntry($file);
+			$version = $entry->getVersions()->getLatest();
+			
+			$file->setServerCreated($version->getCreated());
+			$file->setServerNodeName($this->node->getName());
+			$file->setServerVersionId($version->getId());
+			$file->setServerStoreType(\File::BACK_MAIN);
+			#public function storeSingle(File $file, VersionEntry $versionEntry, Partition $partition, string $filedata) {
+			$this->storage->storeSingle($file, $version, $this->partition, $data);
+			
+		}
+	}
 	
 	public function onOk(\Net\ProtocolAsync $protocol) {
 		
 	}
 
 	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
-		
+		echo "Received filegroup with ".$instance->getFileCount()." files, ".number_format($instance->getSize())." bytes.".PHP_EOL;
 	}
 }

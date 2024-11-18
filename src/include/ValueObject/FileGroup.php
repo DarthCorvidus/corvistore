@@ -33,6 +33,14 @@ class FileGroup {
 		return count($this->file);
 	}
 	
+	function getFile(int $i): File {
+		return $this->file[$i];
+	}
+
+	function getFileData(int $i): string {
+		return $this->filedata[$i];
+	}
+	
 	function getPayloadSize(): int {
 		return $this->size;
 	}
