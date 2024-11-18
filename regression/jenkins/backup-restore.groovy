@@ -20,7 +20,12 @@ node {
 		}
 
 		stage("Create and launch podman image") {
-			sh("podman build -t regression-${params.environment} ${WORKSPACE}/regression/${params.environment}/")
+			if(params.local) {
+				// hardcoded paths are bad design, yes, but I need a quick development workflow without having to commit everything.
+				sh("podman build -t regression-${params.environment} /home/jenkins/crow-protect/regression/${params.environment}/")
+			} else {
+				sh("podman build -t regression-${params.environment} ${WORKSPACE}/regression/${params.environment}/")
+			}
 			dockerId = sh(script: "docker run -t -d -u 1000:1000 regression-${params.environment} cat", returnStdout: true).trim()
 			println dockerId
 		}
