@@ -48,6 +48,27 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	return $this;
 	}
 	
+	public function storeSingle(File $file, VersionEntry $versionEntry, Partition $partition, string $filedata) {
+		$serial = $this->getSerial();
+		$storeId = $this->getStoreId($versionEntry, $partition, $serial);
+		
+		$path = $this->getPathForIdFile($serial);
+		$location = $this->getPathForIdLocation($serial);
+		#echo "Target Path: ".$path.PHP_EOL;
+		if(!file_exists($location)) {
+			mkdir($location, 0700, true);
+		}
+		$data = str_pad($file->toBinary(), 8192, "\0");
+		$data .= $filedata;
+		
+		file_put_contents($path, $data);
+		$error = error_get_last();
+		if(!empty($error)) {
+			throw new \Exception($error["message"]);
+		}
+		$this->endStore($versionEntry, $storeId);
+	}
+	
 	public function restore(int $version): \Net\StreamSender {
 		$param[] = $version;
 		#$param[] = $this->getPartitionId();
@@ -90,8 +111,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 
 	public function onRecvEnd() {
-		$this->pdo->update("d_content", array("dco_stored"=>1), array("dco_id"=>$this->storeId));
-		$this->versionEntry->setStored($this->pdo);
+		$this->endStore($this->versionEntry, $this->storeId);
 		$this->partition = NULL;
 		$this->file = NULL;
 		$this->versionEntry = NULL;
@@ -106,6 +126,29 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		fclose($this->writeHandle);
 	}
 
+	private function getSerial(): int {
+		$param = array();
+		$param[] = $this->getId();
+		$serial = $this->pdo->result("select coalesce(max(dco_serial), 0)+1 from d_content where dst_id = ?", $param);
+	return $serial;
+	}
+	
+	private function getStoreId(VersionEntry $versionEntry, Partition $partition, int $serial): int {
+		$new["dvs_id"] = $versionEntry->getId();
+		$new["dst_id"] = $this->getId();
+		$new["dpt_id"] = $partition->getId();
+		$new["dco_serial"] = $serial;
+		$new["dco_stored"] = 0;
+		$storeId = $this->pdo->create("d_content", $new);
+	return $storeId;
+	}
+
+	private function endStore(VersionEntry $entry, int $storeId) {
+		$this->pdo->update("d_content", array("dco_stored"=>1), array("dco_id"=>$storeId));
+		$entry->setStored($this->pdo);
+	}
+	
+	
 	public function onRecvStart() {
 		// First try on sem_acquire will not block.
 		while(sem_acquire($this->sem, TRUE)===FALSE) {
@@ -115,15 +158,8 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 			sem_acquire($this->sem);
 			break;
 		}
-		$param = array();
-		$param[] = $this->getId();
-		$serial = $this->pdo->result("select coalesce(max(dco_serial), 0)+1 from d_content where dst_id = ?", $param);
-		$new["dvs_id"] = $this->versionEntry->getId();
-		$new["dst_id"] = $this->getId();
-		$new["dpt_id"] = $this->partition->getId();
-		$new["dco_serial"] = $serial;
-		$new["dco_stored"] = 0;
-		$this->storeId = $this->pdo->create("d_content", $new);
+		$serial = $this->getSerial();
+		$this->storeId = $this->getStoreId($this->versionEntry, $this->partition, $serial);
 		sem_release($this->sem);
 		
 		$path = $this->getPathForIdFile($serial);
