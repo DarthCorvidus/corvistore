@@ -237,6 +237,9 @@ class Catalog {
 			}
 			$entry->addVersion($value);
 		}
+		if(empty($entry)) {
+		throw new \RuntimeException("unable to get catalog entry for ".$path);
+		}
 	return $entry;
 	}
 }

@@ -114,7 +114,12 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$protocol->sendOK();
 		}
 	}
-	
+	/**
+	 * @todo Proper error communication here once it is implemented.
+	 * @param \Net\ProtocolAsync $protocol
+	 * @param array $command
+	 * @return type
+	 */
 	private function handleThree(\Net\ProtocolAsync $protocol, array $command) {
 		if($command[0]=="GET" and strtoupper($command[1])=="CATALOG") {
 			$this->checkTransactions();
@@ -125,7 +130,13 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 
 		if($command[0]=="GET" and $command[1]=="PATH") {
 			echo "fetching ".$command["2"].PHP_EOL;
-			$entry = $this->catalog->getEntryByPath($command[2]);
+			try {
+				$entry = $this->catalog->getEntryByPath($command[2]);
+			} catch (\RuntimeException $e) {
+				$protocol->sendMessage($e->getMessage());
+				$protocol->sendCommand("DONE");
+			return;
+			}
 			$protocol->sendSerialize($entry);
 		return;
 		}
