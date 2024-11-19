@@ -60,7 +60,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		}
 		$data = str_pad($file->toBinary(), 8192, "\0");
 		$data .= $filedata;
-		
+		error_clear_last();
 		file_put_contents($path, $data);
 		$error = error_get_last();
 		if(!empty($error)) {

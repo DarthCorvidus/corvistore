@@ -157,7 +157,7 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals(1, $tableVersion[0]["dvs_stored"]);
 	}
 
-	function testStore() {
+	function testStoreSingle() {
 		TestHelper::deleteStorage();
 		TestHelper::initServer();
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
@@ -175,18 +175,7 @@ class StorageBasicTest extends TestCase {
 		$entry = $catalog->newEntry($file);
 		#$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
 		#$versionEntry = $versions->addVersion($source);
-		$sr = $storage->store($entry->getVersions()->getLatest(), $partition, $file);
-		$sr->setRecvSize($file->getSize());
-		$sr->onRecvStart();
-		$fh = fopen($file->getPath(), "r");
-		while($sr->getRecvLeft()>0) {
-			$data = fread($fh, 1024);
-			$sr->receiveData($data);
-			$tableVersion = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
-			// Testing here that dvs_stored is not set while transfer is running.
-			$this->assertEquals(0, $tableVersion[0]["dvs_stored"]);
-		}
-		$sr->onRecvEnd();
+		$sr = $storage->storeSingle($file, $entry->getVersions()->getLatest(), $partition, file_get_contents($file->getPath()));
 		$this->assertFileExists(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp");
 		/**
 		 * 

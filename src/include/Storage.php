@@ -83,6 +83,7 @@ abstract class Storage {
 		
 	}
 	abstract function store(VersionEntry $entry, Partition $partition, File $file): \Net\StreamReceiver;
+	abstract function storeSingle(File $file, VersionEntry $versionEntry, Partition $partition, string $filedata);
 	abstract function restore(int $version): \Net\StreamSender;
 	abstract function getFree(): int ;
 	abstract function getUsed(Partition $partition = NULL): int;
