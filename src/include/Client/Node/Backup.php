@@ -30,6 +30,12 @@ class Backup implements \SignalHandler {
 		$this->protocolNodeListener = new ProtocolNode();
 		$this->protocol = new \Net\ProtocolAsync($this->protocolNodeListener);
 		$this->protocolNodeListener->setProtocol($this->protocol);
+		/*
+		 * Create path from root to starting point if necessary, ie when user
+		 * calls cpnc backup /home/user/files, create /home/ and /home/user/.
+		 */
+		$this->createHierarchy($socket, $this->argv->getBackupPath());
+		
 		$client = new \Net\AsyncStream($socket);
 		$client->setProtocol($this->protocol);
 		$this->timeshare = new Timeshare();
@@ -256,9 +262,18 @@ class Backup implements \SignalHandler {
 			$this->recurseFiles($dir->getPath());
 		}
 	}
-	
-	private function createHierarchy() {
-		$exp = explode("/", $this->argv->getBackupPath());
+	/**
+	 * When using cpnc backup with a path below the root directory, path entries
+	 * leading to the point at which backing up starts nevertheless need to be
+	 * created, otherwise the client can't restore if 'cpnc restore' is used.
+	 * As this is older code, it still uses the synchronized code, but the
+	 * performance penalty will be negligible in most if not all use cases.
+	 * 
+	 * @param mixed $socket
+	 */
+	private function createHierarchy(mixed $socket) {
+		$protocol = new \Net\ProtocolSync(new \Net\StreamClient($socket));
+		$exp = explode("/", realpath($this->argv->getBackupPath()));
 		$path = array();
 		$prev = "";
 		foreach($exp as $key => $value) {
@@ -282,8 +297,8 @@ class Backup implements \SignalHandler {
 			 * - altering CREATE FILE to check before creating (more secure, but
 			 *   consumes more time)
 			 */
-			$this->protocol->sendCommand("GET CATALOG ".dirname($dir));
-			$entries = $this->protocol->getSerialized();
+			$protocol->sendCommand("GET CATALOG ".dirname($dir));
+			$entries = $protocol->getSerialized();
 			if(!$entries->hasName(basename($dir))) {
 				echo "Creating ".$dir.PHP_EOL;
 				$file = \File::fromPath($dir);
