@@ -17,7 +17,7 @@ class RecurseDirectory implements Task {
 	private $repeat = 0;
 	private DirectoryWalkObserver $walkObserver;
 	function __construct(string $path, \InEx $inex, DirectoryWalkObserver $walkObserver) {
-		$this->path = $path;
+		$this->path = realpath($path);
 		$this->dirStack[] = $this->path;
 		$this->inex = $inex;
 		$this->walkObserver = $walkObserver;
