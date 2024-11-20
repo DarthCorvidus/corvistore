@@ -36,6 +36,10 @@ class BackupStat implements \TerminalTableModel {
 		$this->newFiles++;
 	}
 
+	public function addNewFile(int $files): void {
+		$this->updatedFiles += $files;
+	}
+
 	public function incrChangeDir(): void {
 		$this->updatedDirs++;
 	}
@@ -43,7 +47,7 @@ class BackupStat implements \TerminalTableModel {
 	public function incrChangeFile(): void {
 		$this->updatedFiles++;
 	}
-
+	
 	public function incrDelDir(): void {
 		$this->deletedDirs++;
 	}
