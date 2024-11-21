@@ -2,6 +2,7 @@
 namespace Server;
 use plibv4\process\Scheduler;
 use plibv4\process\Task;
+use Storage\TaskSingleStorage;
 class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolSendListener {
 	private $clientId;
 	private $node;
@@ -15,6 +16,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 	private $transactions = 0;
 	private Scheduler $sched;
 	private Task $task;
+	private TaskSingleStorage $storageTask;
 	public function __construct(Scheduler $sched, Task $task, \EPDO $pdo, int $clientId, \Node $node) {
 		$this->clientId = $clientId;
 		$this->node = $node;
@@ -28,6 +30,8 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		 * as there is only one storage type.
 		 */
 		$this->storage = \StorageBasic::fromId($this->pdo, $this->partition->getStorageId());
+		$this->storageTask = new TaskSingleStorage($this->storage, $this->partition);
+		$this->sched->addTask($this->storageTask);
 		#$this->pdo->beginTransaction();
 	}
 	
@@ -77,6 +81,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		if($command == "QUIT") {
 			echo "Terminating worker for ".$this->clientId.PHP_EOL;
 			$this->sched->terminate($this->task);
+			$this->sched->terminate($this->storageTask);
 			//exit();
 		}
 	}
@@ -228,9 +233,8 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$file->setServerNodeName($this->node->getName());
 			$file->setServerVersionId($version->getId());
 			$file->setServerStoreType(\File::BACK_MAIN);
-			#public function storeSingle(File $file, VersionEntry $versionEntry, Partition $partition, string $filedata) {
-			$this->storage->storeSingle($file, $version, $this->partition, $data);
-			
+			$storageJob = new \Storage\StorageJob($file, $version, $data);
+			$this->storageTask->addStorageJob($storageJob);
 		}
 	}
 	

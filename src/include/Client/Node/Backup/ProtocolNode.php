@@ -14,6 +14,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	private \plibv4\process\Task $task;
 	private BackupStat $stat;
 	private \FileGroup $filegroup;
+	private bool $iteratorDone = false;
 	function __construct() {
 		$this->stat = new BackupStat();
 		$this->filegroup = new \FileGroup();
@@ -64,6 +65,22 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		$this->uploadChanged($catalogEntries, $diff);
 		
 		$this->uploadNew($catalogEntries, $diff);
+		// remove processed 'Files' entry.
+		unset($this->files[$catalogEntries->getDirname()]);
+		/**
+		 * If the iterator has stopped, and no more files need to be processed,
+		 * send DONE to server.
+		 * Either this or onFiles can send DONE, depending which one has no
+		 * Files entries left.
+		 */
+		if($this->iteratorDone && empty($this->files)) {
+			if($this->filegroup->getFileCount()>0) {
+				#echo "Sending last filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
+				$this->protocol->sendSerialize($this->filegroup);
+			}
+			$this->protocol->sendCommand("DONE");
+			$this->done = true;
+		}
 	}
 	
 	private function uploadChanged(\CatalogEntries $catalogEntries, \CatFileDiff $diff) {
@@ -166,13 +183,19 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	
 
 	public function onEnd(\plibv4\process\Task $task): void {
-		if($this->filegroup->getFileCount()!=10) {
-			echo "Sending last filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
-			$this->protocol->sendBinaryClass($this->filegroup);
+		echo "onEnd with filegroup count ".$this->filegroup->getFileCount().PHP_EOL;
+		if($this->filegroup->getFileCount()!=0) {
+			echo "onEnd:Sending last filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
+			$this->protocol->sendSerialize($this->filegroup);
 		}
-
-		$this->protocol->sendCommand("DONE");
-		$this->done = true;
+		$this->iteratorDone = true;
+		/**
+		 * If there are no more files to be processed, send DONE here.
+		 */
+		if(empty($this->files)) {
+			$this->protocol->sendCommand("DONE");
+			$this->done = true;
+		}
 	}
 
 	public function onFiles(\plibv4\process\Task $task, string $dir, \Files $files): void {
