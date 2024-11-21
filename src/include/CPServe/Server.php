@@ -14,6 +14,8 @@ class Server implements SignalHandler, Net\HubServerListener, \Net\ProtocolAsync
 	private plibv4\process\Timeshare $ts;
 	private Server\TaskServer $workerServer;
 	private Server\Input $input;
+	private array $running = [];
+	private array $allowedIdle = [Idle::class, Server\TaskServer::class, \Server\Input::class];
 	function __construct(EPDO $pdo) {
 		set_time_limit(0);
 		ob_implicit_flush();
@@ -233,14 +235,15 @@ class Server implements SignalHandler, Net\HubServerListener, \Net\ProtocolAsync
 	}
 
 	public function onAdd(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
-		/*
-		 * If a client connects, pause idle, in order to give full power to the
-		 * client process.
-		 */
-		if($task instanceof AsyncStream) {
-			$this->clientCount++;
+		$className = $task::class;
+		if(!in_array($className, $this->allowedIdle)) {
+			echo "Pausing idle for ".$className.PHP_EOL;
 			$scheduler->pause($this->idle);
 		}
+		if(!isset($this->running[$className])) {
+			$this->running[$className] = 0;
+		}
+		$this->running[$className]++;
 	}
 
 	public function onError(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task, \Exception $e, int $step): void {
@@ -250,20 +253,40 @@ class Server implements SignalHandler, Net\HubServerListener, \Net\ProtocolAsync
 	public function onPause(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
 		
 	}
-
+	
 	public function onRemove(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task, int $step): void {
+		if(!$scheduler->hasTask($this->idle)) {
+			return;
+		}
 		/*
 		 * If the last client disconnects, reactivate Idle process
 		 */
+		$classname = $task::class;
+		$this->running[$classname]--;
+		if($this->running[$classname]<=0) {
+			unset($this->running[$classname]);
+		}
+		
+		foreach($this->running as $key => $value) {
+			if(!in_array($key, $this->allowedIdle)) {
+				echo $key." prevents idling.".PHP_EOL;
+			return;
+			}
+		}
+		echo "Resume idling".PHP_EOL;
+		$scheduler->resume($this->idle);
+	
+		
 		if($task instanceof AsyncStream) {
 			$this->clientCount--;
 		}
+		
 		/*
 		 * Resume if clientCount. As Idle may vanish first on server shutdown,
 		 * only end it if it is still there.
 		 */
 		if($this->clientCount==0 && $scheduler->hasTask($this->idle)) {
-			$scheduler->resume($this->idle);
+			#$scheduler->resume($this->idle);
 		}
 	}
 
