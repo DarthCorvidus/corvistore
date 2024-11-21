@@ -17,6 +17,7 @@ class Input implements \plibv4\process\Task {
 		 * Let the server die if an exception can't be handled.
 		 */
 		echo $e->getMessage();
+		throw $e;
 	}
 
 	public function __tsFinish(Scheduler $sched): void {
