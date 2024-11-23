@@ -1,23 +1,23 @@
 <?php
 class File {
-	private $path;
-	private $ctime;
-	private $atime;
-	private $mtime;
-	private $size;
-	private $permissions;
-	private $gid;
-	private $uid;
-	private $owner;
-	private $group;
-	private $type;
-	private $action = NULL;
-	private $target = NULL;
-	private $version = 1;
-	private $srvNodeName = "";
-	private $srvStoreType = 0;
-	private $srvVersionId = 0;
-	private $srvCreated = 0;
+	private string $path;
+	private int $ctime;
+	private int $atime;
+	private int $mtime;
+	private int $size;
+	private int $permissions;
+	private int $gid;
+	private int $uid;
+	private string $owner;
+	private string $group;
+	private int $type;
+	private ?int $action = NULL;
+	private ?string $target = NULL;
+	private int $version = 1;
+	private string $srvNodeName = "";
+	private int $srvStoreType = 0;
+	private int  $srvVersionId = 0;
+	private int $srvCreated = 0;
 	const CREATE = 1;
 	const UPDATE = 2;
 	const DELETE = 3;
@@ -25,8 +25,8 @@ class File {
 	const BACK_COPY = 2;
 	const ARCH_MAIN = 3;
 	const ARCH_COPY = 4;
-	private static $userCache = array();
-	private static $groupCache = array();
+	private static array $userCache = array();
+	private static array $groupCache = array();
 	private function __construct() {
 	}
 	
@@ -84,7 +84,7 @@ class File {
 	return $writer->getBinary();
 	}
 	
-	function setAction(int $action) {
+	function setAction(int $action): void {
 		Assert::isClassConstant(self::class, $action);
 		$this->action = $action;
 	}
@@ -93,24 +93,24 @@ class File {
 		return $this->action;
 	}
 	
-	function setServerNodeName(string $name) {
+	function setServerNodeName(string $name): void {
 		$this->srvNodeName = $name;
 	}
 	
-	function setServerVersionId(int $versionId) {
+	function setServerVersionId(int $versionId): void {
 		$this->srvVersionId = $versionId;
 	}
 	
-	function setServerStoreType(int $storeType) {
+	function setServerStoreType(int $storeType): void {
 		Assert::isEnum($storeType, array(self::BACK_MAIN, self::BACK_COPY, self::ARCH_MAIN, self::ARCH_COPY));
 		$this->srvStoreType = $storeType;
 	}
 	
-	function setServerCreated(int $created) {
+	function setServerCreated(int $created): void {
 		$this->srvCreated = $created;
 	}
 	
-	function reload() {
+	function reload(): void {
 		clearstatcache();
 		$stat = @stat($this->path);
 		if($stat===FALSE) {
@@ -152,27 +152,29 @@ class File {
 		}
 	}
 	
-	private function getOwnerName(int $uid) {
+	private function getOwnerName(int $uid): string {
 		if(isset(self::$userCache[$uid])) {
 			return self::$userCache[$uid];
 		}
 		$owner = posix_getpwuid($uid);
 		// Fall back to uid if there is no entry for uid
 		if($owner===false) {
-			$owner["name"] = $uid;
+			$owner = array();
+			$owner["name"] = (string)$uid;
 		}
 		self::$userCache[$uid] = $owner["name"];
 	return $owner["name"];
 	}
 	
-	private function getGroupName(int $gid) {
+	private function getGroupName(int $gid): string {
 		if(isset(self::$groupCache[$gid])) {
 			return self::$groupCache[$gid];
 		}
 		$group = posix_getgrgid($gid);
 		// Fall back to gid if there is no entry for gid
 		if($group===false) {
-			$group["name"] = $gid;
+			$group = array();
+			$group["name"] = (string)$gid;
 		}
 		self::$groupCache[$gid] = $group["name"];
 	return $group["name"];
@@ -227,7 +229,7 @@ class File {
 	return File::fromPath($this->getDirname());
 	}
 	
-	function getDirname() {
+	function getDirname(): string {
 		return dirname($this->path);
 	}
 	

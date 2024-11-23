@@ -13,7 +13,7 @@ class FileGroup {
 		;
 	}
 	
-	function addFile(File $file) {
+	function addFile(File $file): void {
 		$size = $file->getSize();
 		$filedata = file_get_contents($file->getPath());
 		/*
