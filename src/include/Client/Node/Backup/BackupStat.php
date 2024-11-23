@@ -37,7 +37,7 @@ class BackupStat implements \TerminalTableModel {
 	}
 
 	public function addNewFile(int $files): void {
-		$this->updatedFiles += $files;
+		$this->newFiles += $files;
 	}
 
 	public function incrChangeDir(): void {
