@@ -15,6 +15,20 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	private BackupStat $stat;
 	private \FileGroup $filegroup;
 	private bool $iteratorDone = false;
+	/**
+	 * File size below which a file will be added to a file group (1Mib)
+	 */
+	const FILE_SIZE_THRESHOLD = 1048576;
+	/**
+	 * Maximum size to which a FileGroup is allowed to grow until it gets sent
+	 * to the server (10Mib)
+	 */
+	const FILEGROUP_SIZE_MAX = 10485760;
+	/**
+	 * Maximum amount of files in a FileGroup before it gets sent to the server
+	 * (255). 255 was chosen with a binary transfer in mind (uint8).
+	 */
+	const FILEGROUP_AMOUNT_MAX = 255;
 	function __construct() {
 		$this->stat = new BackupStat();
 		$this->filegroup = new \FileGroup();
@@ -127,11 +141,16 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 			#	continue;
 			#}
 			#$this->protocol->sendCommand("CREATE FILE ".$file->getPath());
-
-			if($file->getType()== \Catalog::TYPE_FILE && $file->getSize()<=1024*1024) {
+			/**
+			 * Add files below FILE_SIZE_THRESHOLD to FileGroup
+			 */
+			if($file->getType()== \Catalog::TYPE_FILE && $file->getSize()<= self::FILE_SIZE_THRESHOLD) {
 				$file->setAction(\File::CREATE);
 				$this->filegroup->addFile($file);
-				if($this->filegroup->getFileCount()==255 or $this->filegroup->getPayloadSize()>=1024*1024*10) {
+				/**
+				 * Send Filegroup to Server if either maximum
+				 */
+				if($this->filegroup->getFileCount()== self::FILEGROUP_AMOUNT_MAX or $this->filegroup->getPayloadSize()>= self::FILEGROUP_SIZE_MAX) {
 					echo "Sending filegroup with ".$this->filegroup->getFileCount()." files [". number_format($this->filegroup->getPayloadSize())."]".PHP_EOL;
 					//$this->protocol->sendBinaryClass($this->filegroup);
 					$this->protocol->sendSerialize($this->filegroup);
@@ -143,7 +162,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 
 			$file->setAction(\File::CREATE);
 			$this->protocol->sendSerialize($file);
-			if($file->getType()== \Catalog::TYPE_FILE && $file->getSize()>1024*1024) {
+			if($file->getType()== \Catalog::TYPE_FILE) {
 			#if($file->getType()== \Catalog::TYPE_FILE) {
 				echo "Sending new file ".$file->getPath()." [".number_format($file->getSize())."]".PHP_EOL;
 				try {
