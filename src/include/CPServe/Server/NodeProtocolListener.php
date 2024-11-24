@@ -80,6 +80,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 		if($command == "QUIT") {
 			echo "Terminating worker for ".$this->clientId.PHP_EOL;
+			#\plibv4\profiler\Profiler::printTimers();
 			$this->sched->terminate($this->task);
 			$this->sched->terminate($this->storageTask);
 			//exit();
@@ -226,9 +227,14 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		for($i = 0; $i<$fg->getFileCount(); $i++) {
 			$file = $fg->getFile($i);
 			$data = $fg->getFileData($i);
+			$this->pdo->beginTransaction();
 			$entry = $this->catalog->newEntry($file);
-			$version = $entry->getVersions()->getLatest();
+			#\plibv4\profiler\Profiler::startTimer("newEntryCommit");
+			$this->pdo->commit();
+			#\plibv4\profiler\Profiler::endTimer("newEntryCommit");
 			
+			$version = $entry->getVersions()->getLatest();
+
 			$file->setServerCreated($version->getCreated());
 			$file->setServerNodeName($this->node->getName());
 			$file->setServerVersionId($version->getId());
