@@ -49,6 +49,10 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 	
 	public function storeSingle(File $file, VersionEntry $versionEntry, Partition $partition, string $filedata) {
+		/**
+		 * Using a transaction here speeds up SQLite.
+		 */
+		$this->pdo->beginTransaction();
 		$serial = $this->getSerial();
 		$storeId = $this->getStoreId($versionEntry, $partition, $serial);
 		
@@ -67,6 +71,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 			throw new \Exception($error["message"]);
 		}
 		$this->endStore($versionEntry, $storeId);
+		$this->pdo->commit();
 	}
 	
 	public function restore(int $version): \Net\StreamSender {
@@ -139,13 +144,17 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		$new["dpt_id"] = $partition->getId();
 		$new["dco_serial"] = $serial;
 		$new["dco_stored"] = 0;
+		#plibv4\profiler\Profiler::startTimer("getStoreId");
 		$storeId = $this->pdo->create("d_content", $new);
+		#plibv4\profiler\Profiler::endTimer("getStoreId");
 	return $storeId;
 	}
 
 	private function endStore(VersionEntry $entry, int $storeId) {
+		#plibv4\profiler\Profiler::startTimer("finalizeStored");
 		$this->pdo->update("d_content", array("dco_stored"=>1), array("dco_id"=>$storeId));
 		$entry->setStored($this->pdo);
+		#plibv4\profiler\Profiler::endTimer("finalizeStored");
 	}
 	
 	
