@@ -6,13 +6,15 @@ namespace Storage;
  */
 class StorageJob {
 	public \File $file;
-	public \VersionEntry $versionEntry;
+	public \Catalog $catalog;
 	public string $filedata;
 	public \Partition $partition;
-	function __construct(\File $file, \VersionEntry $versionEntry, \Partition $partition, string $filedata) {
+	public \Node $node;
+	function __construct(\File $file, \Catalog $catalog, \Partition $partition, \Node $node, string $filedata) {
 		$this->file = $file;
-		$this->versionEntry = $versionEntry;
+		$this->catalog = $catalog;
 		$this->filedata = $filedata;
 		$this->partition = $partition;
+		$this->node = $node;
 	}
 }

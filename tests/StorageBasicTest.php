@@ -172,11 +172,11 @@ class StorageBasicTest extends TestCase {
 		 * This is not correct, since we create the entry below / instead of
 		 * /tmp/crow-protect/, but this is irrelevant for this test.
 		 */
-		$entry = $catalog->newEntry($file);
+
 		#$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
 		#$versionEntry = $versions->addVersion($source);
 		#$file, $entry->getVersions()->getLatest(), $partition, file_get_contents($file->getPath())
-		$storageJob = new \Storage\StorageJob($file, $entry->getVersions()->getLatest(), $partition, file_get_contents($file->getPath()));
+		$storageJob = new \Storage\StorageJob($file, $catalog, $partition, $node, file_get_contents($file->getPath()));
 		$storage->storeSingle($storageJob);
 		$this->assertFileExists(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp");
 		/**

@@ -53,8 +53,15 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		 * Using a transaction here speeds up SQLite.
 		 */
 		$this->pdo->beginTransaction();
+		$entry = $job->catalog->newEntry($job->file);
+		$versionEntry = $entry->getVersions()->getLatest();
+		$job->file->setServerCreated($versionEntry->getCreated());
+		$job->file->setServerNodeName($job->node->getName());
+		$job->file->setServerVersionId($versionEntry->getId());
+		$job->file->setServerStoreType(\File::BACK_MAIN);
+
 		$serial = $this->getSerial();
-		$storeId = $this->getStoreId($job->versionEntry, $job->partition, $serial);
+		$storeId = $this->getStoreId($versionEntry, $job->partition, $serial);
 		
 		$path = $this->getPathForIdFile($serial);
 		$location = $this->getPathForIdLocation($serial);
@@ -70,7 +77,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		if(!empty($error)) {
 			throw new \Exception($error["message"]);
 		}
-		$this->endStore($job->versionEntry, $storeId);
+		$this->endStore($versionEntry, $storeId);
 		$this->pdo->commit();
 	}
 	

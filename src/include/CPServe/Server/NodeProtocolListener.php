@@ -227,19 +227,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		for($i = 0; $i<$fg->getFileCount(); $i++) {
 			$file = $fg->getFile($i);
 			$data = $fg->getFileData($i);
-			$this->pdo->beginTransaction();
-			$entry = $this->catalog->newEntry($file);
-			#\plibv4\profiler\Profiler::startTimer("newEntryCommit");
-			$this->pdo->commit();
-			#\plibv4\profiler\Profiler::endTimer("newEntryCommit");
-			
-			$version = $entry->getVersions()->getLatest();
-
-			$file->setServerCreated($version->getCreated());
-			$file->setServerNodeName($this->node->getName());
-			$file->setServerVersionId($version->getId());
-			$file->setServerStoreType(\File::BACK_MAIN);
-			$storageJob = new \Storage\StorageJob($file, $version, $this->partition, $data);
+			$storageJob = new \Storage\StorageJob($file, $this->catalog, $this->partition, $this->node, $data);
 			$this->storageTask->addStorageJob($storageJob);
 		}
 	}
