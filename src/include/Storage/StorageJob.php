@@ -8,9 +8,11 @@ class StorageJob {
 	public \File $file;
 	public \VersionEntry $versionEntry;
 	public string $filedata;
-	function __construct(\File $file, \VersionEntry $versionEntry, string $filedata) {
+	public \Partition $partition;
+	function __construct(\File $file, \VersionEntry $versionEntry, \Partition $partition, string $filedata) {
 		$this->file = $file;
 		$this->versionEntry = $versionEntry;
 		$this->filedata = $filedata;
+		$this->partition = $partition;
 	}
 }

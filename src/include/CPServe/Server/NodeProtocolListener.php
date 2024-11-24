@@ -30,7 +30,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		 * as there is only one storage type.
 		 */
 		$this->storage = \StorageBasic::fromId($this->pdo, $this->partition->getStorageId());
-		$this->storageTask = new TaskSingleStorage($this->storage, $this->partition);
+		$this->storageTask = new TaskSingleStorage($this->storage);
 		$this->sched->addTask($this->storageTask);
 		#$this->pdo->beginTransaction();
 	}
@@ -239,7 +239,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$file->setServerNodeName($this->node->getName());
 			$file->setServerVersionId($version->getId());
 			$file->setServerStoreType(\File::BACK_MAIN);
-			$storageJob = new \Storage\StorageJob($file, $version, $data);
+			$storageJob = new \Storage\StorageJob($file, $version, $this->partition, $data);
 			$this->storageTask->addStorageJob($storageJob);
 		}
 	}

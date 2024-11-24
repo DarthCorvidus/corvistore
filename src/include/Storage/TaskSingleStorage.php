@@ -9,10 +9,8 @@ use plibv4\process\Scheduler;
 class TaskSingleStorage implements Task {
 	private array $queue = [];
 	private \Storage $storage;
-	private \Partition $partition;
-	public function __construct(\Storage $storage, \Partition $partition) {
+	public function __construct(\Storage $storage) {
 		$this->storage = $storage;
-		$this->partition = $partition;
 	}
 	
 	public function addStorageJob(StorageJob $storageJob) {
@@ -40,7 +38,7 @@ class TaskSingleStorage implements Task {
 		if($count % 50 == 0) {
 			echo "Storing ".$job->file->getPath().", ".$count." left".PHP_EOL;
 		}
-		$this->storage->storeSingle($job->file, $job->versionEntry, $this->partition, $job->filedata);
+		$this->storage->storeSingle($job);
 		
 	return true;
 	}

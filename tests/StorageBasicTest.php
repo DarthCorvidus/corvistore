@@ -175,7 +175,9 @@ class StorageBasicTest extends TestCase {
 		$entry = $catalog->newEntry($file);
 		#$versions = new Versions(TestHelper::getEPDO(), $catalogEntry);
 		#$versionEntry = $versions->addVersion($source);
-		$sr = $storage->storeSingle($file, $entry->getVersions()->getLatest(), $partition, file_get_contents($file->getPath()));
+		#$file, $entry->getVersions()->getLatest(), $partition, file_get_contents($file->getPath())
+		$storageJob = new \Storage\StorageJob($file, $entry->getVersions()->getLatest(), $partition, file_get_contents($file->getPath()));
+		$storage->storeSingle($storageJob);
 		$this->assertFileExists(__DIR__."/storage/basic01/00/00/00/00/00/00/00/01.cp");
 		/**
 		 * 
@@ -184,6 +186,8 @@ class StorageBasicTest extends TestCase {
 		$tableVersion = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
 		// Testing here that dvs_stored is set after has completed
 		$this->assertEquals(1, $tableVersion[0]["dvs_stored"]);
+		$tableContent = TestHelper::dumpTable(TestHelper::getEPDO(), "d_content", "dco_id");
+		$this->assertEquals(1, $tableContent[0]["dco_stored"]);
 	}
 	
 	#function testRestore() {

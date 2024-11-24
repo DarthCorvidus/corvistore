@@ -48,13 +48,13 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	return $this;
 	}
 	
-	public function storeSingle(File $file, VersionEntry $versionEntry, Partition $partition, string $filedata) {
+	public function storeSingle(\Storage\StorageJob $job) {
 		/**
 		 * Using a transaction here speeds up SQLite.
 		 */
 		$this->pdo->beginTransaction();
 		$serial = $this->getSerial();
-		$storeId = $this->getStoreId($versionEntry, $partition, $serial);
+		$storeId = $this->getStoreId($job->versionEntry, $job->partition, $serial);
 		
 		$path = $this->getPathForIdFile($serial);
 		$location = $this->getPathForIdLocation($serial);
@@ -62,15 +62,15 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		if(!file_exists($location)) {
 			mkdir($location, 0700, true);
 		}
-		$data = str_pad($file->toBinary(), 8192, "\0");
-		$data .= $filedata;
+		$data = str_pad($job->file->toBinary(), 8192, "\0");
+		$data .= $job->filedata;
 		error_clear_last();
 		file_put_contents($path, $data);
 		$error = error_get_last();
 		if(!empty($error)) {
 			throw new \Exception($error["message"]);
 		}
-		$this->endStore($versionEntry, $storeId);
+		$this->endStore($job->versionEntry, $storeId);
 		$this->pdo->commit();
 	}
 	
