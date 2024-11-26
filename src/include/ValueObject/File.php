@@ -54,10 +54,10 @@ class File {
 		$file->permissions = $reader->getUInt16();
 		$file->type = $reader->getUInt8();
 		$file->uid = $reader->getUInt32();
-		$file->owner = $reader->getIndexedString(8, 255);
+		$file->owner = $reader->getIndexedString(8);
 		$file->gid = $reader->getUInt32();
-		$file->group = $reader->getIndexedString(8, 255);
-		$file->path = $reader->getIndexedString(16, 4096);
+		$file->group = $reader->getIndexedString(8);
+		$file->path = $reader->getIndexedString(16);
 	return $file;
 	}
 	
@@ -77,10 +77,10 @@ class File {
 		$writer->addUInt16($this->permissions);
 		$writer->addUInt8($this->type);
 		$writer->addUint32($this->uid);
-		$writer->addIndexedString(8, $this->owner, 255);
+		$writer->addIndexedString(8, $this->owner);
 		$writer->addUint32($this->gid);
-		$writer->addIndexedString(8, $this->group, 255);
-		$writer->addIndexedString(16, $this->path, 4096);
+		$writer->addIndexedString(8, $this->group);
+		$writer->addIndexedString(16, $this->path);
 	return $writer->getBinary();
 	}
 	
