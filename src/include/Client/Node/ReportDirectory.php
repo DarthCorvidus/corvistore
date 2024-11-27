@@ -53,15 +53,19 @@ class ReportDirectory implements \TerminalTableModel, \TerminalTableLayout {
 	}
 
 	private function getType(int $type): string {
-		if($type==0) {
+		if($type==\Catalog::TYPE_DELETED) {
 			return "DEL";
 		}
-		if($type==1) {
+		if($type==\Catalog::TYPE_DIR) {
 			return "DIR";
 		}
-		if($type==2) {
+		if($type==\Catalog::TYPE_FILE) {
 			return "FILE";
 		}
+		if($type==\Catalog::TYPE_LINK) {
+			return "LINK";
+		}
+	return "UNK";
 	}
 	
 	public function load() {
