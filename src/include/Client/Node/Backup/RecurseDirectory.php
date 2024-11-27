@@ -56,7 +56,12 @@ class RecurseDirectory implements Task {
 			if(!$this->inex->isValid($realPath)) {
 				continue;
 			}
+			/*
+			 * Skip early if file is link.
+			 */
 			if($object->isLink()) {
+				$file = \File::fromPath($value);
+				$files->addEntry($file);
 				continue;
 			}
 			if(!$object->isDir() && !$object->isFile()) {

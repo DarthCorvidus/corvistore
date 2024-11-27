@@ -138,6 +138,9 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		if($file->getType()== \Catalog::TYPE_FILE && $file->getSize()<= self::FILE_SIZE_THRESHOLD) {
 			return true;
 		}
+		if($file->getType()== \Catalog::TYPE_LINK) {
+			return true;
+		}
 		#if($file->getType()== \Catalog::TYPE_DIR) {
 		#	return true;
 		#}
