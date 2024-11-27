@@ -126,6 +126,23 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 			}
 		}
 	}
+	/**
+	 * Checks if a file should be added to the current file group.
+	 * @param \File $file
+	 * @return bool
+	 */
+	private function eligibleForFilegroup(\File $file): bool {
+		/*
+		 * Add files below FILE_SIZE_THRESHOLD to FileGroup
+		 */
+		if($file->getType()== \Catalog::TYPE_FILE && $file->getSize()<= self::FILE_SIZE_THRESHOLD) {
+			return true;
+		}
+		#if($file->getType()== \Catalog::TYPE_DIR) {
+		#	return true;
+		#}
+	return false;
+	}
 	
 	private function uploadNew(\CatalogEntries $catalogEntries, \CatFileDiff $diff) {
 		#echo "Uploading for ".$catalogEntries->getDirname().PHP_EOL;
@@ -141,10 +158,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 			#	continue;
 			#}
 			#$this->protocol->sendCommand("CREATE FILE ".$file->getPath());
-			/**
-			 * Add files below FILE_SIZE_THRESHOLD to FileGroup
-			 */
-			if($file->getType()== \Catalog::TYPE_FILE && $file->getSize()<= self::FILE_SIZE_THRESHOLD) {
+			if($this->eligibleForFilegroup($file)) {
 				$file->setAction(\File::CREATE);
 				$this->filegroup->addFile($file);
 				/**
@@ -159,7 +173,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 				}
 			continue;
 			}
-
+			
 			$file->setAction(\File::CREATE);
 			$this->protocol->sendSerialize($file);
 			if($file->getType()== \Catalog::TYPE_FILE) {
