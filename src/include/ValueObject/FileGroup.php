@@ -15,14 +15,23 @@ class FileGroup {
 	
 	function addFile(File $file): void {
 		$size = $file->getSize();
-		$filedata = file_get_contents($file->getPath());
-		/*
-		 * Throw FileChangedException, should file size have changed between 
-		 * creating File object and getting file contents.
-		 * The ba client can then retry.
+		if($file->getType() === \Catalog::TYPE_FILE) {
+			$filedata = file_get_contents($file->getPath());
+			/*
+			 * Throw FileChangedException, should file size have changed between 
+			 * creating File object and getting file contents.
+			 * The ba client can then retry.
+			 */
+			if($size != strlen($filedata)) {
+				throw new FileChangedException("file changed while adding to FileGroup");
+			}
+		}
+		/**
+		 * For symlinks, the target path is stored within the 'data' part of
+		 * the file.
 		 */
-		if($size != strlen($filedata)) {
-			throw new FileChangedException("file changed while adding to FileGroup");
+		if($file->getType() === \Catalog::TYPE_LINK) {
+			$filedata = $file->getTarget();
 		}
 		$this->file[] = $file;
 		$this->filedata[] = $filedata;
