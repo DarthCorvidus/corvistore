@@ -7,16 +7,16 @@
  * @author Claus-Christoph Küthe
  */
 class Partition {
-	private $pdo;
-	private $name;
-	private $storage;
-	private $type;
-	private $id;
-	private $copy;
+	private EPDO $pdo;
+	private string $name;
+	private Storage $storage;
+	private string $type;
+	private int $id;
+	private ?Partition $copy;
 	private function __construct() {
 	}
 	
-	static function define(EPDO $pdo, CommandParser $command) {
+	static function define(EPDO $pdo, CommandParser $command): void {
 		$command->import(new CPModelPartition($pdo, CPModelPartition::MODE_DEFINE));
 		$name = $command->getPositional(0);
 		$storage = $command->getParam("storage");
@@ -29,7 +29,7 @@ class Partition {
 		$part->create();
 	}
 	
-	static function update(EPDO $pdo, CommandParser $command) {
+	static function update(EPDO $pdo, CommandParser $command): void {
 		$update = array();
 		$command->import(new CPModelPartition($pdo, CPModelPartition::MODE_UPDATE));
 		$partition = Partition::fromName($pdo, $command->getPositional(0));
@@ -61,7 +61,7 @@ class Partition {
 	return $part;
 	}
 	
-	static function fromName(EPDO $pdo, $name): Partition {
+	static function fromName(EPDO $pdo, string $name): Partition {
 		$row = $pdo->row("select * from d_partition where dpt_name = ?", array($name));
 		if(empty($row)) {
 			throw new Exception("Partition '".$name."' does not exist.");
@@ -69,7 +69,7 @@ class Partition {
 	return self::fromArray($pdo, $row);
 	}
 	
-	static function fromId(EPDO $pdo, $id): Partition {
+	static function fromId(EPDO $pdo, int $id): Partition {
 		$row = $pdo->row("select * from d_partition where dpt_id = ?", array($id));
 		if(empty($row)) {
 			throw new Exception("Partition with id '".$id."' does not exist.");
@@ -77,9 +77,10 @@ class Partition {
 	return self::fromArray($pdo, $row);
 	}
 	
-	public function create() {
+	public function create(): void {
 		$this->pdo->beginTransaction();
 		$this->storage = Storage::fromName($this->pdo, $this->storage->getName());
+		$new = [];
 		$new["dpt_name"] = $this->name;
 		$new["dpt_type"] = $this->type;
 		$new["dst_id"] = $this->storage->getId();
@@ -108,6 +109,9 @@ class Partition {
 	}
 	
 	public function getCopyPartition(): Partition {
+		if($this->copy === null) {
+			throw new \RuntimeException("partition ".$this->name." has no copy partition");
+		}
 		return $this->copy;
 	}
 }

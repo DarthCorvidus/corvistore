@@ -7,12 +7,12 @@
  * @author Claus-Christoph Küthe
  */
 class Node {
-	private $pdo;
-	private $id;
-	private $name;
-	private $policy;
-	private $salt;
-	private $password;
+	private EPDO $pdo;
+	private int $id;
+	private string $name;
+	private Policy $policy;
+	private string $salt;
+	private string $password;
 	private function __construct() {
 		;
 	}
@@ -45,7 +45,7 @@ class Node {
 	return "No changes.";
 	}
 	
-	static function authenticate(EPDO $pdo, string $conjoined) {
+	static function authenticate(EPDO $pdo, string $conjoined): Node {
 		$exp = explode(":", $conjoined, 2);
 		if(count($exp)==1) {
 			throw new Exception("Unable to read password for node ".$exp[0]);
@@ -58,7 +58,7 @@ class Node {
 	}
 
 	
-	private function create() {
+	private function create(): void {
 		$new = array();
 		$new["dnd_name"] = $this->name;
 		$new["dpo_id"] = Policy::fromId($this->pdo, $this->policy->getId())->getId();

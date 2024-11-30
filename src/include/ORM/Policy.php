@@ -5,17 +5,17 @@
  * @author Claus-Christoph Küthe
  */
 class Policy {
-	private $pdo;
-	private $name;
-	private $id;
-	private $retentionExists = 0;
-	private $retentionDeleted = 0;
-	private $versionExists = 0;
-	private $versionDeleted = 0;
-	private $partition;
+	private EPDO $pdo;
+	private string $name;
+	private int $id;
+	private int $retentionExists = 0;
+	private int $retentionDeleted = 0;
+	private int $versionExists = 0;
+	private int $versionDeleted = 0;
+	private Partition $partition;
 	private function __construct() {
 	}
-	static function define(EPDO $pdo, CommandParser $parser) {
+	static function define(EPDO $pdo, CommandParser $parser): void {
 		$parser->import(new CPModelPolicy());
 		$policy = new Policy();
 		$policy->pdo = $pdo;
@@ -41,7 +41,7 @@ class Policy {
 	return $policy;
 	}
 	
-	static function fromName(EPDO $pdo, string $name) {
+	static function fromName(EPDO $pdo, string $name): Policy {
 		$array = $pdo->row("select * from d_policy where dpo_name = ?", array($name));
 		if(empty($array)) {
 			throw new InvalidArgumentException(sprintf("Policy with name '%s' does not exist.", $name));
@@ -49,7 +49,7 @@ class Policy {
 	return Policy::fromArray($pdo, $array);
 	}
 	
-	static function fromId(EPDO $pdo, int $id) {
+	static function fromId(EPDO $pdo, int $id): Policy {
 		$array = $pdo->row("select * from d_policy where dpo_id = ?", array($id));
 		if(empty($array)) {
 			throw new RuntimeException(sprintf("Policy with id '%d' does not exist.", $id));
@@ -57,7 +57,8 @@ class Policy {
 	return Policy::fromArray($pdo, $array);
 	}
 	
-	function create() {
+	function create(): void {
+		$new = [];
 		$new["dpo_name"] = $this->name;
 		$new["dpt_id"] = Partition::fromId($this->pdo, $this->partition->getId())->getId();
 		$new["dpo_version_exists"] = $this->versionExists;
@@ -68,7 +69,7 @@ class Policy {
 	}
 	
 	function getId():int {
-		return (int)$this->id;
+		return $this->id;
 	}
 	
 	function getName(): string {
@@ -76,19 +77,19 @@ class Policy {
 	}
 	
 	function getVersionExists(): int {
-		return (int)$this->versionExists;
+		return $this->versionExists;
 	}
 	
 	function getVersionDeleted(): int {
-		return (int)$this->versionDeleted;
+		return $this->versionDeleted;
 	}
 	
 	function getRetentionExists(): int {
-		return (int)$this->retentionExists;
+		return $this->retentionExists;
 	}
 	
 	function getRetentionDeleted(): int {
-		return (int)$this->retentionDeleted;
+		return $this->retentionDeleted;
 	}
 	
 	function getPartition(): Partition {

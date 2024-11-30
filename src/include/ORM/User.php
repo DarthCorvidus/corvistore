@@ -7,15 +7,15 @@
  * @author Claus-Christoph Küthe
  */
 class User {
-	private $pdo;
-	private $id;
-	private $name;
-	private $salt;
-	private $password;
+	private EPDO $pdo;
+	private int $id;
+	private string $name;
+	private string $salt;
+	private string $password;
 	private function __construct() {
 		;
 	}
-	static function define(EPDO $pdo, CommandParser $commandParser) {
+	static function define(EPDO $pdo, CommandParser $commandParser): string {
 		$commandParser->import(new CPModelUser($pdo, CPModelUser::MODE_DEFINE));
 		$user = new User();
 		$user->pdo = $pdo;
@@ -43,7 +43,7 @@ class User {
 	return "No changes.";
 	}
 
-	static function authenticate(EPDO $pdo, string $conjoined) {
+	static function authenticate(EPDO $pdo, string $conjoined): User {
 		$exp = explode(":", $conjoined, 2);
 		if(count($exp)==1) {
 			throw new Exception("Unable to read password for node ".$exp[0]);
@@ -56,7 +56,7 @@ class User {
 	}
 
 	
-	private function create() {
+	private function create(): void {
 		$new = array();
 		$new["du_name"] = $this->name;
 		$new["du_password"] = $this->password;

@@ -1,18 +1,18 @@
 <?php
 declare(strict_types=1);
 class VersionEntry {
-	private $id;
-	private $atime;
-	private $ctime;
-	private $mtime = 0;
-	private $permissions = 0;
-	private $owner = "";
-	private $group = "";
-	private $size = 0;
-	private $created;
-	private $catalogId;
-	private $stored = 0;
-	private $type;
+	private int $id;
+	private int $atime;
+	private int $ctime;
+	private int $mtime = 0;
+	private int $permissions = 0;
+	private string $owner = "";
+	private string $group = "";
+	private int $size = 0;
+	private int $created;
+	private int $catalogId;
+	private int $stored = 0;
+	private int $type;
 	private function __construct() {
 		
 	}
@@ -41,7 +41,8 @@ class VersionEntry {
 	return $version;
 	}
 	
-	function toBinary() {
+	function toBinary(): string {
+		$values = [];
 		$values["dvs_id"] = $this->id;
 		$values["dvs_type"] = $this->type;
 		$values["dvs_created_epoch"] = $this->created;
@@ -55,9 +56,9 @@ class VersionEntry {
 	return BinaryWriter::toString($values, new \BinStruct\VersionEntry());
 	}
 	
-	static function fromBinary($string): VersionEntry {
+	static function fromBinary(string $binary): VersionEntry {
 		$reader = new BinaryReader(new \BinStruct\VersionEntry());
-		$values = $reader->fromString($string);
+		$values = $reader->fromString($binary);
 	return self::fromArray($values);
 	}
 	
@@ -117,12 +118,12 @@ class VersionEntry {
 		return $this->catalogId;
 	}
 	
-	function setStored(EPDO $pdo) {
+	function setStored(EPDO $pdo): void {
 		$pdo->update("d_version", array("dvs_stored"=>"1"), array("dvs_id"=>$this->id));
 		$this->stored = 1;
 	}
 	
-	function isStored() {
+	function isStored(): bool {
 		return $this->stored === 1;
 	}
 }

@@ -10,7 +10,12 @@
 		<PropertyNotSetInConstructor>
 			<errorLevel type="suppress">
 				<file name="src/include/ValueObject/File.php" /> 
-				<file name="src/include/Storage.php" /> 
+				<file name="src/include/Storage.php" />
+				<file name="src/include/ORM/Node.php" /> 
+				<file name="src/include/ORM/Partition.php" /> 
+				<file name="src/include/ORM/Policy.php" /> 
+				<file name="src/include/ORM/User.php" /> 
+				<file name="src/include/ORM/VersionEntry.php" /> 
 			</errorLevel>
 		</PropertyNotSetInConstructor>
 	</issueHandlers>
