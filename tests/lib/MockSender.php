@@ -36,7 +36,7 @@ class MockSender implements StreamSender {
         return strlen($this->data) - $this->pointer;
     }
 
-    public function onSendStart() {
+    public function onSendStart(): void {
 		// onSendStart should fail if $this->exceptionAfter is zero.
 		if($this->exceptionAfter==0) {
 			$this->cancelled = TRUE;
@@ -46,11 +46,11 @@ class MockSender implements StreamSender {
         $this->started = true;
     }
 
-    public function onSendEnd() {
+    public function onSendEnd(): void {
         $this->ended = true;
     }
 
-    public function onSendCancel() {
+    public function onSendCancel(): void {
         $this->cancelled = true;
     }
 

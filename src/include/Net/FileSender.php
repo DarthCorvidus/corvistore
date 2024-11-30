@@ -63,15 +63,15 @@ class FileSender implements StreamSender {
 		return $this->size;
 	}
 
-	public function onSendCancel() {
+	public function onSendCancel(): void {
 		fclose($this->handle);
 	}
 
-	public function onSendEnd() {
+	public function onSendEnd(): void {
 		fclose($this->handle);
 	}
 
-	public function onSendStart() {
+	public function onSendStart(): void {
 		$this->handle = @fopen($this->file->getPath(), "r");
 		if($this->handle===FALSE) {
 			throw new \RuntimeException("unable to open ".$this->file->getPath()." for read.");

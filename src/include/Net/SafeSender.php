@@ -141,15 +141,15 @@ class SafeSender implements StreamSender {
 		return $this->size;
 	}
 
-	public function onSendCancel() {
+	public function onSendCancel(): void {
 		$this->sender->onSendCancel();
 	}
 
-	public function onSendEnd() {
+	public function onSendEnd(): void {
 		$this->sender->onSendEnd();
 	}
 
-	public function onSendStart() {
+	public function onSendStart(): void {
 		$this->sender->onSendStart();
 	}
 	

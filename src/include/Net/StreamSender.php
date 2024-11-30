@@ -5,7 +5,7 @@ interface StreamSender {
 	function getSendSize(): int;
 	function getSendData(int $amount): string;
 	function getSendLeft(): int;
-	function onSendStart();
-	function onSendEnd();
-	function onSendCancel();
+	function onSendStart(): void;
+	function onSendEnd(): void;
+	function onSendCancel(): void;
 }

@@ -30,15 +30,15 @@ class LinkSender implements StreamSender {
 		return \Net\Protocol::FILE;
 	}
 
-	public function onSendCancel() {
+	public function onSendCancel(): void {
 		
 	}
 
-	public function onSendEnd() {
+	public function onSendEnd(): void {
 		
 	}
 
-	public function onSendStart() {
+	public function onSendStart(): void {
 		
 	}
 

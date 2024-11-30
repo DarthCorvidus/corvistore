@@ -30,15 +30,15 @@ class StringSender implements StreamSender {
 		return $this->size;
 	}
 
-	public function onSendCancel() {
+	public function onSendCancel(): void {
 		
 	}
 
-	public function onSendEnd() {
+	public function onSendEnd(): void {
 		
 	}
 
-	public function onSendStart() {
+	public function onSendStart(): void {
 		
 	}
 
