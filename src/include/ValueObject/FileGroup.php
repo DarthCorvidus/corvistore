@@ -14,6 +14,7 @@ class FileGroup {
 	}
 	
 	function addFile(File $file): void {
+		$filedata = "";
 		$size = $file->getSize();
 		if($file->getType() === \Catalog::TYPE_FILE) {
 			$filedata = file_get_contents($file->getPath());
