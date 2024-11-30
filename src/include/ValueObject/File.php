@@ -11,8 +11,8 @@ class File {
 	private string $owner;
 	private string $group;
 	private int $type;
-	private ?int $action = NULL;
-	private ?string $target = NULL;
+	private int $action = 0;
+	private string $target = "";
 	private int $version = 1;
 	private string $srvNodeName = "";
 	private int $srvStoreType = 0;
@@ -215,7 +215,7 @@ class File {
 	}
 	
 	function getTarget(): string {
-		if($this->type!=3) {
+		if($this->type!= \Catalog::TYPE_LINK) {
 			throw new Exception("file is not a link");
 		}
 	return $this->target;

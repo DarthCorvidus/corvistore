@@ -6,11 +6,18 @@
     xmlns="https://getpsalm.org/schema/config"
     xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
 >
-    <projectFiles>
+	<issueHandlers>
+		<PropertyNotSetInConstructor>
+			<errorLevel type="suppress">
+				<file name="src/include/ValueObject/File.php" /> 
+			</errorLevel>
+		</PropertyNotSetInConstructor>
+	</issueHandlers>
+	<projectFiles>
         <directory name="src" />
         <ignoreFiles>
             <directory name="vendor" />
 			<directory name="prototyping" />
         </ignoreFiles>
-    </projectFiles>
+	</projectFiles>
 </psalm>
