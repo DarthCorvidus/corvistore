@@ -19,3 +19,7 @@
 rsync.sh
 vm03-rsync.sh
 part-sqlite.sql
+src/include/Storage/BufferedReader.php
+src/include/Storage/BufferedWriter.php
+src/include/Storage/Disk.php
+tests/Storage/DiskTest.php
