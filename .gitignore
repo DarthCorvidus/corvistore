@@ -16,3 +16,6 @@
 /prototyping/reset-library02.sh
 /prototyping/restore02
 /prototyping/ssl/ssl-cert.php
+rsync.sh
+vm03-rsync.sh
+part-sqlite.sql
