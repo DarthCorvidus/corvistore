@@ -13,7 +13,7 @@ class TaskSingleStorage implements Task {
 		$this->storage = $storage;
 	}
 	
-	public function addStorageJob(StorageJob $storageJob) {
+	public function addStorageJob(StorageJob $storageJob): void {
 		$this->queue[] = $storageJob;
 	}
 	

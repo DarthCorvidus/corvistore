@@ -10,6 +10,7 @@
 		<PropertyNotSetInConstructor>
 			<errorLevel type="suppress">
 				<file name="src/include/ValueObject/File.php" /> 
+				<file name="src/include/Storage.php" /> 
 			</errorLevel>
 		</PropertyNotSetInConstructor>
 	</issueHandlers>

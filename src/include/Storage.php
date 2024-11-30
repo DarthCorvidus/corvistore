@@ -7,11 +7,11 @@
  * @author Claus-Christoph Küthe
  */
 abstract class Storage {
-	protected $pdo;
-	protected $name;
-	protected $type;
-	protected $location;
-	protected $id;
+	protected \EPDO $pdo;
+	protected string $name;
+	protected string $type;
+	protected string $location;
+	protected int $id;
 	protected function __construct() {
 		;
 	}
@@ -25,6 +25,7 @@ abstract class Storage {
 			$storage->id = $array["dst_id"];
 			return $storage;
 		}
+	throw new \RuntimeException("unknown storage type '".$array["dst_type"]."'");
 	}
 	
 	static function fromName(EPDO $pdo, string $name): Storage {
@@ -43,14 +44,15 @@ abstract class Storage {
 		return self::fromArray($pdo, $row);
 	}
 	
-	function create() {
+	function create(): void {
+		$insert = array();
 		$insert["dst_name"] = $this->name;
 		$insert["dst_location"] = $this->location;
 		$insert["dst_type"] = $this->type;
 		$this->id = $this->pdo->create("d_storage", $insert);
 	}
 
-	static function define(EPDO $pdo, CommandParser $command) {
+	static function define(EPDO $pdo, CommandParser $command): void {
 		$command->import(new CPModelStorage);
 		if($command->getParam("type")=="basic") {
 			$new = new StorageBasic();
@@ -75,13 +77,10 @@ abstract class Storage {
 		return $this->name;
 	}
 	
-	function getId(): string {
+	function getId(): int {
 		return $this->id;
 	}
 	
-	function createStoragePool() {
-		
-	}
 	abstract function store(VersionEntry $entry, Partition $partition, File $file): \Net\StreamReceiver;
 	abstract function storeSingle(\Storage\StorageJob $job): void;
 	abstract function restore(int $version): \Net\StreamSender;
