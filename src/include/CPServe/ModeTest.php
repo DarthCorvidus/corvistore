@@ -54,30 +54,30 @@ class ModeTest implements \Net\ProtocolListener, \Net\TransferListener {
 	$protocol->sendError("Command ".$command." not known.");
 	}
 
-	public function onQuit() {
+	public function onQuit(): void {
 		echo "Client ".$this->clientId." requested quit. Ending connection.".PHP_EOL;
 	}
 
-	public function onCancel() {
+	public function onCancel(): void {
 		echo "Transfer aborted.".PHP_EOL;
 		fclose($this->transfer);
 	}
 
-	public function onData(string $data) {
+	public function onData(string $data): void {
 		fwrite($this->transfer, $data);
 	}
 
-	public function onEnd() {
+	public function onEnd(): void {
 		echo " Received: ".md5_file($this->filename).PHP_EOL;
 		fclose($this->transfer);
 	}
 
-	public function onFail() {
+	public function onFail(): void {
 		echo "Transfer aborted, catastrophic failure.".PHP_EOL;
 		fclose($this->transfer);
 	}
 
-	public function onStart(int $size) {
+	public function onStart(int $size): void {
 		$this->transfer = fopen($this->filename, "w");
 	}
 

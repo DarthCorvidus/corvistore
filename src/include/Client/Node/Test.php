@@ -21,7 +21,7 @@ class Test implements \Net\TransferListener {
 		$this->socket = stream_socket_client("ssl://".$this->config->getHost().":4096", $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $context->getContextClient());
 		fwrite($this->socket, "test\n");
 		#stream_set_blocking($this->socket, TRUE);
-		$this->protocol = new \Net\Protocol($this->socket);
+		$this->protocol = new \Net\SyncProtocol($this->socket);
 		#$this->inex = new InEx();
 		#$this->inex->addInclude("/boot/");
 		#$this->inex->addInclude("/tmp/");

@@ -11,15 +11,15 @@ class RestoreListener implements \Net\TransferListener {
 		unlink($this->target);
 	}
 
-	public function onData(string $data) {
+	public function onData(string $data): void {
 		fwrite($this->handle, $data);
 	}
 
-	public function onEnd() {
+	public function onEnd(): void {
 		fclose($this->handle);
 	}
 
-	public function onFail() {
+	public function onFail(): void {
 		
 	}
 

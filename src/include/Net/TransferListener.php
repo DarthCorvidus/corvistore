@@ -12,22 +12,22 @@ interface TransferListener {
 	 * transfer.
 	 * @param int $size
 	 */
-	function onStart(int $size);
+	function onStart(int $size): void;
 	/**
 	 * Get data from transfer
 	 * @param string $data
 	 */
-	function onData(string $data);
+	function onData(string $data): void;
 	/**
 	 * Transfer has been cancelled (usually recoverable)
 	 */
-	function onCancel();
+	function onCancel(): void;
 	/**
 	 * Transfer has failed (recoverable depending on circumstances)
 	 */
-	function onFail();
+	function onFail(): void;
 	/**
 	 * Transfer has finished as planned.
 	 */
-	function onEnd();
+	function onEnd(): void;
 }
