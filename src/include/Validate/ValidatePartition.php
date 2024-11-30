@@ -1,4 +1,5 @@
 <?php
+/*
 class ValidatePartition implements Validate {
 	private $expectExist = false;
 	private $expectCopy = false;
@@ -23,3 +24,4 @@ class ValidatePartition implements Validate {
 		
 	}
 }
+*/

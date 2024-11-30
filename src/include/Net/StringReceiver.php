@@ -20,21 +20,21 @@ class StringReceiver implements StreamReceiver {
 		return $this->size;
 	}
 
-	public function onRecvCancel() {
+	public function onRecvCancel(): void {
 		$this->pos = 0;
 		$this->string = "";
 	}
 
-	public function onRecvEnd() {
+	public function onRecvEnd(): void {
 		
 	}
 
-	public function onRecvStart() {
+	public function onRecvStart(): void {
 		$this->pos = 0;
 		$this->string = "";
 	}
 
-	public function receiveData(string $data) {
+	public function receiveData(string $data): void {
 		$len = strlen($data);
 		#if($len>=$this->left) {
 		#	$this->string .= substr($data, 0, $this->left);
@@ -45,12 +45,12 @@ class StringReceiver implements StreamReceiver {
 		$this->left = $this->left-$len;
 	}
 
-	public function setRecvSize(int $size) {
+	public function setRecvSize(int $size): void {
 		$this->size = $size;
 		$this->left = $size;
 	}
 	
-	public function getString() {
+	public function getString(): string {
 		return $this->string;
 	}
 

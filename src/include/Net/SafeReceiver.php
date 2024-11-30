@@ -79,15 +79,15 @@ class SafeReceiver implements StreamReceiver {
 		return $this->size;
 	}
 
-	public function onRecvCancel() {
+	public function onRecvCancel(): void {
 		$this->receiver->onRecvCancel();
 	}
 
-	public function onRecvEnd() {
+	public function onRecvEnd(): void {
 		$this->receiver->onRecvEnd();
 	}
 
-	public function onRecvStart() {
+	public function onRecvStart(): void {
 		$this->receiver->onRecvStart();
 	}
 

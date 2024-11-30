@@ -19,7 +19,7 @@ class FileReceiver implements StreamReceiver {
 		}
 		$this->filename = $filename;
 	}
-	public function receiveData(string $data) {
+	public function receiveData(string $data): void {
 		if(!is_resource($this->handle)) {
 			throw new \RuntimeException("Resource for ".$this->filename." not available.");
 		}
@@ -52,16 +52,16 @@ class FileReceiver implements StreamReceiver {
 		return $this->size;
 	}
 
-	public function onRecvCancel() {
+	public function onRecvCancel(): void {
 		fclose($this->handle);
 		unlink($this->filename);
 	}
 
-	public function onRecvEnd() {
+	public function onRecvEnd(): void {
 		fclose($this->handle);
 	}
 
-	public function onRecvStart() {
+	public function onRecvStart(): void {
 		$this->handle = fopen($this->filename, "w");
 	}
 

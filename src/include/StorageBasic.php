@@ -91,7 +91,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	return $fileSender;
 	}
 	
-	public function onRecvCancel() {
+	public function onRecvCancel(): void {
 		echo "Transfer cancelled, cleaning up.".PHP_EOL;
 		if(file_exists($this->getPathForIdFile($this->storeId))) {
 			unlink($this->getPathForIdFile($this->storeId));
@@ -104,7 +104,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		fclose($this->writeHandle);
 	}
 	
-	public function setRecvSize(int $size) {
+	public function setRecvSize(int $size): void {
 		$this->recvSize = $size;
 		$this->recvLeft = $size;
 	}
@@ -122,7 +122,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		$this->recvLeft -= strlen($data);
 	}
 
-	public function onRecvEnd() {
+	public function onRecvEnd(): void {
 		$this->endStore($this->versionEntry, $this->storeId);
 		$this->partition = NULL;
 		$this->file = NULL;
@@ -165,7 +165,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 	
 	
-	public function onRecvStart() {
+	public function onRecvStart(): void {
 		// First try on sem_acquire will not block.
 		while(sem_acquire($this->sem, TRUE)===FALSE) {
 			// Show debug message here.
@@ -197,6 +197,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 
 	public function getUsed(\Partition $partition = NULL): int {
+		$param = array();
 		if($partition==NULL) {
 			$param[] = 1;
 			$param[] = $this->id;

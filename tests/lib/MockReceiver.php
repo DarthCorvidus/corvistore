@@ -10,7 +10,7 @@ class MockReceiver implements StreamReceiver {
 	private $endCalled = false;
 	private $cancelCalled = false;
 
-	public function setRecvSize(int $size) {
+	public function setRecvSize(int $size): void {
 		$this->recvSize = $size;
 	}
 
@@ -26,15 +26,15 @@ class MockReceiver implements StreamReceiver {
 		return $this->recvSize - strlen($this->data);
 	}
 
-	public function onRecvStart() {
+	public function onRecvStart(): void {
 		$this->startCalled = true;
 	}
 
-	public function onRecvEnd() {
+	public function onRecvEnd(): void {
 		$this->endCalled = true;
 	}
 
-	public function onRecvCancel() {
+	public function onRecvCancel(): void {
 		$this->cancelCalled = true;
 	}
 

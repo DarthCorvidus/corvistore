@@ -5,7 +5,7 @@ interface StreamReceiver {
 	function getRecvSize(): int;
 	function receiveData(string $data);
 	function getRecvLeft(): int;
-	function onRecvStart();
-	function onRecvEnd();
-	function onRecvCancel();
+	function onRecvStart(): void;
+	function onRecvEnd(): void;
+	function onRecvCancel(): void;
 }
