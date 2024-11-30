@@ -14,7 +14,7 @@
 class StreamFake implements \Net\Stream {
 	private $data;
 	private $pos;
-	function __construct($data) {
+	function __construct(string $data) {
 		$this->data = $data;
 		$this->pos = 0;
 	}
@@ -25,19 +25,20 @@ class StreamFake implements \Net\Stream {
 	return $data;
 	}
 
-	public function close() {
+	public function close(): void {
 		
 	}
 
-	public function write(string $data) {
+	public function write(string $data): int {
 		$this->data .= $data;
+	return strlen($data);
 	}
 	
 	public function getData(): string {
 		return $this->data;
 	}
 	
-	public function eof() {
+	public function eof(): bool {
 		return strlen($this->data)==$this->pos;
 	}
 

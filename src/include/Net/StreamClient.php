@@ -1,8 +1,8 @@
 <?php
 namespace Net;
 class StreamClient implements Stream {
-	private $socket;
-	function __construct($socket) {
+	private mixed $socket;
+	function __construct(mixed $socket) {
 		$this->socket = $socket;
 		// Make sure stream is blocking.
 		stream_set_blocking($this->socket, true);
@@ -18,7 +18,7 @@ class StreamClient implements Stream {
 		 */
 		stream_set_timeout($this->socket, 5);
 	}
-	public function close() {
+	public function close(): void {
 		fclose($this->socket);
 	}
 
@@ -50,7 +50,7 @@ class StreamClient implements Stream {
 		}
 	}
 
-	public function write($string): int {
+	public function write(string $string): int {
 		while(true) {
 			$write = array($this->socket);
 			$read = array();
