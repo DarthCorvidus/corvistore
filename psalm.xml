@@ -19,6 +19,10 @@
             <directory name="vendor" />
 			<directory name="prototyping" />
 			<file name="src/include/StorageBasic.php" />
+			<file name="src/include/Storage/Disk.php" />
+			<file name="src/include/Storage/BufferedWriter.php" />
+			<file name="src/include/Storage/BufferedReader.php" />
+			<file name="src/include/Storage/ExtentMain.php" />
         </ignoreFiles>
 	</projectFiles>
 </psalm>
