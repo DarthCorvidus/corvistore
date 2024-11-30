@@ -48,7 +48,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	return $this;
 	}
 	
-	public function storeSingle(\Storage\StorageJob $job) {
+	public function storeSingle(\Storage\StorageJob $job): void {
 		/**
 		 * Using a transaction here speeds up SQLite.
 		 */
