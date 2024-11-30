@@ -4,16 +4,16 @@
  * between the filesystem / the catalog tucked away in one class.
  */
 class CatFileDiff {
-	private $new;
-	private $deleted;
-	private $changed;
+	private Files $new;
+	private CatalogEntries $deleted;
+	private Files $changed;
 	function __construct(string $dirname) {
 		$this->new = new Files();
 		$this->changed = new Files();
 		$this->deleted = new CatalogEntries($dirname);
 	}
 	
-	function addNew(File $file) {
+	function addNew(File $file): void {
 		$this->new->addEntry($file);
 	}
 	
@@ -21,7 +21,7 @@ class CatFileDiff {
 		return $this->new;
 	}
 	
-	function addChanged(File $file) {
+	function addChanged(File $file): void {
 		$this->changed->addEntry($file);
 	}
 	
@@ -29,7 +29,7 @@ class CatFileDiff {
 		return $this->changed;
 	}
 	
-	function addDeleted(CatalogEntry $catalog) {
+	function addDeleted(CatalogEntry $catalog): void {
 		$this->deleted->addEntry($catalog);
 	}
 	
