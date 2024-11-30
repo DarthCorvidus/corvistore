@@ -7,9 +7,9 @@
  * @author Claus-Christoph Küther
  */
 class PartitionList implements TerminalTableLayout, TerminalTableModel {
-	private $values;
-	private $title;
-	private $pdo;
+	private array $values = [];
+	private array $title = [];
+	private EPDO $pdo;
 	const PARTITION = 0;
 	const STORAGE = 1;
 	const TYPE = 2;
@@ -59,13 +59,9 @@ class PartitionList implements TerminalTableLayout, TerminalTableModel {
 		return true;
 	}
 
-	private function getUsed(array $value) {
-		if($value["dst_type"]=="basic") {
-			return $this->pdo->result("select coalesce(sum(dvs_size), 0) from d_version JOIN n_version2basic USING (dvs_id) where dpt_id = ?", array($value["dpt_id"]));
-		}
-	return 0;
-	}
-	
+	/**
+	 * @psalm-suppress MissingReturnType
+	 */
 	public function load() {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_partition JOIN d_storage USING (dst_id)");

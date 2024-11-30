@@ -5,9 +5,9 @@
  * Model to handle 'query storage'.
  */
 class StorageList implements TerminalTableLayout, TerminalTableModel {
-	private $values;
-	private $title;
-	private $pdo;
+	private array $values = [];
+	private array $title = [];
+	private EPDO $pdo;
 	const NAME = 0;
 	const TYPE = 1;
 	const CAPACITY = 2;
@@ -55,7 +55,9 @@ class StorageList implements TerminalTableLayout, TerminalTableModel {
 	public function hasTitle(): bool {
 		return true;
 	}
-	
+	/**
+	 * @psalm-suppress MissingReturnType
+	 */
 	public function load() {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_storage");

@@ -5,13 +5,13 @@
  * Model to handle 'query storage'.
  */
 class NodeList implements TerminalTableLayout, TerminalTableModel {
-	private $values;
-	private $title;
-	private $pdo;
+	private array $values = [];
+	private array $title = [];
+	private EPDO $pdo;
 	const NAME = 0;
 	const FILES = 1;
-	const VERSIONS = 2;
-	const SPACE = 3;
+	const SPACE = 2;
+	const VERSIONS = 3;
 	const POLICY = 4;
 	const MAX = 5;
 	function __construct(EPDO $pdo) {
@@ -65,12 +65,14 @@ class NodeList implements TerminalTableLayout, TerminalTableModel {
 	public function getSpace(int $nodeId): int {
 		return $this->pdo->result("select coalesce(sum(dvs_size), 0) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ? and dvs_stored = ?", array($nodeId, 1));
 	}
-	
+
 	public function getVersions(int $nodeId): int {
 		return $this->pdo->result("select coalesce(count(dvs_id), 0) from d_catalog JOIN d_version USING (dc_id) where dnd_id = ? and dvs_stored = ?", array($nodeId, 1));
 	}
 	
-	
+	/**
+	 * @psalm-suppress MissingReturnType
+	 */
 	public function load() {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_node LEFT JOIN d_policy USING (dpo_id)");
