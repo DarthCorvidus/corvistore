@@ -1,10 +1,10 @@
 <?php
 namespace Net;
 class StringSender implements StreamSender {
-	private $content;
-	private $pos;
-	private $size;
-	private $type;
+	private string $content;
+	private int $pos;
+	private int $size;
+	private int $type;
 	function __construct(int $type, string $string) {
 		$this->content = $string;
 		$this->pos = 0;

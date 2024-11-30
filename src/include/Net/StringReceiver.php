@@ -8,10 +8,13 @@
 
 namespace Net;
 class StringReceiver implements StreamReceiver {
-	private $pos;
-	private $string;
-	private $size;
-	private $left;
+	private int $pos = 0;
+	private string $string = "";
+	private int $size = 0;
+	private int $left = 0;
+	public function __construct() {
+		;
+	}
 	public function getRecvLeft(): int {
 		return $this->left;
 	}
