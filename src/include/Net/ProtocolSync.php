@@ -7,13 +7,13 @@ class ProtocolSync extends Protocol {
 	const SERIALIZED_PHP = 4;
 	const FILE = 5;
 	const ERROR = 255;
-	private $stream;
-	private $blockSize = 1024;
+	private Stream $stream;
+	private int $blockSize = 1024;
 	function __construct(Stream $stream) {
 		$this->stream = $stream;
 	}
 	
-	private function sendString(int $type, $string) {
+	private function sendString(int $type, string $string): void {
 		$len = strlen($string);
 		$header = chr($type);
 		$header .= \IntVal::uint32SE()->putValue($len);
@@ -26,19 +26,19 @@ class ProtocolSync extends Protocol {
 		}
 	}
 	
-	function sendCommand(string $command) {
+	function sendCommand(string $command): void {
 		$this->sendString(self::COMMAND, $command);
 	}
 	
-	function sendMessage(string $message) {
+	function sendMessage(string $message): void {
 		$this->sendString(self::MESSAGE, $message);
 	}
 	
-	function sendSerialize($serialize) {
+	function sendSerialize(mixed $serialize): void {
 		$this->sendString(self::SERIALIZED_PHP, serialize($serialize));
 	}
 	
-	function sendStream(StreamSender $stream) {
+	function sendStream(StreamSender $stream): void {
 		$outer = new SafeSender($stream, $this->blockSize);
 		while($outer->getSendLeft()>0) {
 			$this->stream->write($outer->getSendData($this->blockSize));
@@ -81,16 +81,16 @@ class ProtocolSync extends Protocol {
 		return $this->getString(self::MESSAGE);
 	}
 	
-	function getSerialized() {
+	function getSerialized(): mixed {
 		return unserialize($this->getString(self::SERIALIZED_PHP));
 	}
 	
-	public function sendOK() {
+	public function sendOK(): void {
 		$package = parent::getControlBlock(self::OK, $this->blockSize);
 		$this->stream->write($package);
 	}
 	
-	public function getOK() {
+	public function getOK(): void {
 		$package = $this->stream->read($this->blockSize);
 		$type = ord($package[0]);
 		$secType = ord($package[$this->blockSize-1]);
@@ -102,7 +102,7 @@ class ProtocolSync extends Protocol {
 		}
 	}
 	
-	public function getStream(\Net\StreamReceiver $receiver) {
+	public function getStream(\Net\StreamReceiver $receiver): void {
 		$outer = new \Net\SafeReceiver($receiver, $this->blockSize);
 		while($outer->getRecvLeft()>0) {
 			$outer->receiveData($this->stream->read($this->blockSize));
