@@ -1,4 +1,7 @@
 <?php
+/**
+ * @deprecated since version 0.0.1
+ */
 class ModeTest implements \Net\ProtocolListener, \Net\TransferListener {
 	private $clientId;
 	private $filename;
@@ -6,7 +9,7 @@ class ModeTest implements \Net\ProtocolListener, \Net\TransferListener {
 	function __construct(int $clientId) {
 		$this->clientId = $clientId;
 	}
-	public function onCommand(string $command, \Net\Protocol $protocol) {
+	public function onCommand(string $command, \Net\Protocol $protocol): void {
 		echo "Received command in mode test: ".$command.PHP_EOL;
 		if($command=="SEND OK") {
 			$protocol->sendOK();

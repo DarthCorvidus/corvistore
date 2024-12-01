@@ -37,7 +37,11 @@ class Client {
 			echo "Password: ";
 			$password = trim(fgets(STDIN));
 		}
-		$this->protocol = new \Net\ProtocolAsync(new ProtocolListener());
+		/**
+		 * \Admin is not necessary here and only serves to distinguish from
+		 * deprecated class \Net\ProtocolListener.
+		 */
+		$this->protocol = new \Net\ProtocolAsync(new \Admin\ProtocolListener());
 		$this->inputListener = new InputListener($this->protocol);
 		
 		$this->hub->addClientStream("ssl", 0, $socket, $this->protocol);
