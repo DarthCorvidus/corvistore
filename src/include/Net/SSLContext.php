@@ -9,14 +9,13 @@ namespace Net;
  * @author hm
  */
 class SSLContext {
-	private $contextOptions = array();
-	private $ca;
-	private $cert;
-	private $key;
+	private string $ca;
+	private string $cert;
+	private string $key;
 	function __construct() {
 	}
 	
-	public function setCAFile($filename) {
+	public function setCAFile(string $filename): void {
 		if(!file_exists($filename)) {
 			throw new \RuntimeException("Root certificate ".$filename." not found.");
 		}
@@ -27,7 +26,7 @@ class SSLContext {
 		$this->ca = $filename;
 	}
 	
-	public function setCertificateFile($filename) {
+	public function setCertificateFile(string $filename): void {
 		if(!file_exists($filename)) {
 			throw new \RuntimeException("Server certificate ".$filename." not found.");
 		}
@@ -39,7 +38,7 @@ class SSLContext {
 		
 	}
 	
-	public function setPrivateKeyFile($filename) {
+	public function setPrivateKeyFile(string $filename): void {
 		if(!file_exists($filename)) {
 			throw new \RuntimeException("Server key ".$filename." not found.");
 		}
@@ -62,7 +61,7 @@ class SSLContext {
 		return $this->key;
 	}
 	
-	public function getContextServer() {
+	public function getContextServer(): mixed {
 		$context = stream_context_create();
 		stream_context_set_option($context, 'ssl', 'local_cert', $this->cert);
 		stream_context_set_option($context, 'ssl', 'local_pk', $this->key);
@@ -70,7 +69,7 @@ class SSLContext {
 	return $context;
 	}
 	
-	public function getContextClient() {
+	public function getContextClient(): mixed {
 		$context = stream_context_create();
 		stream_context_set_option($context, 'ssl', 'cafile', $this->ca);
 	return $context;

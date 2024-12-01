@@ -9,6 +9,9 @@
 	<issueHandlers>
 		<PropertyNotSetInConstructor>
 			<errorLevel type="suppress">
+				<!-- Critique on this one is justified, but SSLContext just
+					serves as a factory. -->
+				<file name="src/include/Net/SSLContext.php" /> 
 				<file name="src/include/ValueObject/File.php" /> 
 				<file name="src/include/Storage.php" />
 				<file name="src/include/ORM/Node.php" /> 
