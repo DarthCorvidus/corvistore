@@ -14,27 +14,41 @@ namespace Net;
  * @author hm
  */
 class ProtocolAsync extends Protocol implements HubClientListener {
-	private $sendStack = array();
-	private $listener = array();
-	private $rest = 0;
-	private $expected = array();
-	private $sendStream = array();
-	private $sendListeners = array();
-	private $streamReceiver = NULL;
-	private $fileReceiver = NULL;
-	private $currentRecvType = NULL;
+	private ProtocolAsyncListener $listener;
+	private array $expected = array();
+	private array $sendStream = array();
+	private array $sendListeners = array();
+	private StreamReceiver $streamReceiver;
+	private ?StreamReceiver $fileReceiver = NULL;
+	private ?int $currentRecvType = NULL;
 	public function __construct(ProtocolAsyncListener $listener) {
 		$this->listener = $listener;
+		/**
+		 * Some remarks on how StreamReceiver/FileReceiver are related to each
+		 * other. $this->streamReceiver is the current StreamReceiver used. It
+		 * will be switched to $this->fileReceiver once a file comes in.
+		 */
+		$this->streamReceiver = new StringReceiver();
 	}
 	
-	function setFileReceiver(StreamReceiver $receiver) {
+	function setFileReceiver(StreamReceiver $receiver): void {
 		$this->fileReceiver = $receiver;
 	}
 	
 	private function getCurrentSender(): StreamSender {
 		return $this->sendStream[0];
 	}
-
+	
+	/**
+	 * This is just a PHP variant of Java's (StringReceiver).
+	 * @psalm-suppress MoreSpecificReturnType
+	 * @psalm-suppress LessSpecificReturnStatement
+	 * @param StreamReceiver $receiver
+	 * @return StringReceiver
+	 */
+	private function toStringReceiver(StreamReceiver $receiver): StringReceiver {
+		return $receiver;
+	}
 	private function getCurrentReceiver(): StreamReceiver {
 		return $this->streamReceiver;
 	}
@@ -55,15 +69,15 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		return !empty($this->sendStream);
 	}
 
-	public function onDisconnect() {
+	public function onDisconnect(): void {
 		$this->listener->onDisconnect($this);
 	}
 	
-	private function isString(int $type) {
+	private function isString(int $type): bool {
 		return in_array($type, array(self::MESSAGE, self::COMMAND, self::SERIALIZED_PHP, self::BINARY_CLASS));
 	}
 
-	public function onRead(string $data) {
+	public function onRead(string $data): void {
 		/*
 		 * If $this->currentRecvType is empty: determine message type, start
 		 * reading from data.
@@ -79,6 +93,9 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 			return;
 			}
 			if($this->currentRecvType===self::FILE) {
+				if($this->fileReceiver === null) {
+					throw new \InvalidArgumentException("received file, but no file receiver was defined.");
+				}
 				$this->streamReceiver = new \Net\SafeReceiver($this->fileReceiver, $this->getPacketLength());
 				$this->streamReceiver->receiveData($data);
 				#$this->streamReceiver->setRecvSize(\IntVal::uint64LE()->getValue(substr($data, 1, 8)));
@@ -125,12 +142,13 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		if($current->getSendType()==self::FILE) {
 			return $current->getSendData($this->getPacketLength());
 		}
+	throw new \RuntimeException("Unable to determine data to write.");
 	}
 	
-	private function onWriteFirstString(StreamSender $sender) {
+	private function onWriteFirstString(StreamSender $sender): string {
 		$data = chr($sender->getSendType());
 		$data .= \IntVal::uint32LE()->putValue($sender->getSendSize());
-		$packetLength = $this->getPacketLength("X", 0);
+		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength-5) {
 			$data .= parent::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-5);
 			#array_shift($this->sendStream);
@@ -140,7 +158,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	return $data;
 	}
 	
-	private function onWriteFirstFile(StreamSender $sender) {
+	private function onWriteFirstFile(StreamSender $sender): string {
 		$data = chr($sender->getSendType());
 		$data .= \IntVal::uint64LE()->putValue($sender->getSendSize());
 		$packetLength = $this->getPacketLength();
@@ -153,7 +171,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	return $data;
 	}
 	
-	private function onWriteString(StreamSender $sender) {
+	private function onWriteString(StreamSender $sender): string {
 		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength) {
 			$data = parent::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength);
@@ -163,7 +181,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	return $sender->getSendData($packetLength);
 	}
 
-	function onWritten() {
+	function onWritten(): void {
 		/**
 		 * If we're at the end of a SendStream, move the stream off the stack
 		 * and call the send listener, if there is one (it can be NULL).
@@ -177,24 +195,29 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		}
 	}
 
-	private function sendString(int $type, string $data, ProtocolSendListener $listener = NULL) {
+	private function sendString(int $type, string $data, ProtocolSendListener $listener = NULL): void {
 		#$this->sendStream[] = new StringSender(chr($type).\IntVal::uint32LE()->putValue(strlen($data)).$data);
 		$this->sendStream[] = new StringSender($type, $data);
 		$this->sendListeners[] = $listener;
 	return;
 	}
 	
-	function sendOK(ProtocolSendListener $listener = NULL) {
+	/**
+	 * @psalm-suppress ArgumentTypeCoercion
+	 * @param ProtocolSendListener $listener
+	 * @return void
+	 */
+	function sendOK(ProtocolSendListener $listener = NULL): void {
 		/**
 		 * OK packages are a special form of strings that have the size of a
 		 * package, but begin and end with self::OK.
 		 */
-		$data = random_bytes($this->getPacketLength("x", 0)-6).chr(self::OK);
+		$data = random_bytes($this->getPacketLength()-6).chr(self::OK);
 		$this->sendStream[] = new StringSender(self::OK, $data);
 		$this->sendListeners[] = $listener;
 	}
 	
-	function readOk(string $data) {
+	function readOk(string $data): void {
 		$last = $data[strlen($data)-1];
 		if($last!==chr(self::OK)) {
 			throw new \RuntimeException("malformed OK packet.");
@@ -203,7 +226,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		$this->listener->onOK($this);
 	}
 	
-	private function readString(string $data) {
+	private function readString(string $data): void {
 		$receiver = $this->getCurrentReceiver();
 		$len = strlen($data);
 		if($len<$receiver->getRecvLeft()) {
@@ -213,14 +236,15 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		$receiver->receiveData(substr($data, 0, $receiver->getRecvLeft()));
 		$type = $this->currentRecvType;
 		$this->currentRecvType = NULL;
+		$string = $this->toStringReceiver($this->streamReceiver)->getString();
 		if($type==self::MESSAGE) {
-			$this->listener->onMessage($this, $this->streamReceiver->getString());
+			$this->listener->onMessage($this, $string);
 		}
 		if($type==self::COMMAND) {
-			$this->listener->onCommand($this, $this->streamReceiver->getString());
+			$this->listener->onCommand($this, $string);
 		}
 		if($type==self::SERIALIZED_PHP) {
-			$unserialized = unserialize($this->streamReceiver->getString());
+			$unserialized = unserialize($string);
 			$this->listener->onSerialized($this, $unserialized);
 		}
 		/*
@@ -228,8 +252,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		 */
 		
 		if($type==self::BINARY_CLASS) {
-			$raw = $this->streamReceiver->getString();
-			$br = new \plibv4\Binary\StringReader($raw, \plibv4\Binary\StringReader::LE);
+			$br = new \plibv4\Binary\StringReader($string, \plibv4\Binary\StringReader::LE);
 			$classname = $br->getIndexedString(16);
 			$classdata = $br->getIndexedString(32);
 			/*
@@ -241,15 +264,15 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 
 	}
 	
-	public function sendMessage(string $message, ProtocolSendListener $listener = NULL) {
+	public function sendMessage(string $message, ProtocolSendListener $listener = NULL): void {
 		$this->sendString(self::MESSAGE, $message, $listener);
 	}
 
-	public function sendCommand(string $message, ProtocolSendListener $listener = NULL) {
+	public function sendCommand(string $message, ProtocolSendListener $listener = NULL): void {
 		$this->sendString(self::COMMAND, $message, $listener);
 	}
 
-	public function sendSerialize($serialize, ProtocolSendListener $listener = NULL) {
+	public function sendSerialize(mixed $serialize, ProtocolSendListener $listener = NULL): void {
 		$serialized = serialize($serialize);
 		$this->sendString(self::SERIALIZED_PHP, $serialized, $listener);
 	}
@@ -258,7 +281,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	 * Pack a class to binary using $class->toBinary(). Currently, no proper
 	 * interface like 'Binaryable' exists.
 	 */
-	public function sendBinaryClass($instance, ProtocolSendListener $listener = NULL) {
+	public function sendBinaryClass(\BinaryPersistable $instance, ProtocolSendListener $listener = NULL): void {
 		$binaryClass = $instance->toBinary();
 		$classname = $instance::class;
 		$bw = new \plibv4\Binary\StringWriter(\plibv4\Binary\StringWriter::LE);
@@ -267,16 +290,16 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		$this->sendString(self::BINARY_CLASS, $bw->getBinary(), $listener);
 	}
 	
-	public function sendStream(StreamSender $sender, ProtocolSendListener $listener = NULL) {
+	public function sendStream(StreamSender $sender, ProtocolSendListener $listener = NULL): void {
 		$this->sendStream[] = new SafeSender($sender, $this->getPacketLength());
 		$this->sendListeners[] = $listener;
 	}
 	
-	public function expect(int $type) {
+	public function expect(int $type): void {
 		$this->expected[] = $type;
 	}
 	
-	public function checkExpect(int $type) {
+	public function checkExpect(int $type): void {
 		if(empty($this->expected)) {
 			return;
 		}
