@@ -47,9 +47,9 @@ abstract class Protocol {
 	 * first would kind of defeat the value of this method.
 	 * @param int $value
 	 * @param int $bit
-	 * @return type
+	 * @return int
 	 */
-	static function ceilBlock(int $value, int $bit) {
+	static function ceilBlock(int $value, int $bit): int {
 	// Bitshift by 2^$bit
 	return ((($value-1) >> $bit)+1) << $bit;
 	}

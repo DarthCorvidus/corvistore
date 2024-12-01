@@ -14,15 +14,15 @@ namespace Net;
  * @author hm
  */
 class SafeSender implements StreamSender {
-	private $sender;
-	private $payloadSize;
-	private $increment = 0;
-	private $size;
-	private $blocksize;
-	private $cancelled = FALSE;
-	private $payloadLeft = 0;
-	private $exception;
-	private $left = 0;
+	private \Net\StreamSender $sender;
+	private int $payloadSize;
+	private int$increment = 0;
+	private int $size;
+	private int $blocksize;
+	private bool $cancelled = FALSE;
+	private int $payloadLeft = 0;
+	private ?\Exception $exception = null;
+	private int $left = 0;
 	public function __construct(\Net\StreamSender $sender, int $blocksize) {
 		$this->sender = $sender;
 		/*
@@ -45,6 +45,9 @@ class SafeSender implements StreamSender {
 	}
 	
 	public function getSendData(int $amount): string {
+		if($amount < 0) {
+			throw new \InvalidArgumentException("amount must be positive.");
+		}
 		// First block: Type file, SafeSender length, StreamSender length, padded to blocksize.
 		if($this->increment == 0) {
 			// call onSendStart() right at the beginning. If something goes wrong,
@@ -107,10 +110,16 @@ class SafeSender implements StreamSender {
 	}
 
 	private function getInnerData(int $amount): string{
+		if($amount < 0) {
+			throw new \InvalidArgumentException("amount must be positive.");
+		}
+		/**
+		 * @psalm-var positive-int $amount
+		 */
 		if($this->cancelled) {
 			$this->payloadLeft -= $amount;
 		return random_bytes($amount);
-		}
+		}  
 		try {
 			$this->payloadLeft -= $amount;
 			return $this->sender->getSendData($amount);
@@ -157,7 +166,16 @@ class SafeSender implements StreamSender {
 		return $this->exception!==NULL;
 	}
 	
+	/**
+	 * @psalm-suppress InvalidNullableReturnType
+	 * @psalm-suppress NullableReturnStatement
+	 * @return \Exception
+	 * @throws \RuntimeException
+	 */
 	public function getException(): \Exception {
+		if(!$this->hasException()) {
+			throw new \RuntimeException("no exception available.");
+		}
 		return $this->exception;
 	}
 }
