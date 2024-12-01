@@ -93,7 +93,8 @@
     },
 	"scripts": {
 		"test": "./vendor/bin/phpunit --bootstrap  tests/autoload-composer.php tests/",
-		"testdox": "./vendor/bin/phpunit --bootstrap tests/autoload-composer.php --testdox --colors=always tests/"
+		"testdox": "./vendor/bin/phpunit --bootstrap tests/autoload-composer.php --testdox --colors=always tests/",
+		"psalm": "./vendor/bin/psalm --show-info=true --no-cache"
 	},
 	"config": {
 		"platform": {
