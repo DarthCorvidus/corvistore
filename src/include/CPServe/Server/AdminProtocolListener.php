@@ -16,7 +16,7 @@ class AdminProtocolListener implements \Net\ProtocolAsyncListener {
 		$this->task = $task;
 	}
 	
-	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command): void {
 		echo "Received ".$command.PHP_EOL;
 		if($command == "status") {
 			$protocol->sendMessage("Status:");
@@ -66,24 +66,24 @@ class AdminProtocolListener implements \Net\ProtocolAsyncListener {
 		}
 	}
 
-	public function onDisconnect(\Net\ProtocolAsync $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol): void {
 		echo "Client ".$this->clientId." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
 		exit();
 	}
 
-	public function onMessage(\Net\ProtocolAsync $protocol, string $command) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $command): void {
 		
 	}
 
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
 		
 	}
 
-	public function onOk(\Net\ProtocolAsync $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol): void {
 		
 	}
 
-	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, object $instance): void {
 		
 	}
 }

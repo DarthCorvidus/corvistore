@@ -13,10 +13,10 @@ namespace Net;
  * @author hm
  */
 interface ProtocolAsyncListener {
-	function onMessage(\Net\ProtocolAsync $protocol, string $message);
-	function onCommand(\Net\ProtocolAsync $protocol, string $command);
-	function onDisconnect(\Net\ProtocolAsync $protocol);
-	function onSerialized(\Net\ProtocolAsync $protocol, $unserialized);
-	function onOk(\Net\ProtocolAsync $protocol);
-	function onBinaryClass(ProtocolAsync $protocol, $instance);
+	function onMessage(\Net\ProtocolAsync $protocol, string $message): void;
+	function onCommand(\Net\ProtocolAsync $protocol, string $command): void;
+	function onDisconnect(\Net\ProtocolAsync $protocol): void;
+	function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void;
+	function onOk(\Net\ProtocolAsync $protocol): void;
+	function onBinaryClass(ProtocolAsync $protocol, object $instance): void;
 }

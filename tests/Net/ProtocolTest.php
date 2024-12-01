@@ -157,27 +157,27 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 	}
 	
 	
-	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command): void {
 		$this->lastString = $command;
 	}
 
-	public function onDisconnect(\Net\ProtocolAsync $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol): void {
 		
 	}
 
-	public function onMessage(\Net\ProtocolAsync $protocol, string $message) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $message): void {
 		
 	}
 
-	public function onOk(\Net\ProtocolAsync $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol): void {
 		
 	}
 
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
 		$this->lastSerialized = $unserialized;
 	}
 
-	public function onBinaryClass(Net\ProtocolAsync $protocol, $instance) {
+	public function onBinaryClass(Net\ProtocolAsync $protocol, object $instance): void {
 		
 	}
 }

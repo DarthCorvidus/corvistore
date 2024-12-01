@@ -20,7 +20,7 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 		$this->listener = $listener;
 	}
 	
-	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command): void {
 		echo $command.PHP_EOL;
 		if($this->mode === "") {
 			$this->modeSelect($protocol, $command);
@@ -56,7 +56,7 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 		$protocol->sendMessage("You sent: ".$command);
 	}
 	
-	private function modeSelect(\Net\ProtocolAsync $protocol, string $command) {
+	private function modeSelect(\Net\ProtocolAsync $protocol, string $command): void {
 		if($command=="quit") {
 			$this->sched->terminate($this->task);
 		return;
@@ -88,7 +88,7 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 		}
 	}
 	
-	private function authenticate(\Net\ProtocolAsync $protocol, string $command) {
+	private function authenticate(\Net\ProtocolAsync $protocol, string $command): void {
 		$exp = explode(" ", $command);
 		if(count($exp)!=2) {
 			echo $command.PHP_EOL;
@@ -114,7 +114,7 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 		}
 	}
 	
-	private function authenticateAdmin(\Net\ProtocolAsync $protocol) {
+	private function authenticateAdmin(\Net\ProtocolAsync $protocol): void {
 		try {
 			$this->user = \User::authenticate($this->pdo, $this->username.":".$this->password);
 			echo "Authentication for client ".$this->id.", username ".$this->username." suceeded".PHP_EOL;
@@ -127,7 +127,7 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 		//$protocol->sendMessage("Corviprotect v0.0.1 Alpha");
 	}
 
-	private function authenticateNode(\Net\ProtocolAsync $protocol) {
+	private function authenticateNode(\Net\ProtocolAsync $protocol): void {
 		try {
 			$node = \Node::authenticate($this->pdo, $this->username.":".$this->password);
 			echo "Authentication for client ".$this->id.", node ".$this->username." suceeded".PHP_EOL;
@@ -142,23 +142,23 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 	
 	
 
-	public function onDisconnect(\Net\ProtocolAsync $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol): void {
 		
 	}
 
-	public function onMessage(\Net\ProtocolAsync $protocol, string $message) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $message): void {
 		
 	}
 
-	public function onOk(\Net\ProtocolAsync $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol): void {
 		
 	}
 
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
 		
 	}
 
-	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, object $instance): void {
 		
 	}
 }

@@ -512,23 +512,23 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals(TRUE, $this->sent);
 	}
 	
-	public function onCommand(ProtocolAsync $protocol, string $command) {
+	public function onCommand(ProtocolAsync $protocol, string $command): void {
 		$this->lastString = $command;
 	}
 
-	public function onDisconnect(ProtocolAsync $protocol) {
+	public function onDisconnect(ProtocolAsync $protocol): void {
 		
 	}
 
-	public function onMessage(ProtocolAsync $protocol, string $message) {
+	public function onMessage(ProtocolAsync $protocol, string $message): void {
 		$this->lastString = $message;
 	}
 
-	public function onSerialized(ProtocolAsync $protocol, $unserialized) {
+	public function onSerialized(ProtocolAsync $protocol, mixed $unserialized): void {
 		$this->lastUnserialized = $unserialized;
 	}
 
-	public function onOk(ProtocolAsync $protocol) {
+	public function onOk(ProtocolAsync $protocol): void {
 		$this->lastOK = true;
 	}
 
@@ -536,7 +536,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->sent = TRUE;
 	}
 
-	public function onBinaryClass(ProtocolAsync $protocol, $instance) {
+	public function onBinaryClass(ProtocolAsync $protocol, object $instance): void {
 		$this->lastBinaryClass = $instance;
 	}
 }

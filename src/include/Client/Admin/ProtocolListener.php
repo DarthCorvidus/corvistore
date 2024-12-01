@@ -1,29 +1,28 @@
 <?php
 namespace Admin;
 class ProtocolListener implements \Net\ProtocolAsyncListener {
-	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command): void {
 		
 	}
 
-	public function onDisconnect(\Net\ProtocolAsync $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol): void {
 		echo "Lost connection to server".PHP_EOL;
 		exit();
 	}
 
-	public function onMessage(\Net\ProtocolAsync $protocol, string $message) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $message): void {
 		echo $message.PHP_EOL;
 	}
 
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
 		echo "Serialized data".PHP_EOL;
-		print_r($unserialized);
 	}
 
-	public function onOk(\Net\ProtocolAsync $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol): void {
 		
 	}
 
-	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, object $instance): void {
 		
 	}
 }

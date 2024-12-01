@@ -46,7 +46,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 	}
 
-	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command): void {
 		echo "Received ".$command.PHP_EOL;
 		$exp = explode(" ", $command, 3);
 		if(count($exp)==1) {
@@ -62,7 +62,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 	}
 
-	private function handleOne(\Net\ProtocolAsync $protocol, string $command) {
+	private function handleOne(\Net\ProtocolAsync $protocol, string $command): void {
 		if($command == "REPORT") {
 			$report["files"] = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ? and dc_id in (select dc_id from d_version where dvs_type = ?)", array($this->node->getId(), \Catalog::TYPE_FILE));
 			$params[] = $this->node->getId();
@@ -92,7 +92,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		exit();
 	}
 	
-	private function handleTwo(\Net\ProtocolAsync $protocol, array $command) {
+	private function handleTwo(\Net\ProtocolAsync $protocol, array $command): void {
 		if($command[0]=="REPORT") {
 			// Report for the root directory.
 			if($command[1]=="/") {
@@ -126,7 +126,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 	 * @param array $command
 	 * @return type
 	 */
-	private function handleThree(\Net\ProtocolAsync $protocol, array $command) {
+	private function handleThree(\Net\ProtocolAsync $protocol, array $command): void {
 		if($command[0]=="GET" and strtoupper($command[1])=="CATALOG") {
 			$this->checkTransactions();
 			$entries = $this->catalog->getEntries($command[2]);
@@ -173,17 +173,17 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 	}
 	
-	public function onDisconnect(\Net\ProtocolAsync $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol): void {
 		#$this->pdo->commit();
 		echo "Client ".$this->clientId." disconnected, exiting worker with ".posix_getpid().PHP_EOL;
 		exit();
 	}
 
-	public function onMessage(\Net\ProtocolAsync $protocol, string $command) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $command): void {
 		
 	}
 
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized): void {
 		echo "Received serialized ".get_class($unserialized).PHP_EOL;
 		if(get_class($unserialized)=="File") {
 			$this->onSerializedFile($protocol, $unserialized, $this->fileAction);
@@ -223,7 +223,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		$this->checkTransactions();
 	}
 
-	private function onSerializedFilegroup(\Net\ProtocolAsync $protocol, \FileGroup $fg) {
+	private function onSerializedFilegroup(\Net\ProtocolAsync $protocol, \FileGroup $fg): void {
 		for($i = 0; $i<$fg->getFileCount(); $i++) {
 			$file = $fg->getFile($i);
 			$data = $fg->getFileData($i);
@@ -232,11 +232,11 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 	}
 	
-	public function onOk(\Net\ProtocolAsync $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol): void {
 		
 	}
 
-	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, object $instance): void {
 		echo "Received filegroup with ".$instance->getFileCount()." files, ".number_format($instance->getSize())." bytes.".PHP_EOL;
 	}
 }

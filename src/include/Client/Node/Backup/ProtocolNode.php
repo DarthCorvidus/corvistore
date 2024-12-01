@@ -42,25 +42,25 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		$this->scheduler = $sched;
 	}
 	
-	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command): void {
 		echo $command;
 	}
 
-	public function onDisconnect(\Net\ProtocolAsync $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol): void {
 		//$this->scheduler->terminate();
 	}
 
-	public function onMessage(\Net\ProtocolAsync $protocol, string $message) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $message): void {
 		echo $message.PHP_EOL;
 	}
 
-	public function onOk(\Net\ProtocolAsync $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol): void {
 		if($this->done == true) {
 			$this->protocol->sendCommand("QUIT");
 		}
 	}
 
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
 		$this->queue--;
 		if($unserialized instanceof \CatalogEntries) {
 			$this->onCatalogEntries($unserialized);
@@ -73,7 +73,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		}
 	}
 	
-	private function onCatalogEntries(\CatalogEntries $catalogEntries) {
+	private function onCatalogEntries(\CatalogEntries $catalogEntries): void {
 		$files = $this->getFiles($catalogEntries->getDirname());
 		$diff = $catalogEntries->getDiff($files);
 		$this->uploadChanged($catalogEntries, $diff);
@@ -97,7 +97,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		}
 	}
 	
-	private function uploadChanged(\CatalogEntries $catalogEntries, \CatFileDiff $diff) {
+	private function uploadChanged(\CatalogEntries $catalogEntries, \CatFileDiff $diff): void {
 		for($i=0;$i<$diff->getChanged()->getCount();$i++) {
 			$file = $diff->getChanged()->getEntry($i);
 			$entry = $catalogEntries->getByName($file->getBasename());
@@ -147,7 +147,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	return false;
 	}
 	
-	private function uploadNew(\CatalogEntries $catalogEntries, \CatFileDiff $diff) {
+	private function uploadNew(\CatalogEntries $catalogEntries, \CatFileDiff $diff): void {
 		#echo "Uploading for ".$catalogEntries->getDirname().PHP_EOL;
 		for($i=0;$i<$diff->getNew()->getCount();$i++) {
 			$file = $diff->getNew()->getEntry($i);
@@ -250,7 +250,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		return $this->stat;
 	}
 
-	public function onBinaryClass(ProtocolAsync $protocol, $instance) {
+	public function onBinaryClass(ProtocolAsync $protocol, mixed $instance): void {
 		
 	}
 }

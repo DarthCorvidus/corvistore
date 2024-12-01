@@ -25,27 +25,27 @@ class FacadeProtocolListener implements ProtocolAsyncListener {
 		$this->current = new NodeProtocolListener($this->sched, $this->task, $this->pdo, $this->id, $node);
 	}
 
-	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
+	public function onCommand(\Net\ProtocolAsync $protocol, string $command): void {
 		$this->current->onCommand($protocol, $command);
 	}
 
-	public function onDisconnect(\Net\ProtocolAsync $protocol) {
+	public function onDisconnect(\Net\ProtocolAsync $protocol): void {
 		$this->current->onDisconnect($protocol);
 	}
 
-	public function onMessage(\Net\ProtocolAsync $protocol, string $message) {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $message): void {
 		$this->current->onMessage($protocol, $message);
 	}
 
-	public function onOk(\Net\ProtocolAsync $protocol) {
+	public function onOk(\Net\ProtocolAsync $protocol): void {
 		$this->current->onOk($protocol);
 	}
 
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
+	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized): void {
 		$this->current->onSerialized($protocol, $unserialized);
 	}
 
-	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance): void {
 		
 	}
 }
