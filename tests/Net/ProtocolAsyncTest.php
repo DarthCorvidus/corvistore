@@ -532,7 +532,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->lastOK = true;
 	}
 
-	public function onSent(ProtocolAsync $protocol) {
+	public function onSent(ProtocolAsync $protocol): void {
 		$this->sent = TRUE;
 	}
 

@@ -87,7 +87,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 	}
 	
-	function onSent(\Net\ProtocolAsync $protocol) {
+	function onSent(\Net\ProtocolAsync $protocol): void {
 		echo "Terminating worker for ".$this->clientId." with PID ".posix_getpid().PHP_EOL;
 		exit();
 	}

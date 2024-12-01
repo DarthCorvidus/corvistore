@@ -169,7 +169,7 @@ class BackupListener implements \Net\ProtocolReactiveListener, \Net\ProtocolSend
 	return $files;
 	}
 	
-	public function onSent(\Net\ProtocolReactive $protocol) {
+	public function onSent(\Net\ProtocolReactive $protocol): void {
 		#if($this->quit == TRUE) {
 		#	exit();
 		#}

@@ -23,7 +23,7 @@ class InputListener implements \Net\HubClientListener {
 
 	public function onRead(string $data) {
 		$quit = (new class() implements \Net\ProtocolSendListener {
-			public function onSent(\Net\ProtocolAsync $protocol) { exit(); }}
+			public function onSent(\Net\ProtocolAsync $protocol): void { exit(); }}
 		);
 
 		if($data=="quit") {

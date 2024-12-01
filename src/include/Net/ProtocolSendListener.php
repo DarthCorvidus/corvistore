@@ -1,5 +1,5 @@
 <?php
 namespace Net;
 interface ProtocolSendListener {
-	function onSent(ProtocolAsync $protocol);
+	function onSent(ProtocolAsync $protocol): void;
 }
