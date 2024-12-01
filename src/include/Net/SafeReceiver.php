@@ -6,21 +6,21 @@ namespace Net;
  * @author hm
  */
 class SafeReceiver implements StreamReceiver {
-	private $receiver;
-	private $increment = 0;
-	private $left;
-	private $size;
-	private $bitsize;
-	private $blocksize;
+	private StreamReceiver $receiver;
+	private int $increment = 0;
+	private int $left;
+	private int $size;
+	private int $bitsize;
+	private int $blocksize;
 	function __construct(\Net\StreamReceiver $receiver, int $blocksize) {
 		$this->receiver = $receiver;
 		// Length is at least blocksize * 2: the first and the last control block.
 		$this->size = $blocksize*2;
 		$this->left = $blocksize*2;
-		$this->bitsize = log($blocksize, 2);
+		$this->bitsize = (int)log($blocksize, 2);
 		$this->blocksize = $blocksize;
 	}
-	public function receiveData(string $data) {
+	public function receiveData(string $data): void {
 		if($this->increment==0) {
 			$type = ord($data[0]);
 			$this->size = \IntVal::uint64LE()->getValue(substr($data, 1, 8));
@@ -63,7 +63,7 @@ class SafeReceiver implements StreamReceiver {
 		return $this->left;
 	}
 
-	public function setRecvSize(int $size) {
+	public function setRecvSize(int $size): void {
 		throw new \RuntimeException("Size is determined from the first data block, do not set manually.");
 		/**
 		 * As the receiver is reused in ProtocolAsync, we need to reset the

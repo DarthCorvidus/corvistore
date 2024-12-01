@@ -43,7 +43,7 @@ class FileReceiver implements StreamReceiver {
 		return $this->left;
 	}
 
-	public function setRecvSize(int $size) {
+	public function setRecvSize(int $size): void {
 		$this->size = $size;
 		$this->left = $size;
 	}

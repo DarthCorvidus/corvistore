@@ -18,7 +18,7 @@ class MockReceiver implements StreamReceiver {
 		return $this->recvSize;
 	}
 
-	public function receiveData(string $data) {
+	public function receiveData(string $data): void {
 		$this->data .= $data;
 	}
 

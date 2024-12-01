@@ -117,7 +117,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		return $this->recvLeft;
 	}
 	
-	public function receiveData(string $data) {
+	public function receiveData(string $data): void {
 		fwrite($this->writeHandle, $data);
 		$this->recvLeft -= strlen($data);
 	}
