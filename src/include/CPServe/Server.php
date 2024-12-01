@@ -1,7 +1,7 @@
 <?php
 use plibv4\process\TimeshareObserver;
 use Net\AsyncStream;
-class Server implements SignalHandler, Net\HubServerListener, \Net\ProtocolAsyncListener, TimeshareObserver {
+class Server implements SignalHandler, Net\HubServerListener, TimeshareObserver {
 	private $hub;
 	private $workerProcess = array();
 	private $pdo;
@@ -140,100 +140,6 @@ class Server implements SignalHandler, Net\HubServerListener, \Net\ProtocolAsync
 		;
 	}
 
-	private function endHandshake(string $key) {
-		$kexp = explode(":", $key);
-		$name = $kexp[0];
-		$id = $kexp[1];
-		$this->hub->close($name, $id);
-		unset($this->authFail[$key]);
-		unset($this->authProt[$key]);
-		unset($this->authMode[$key]);
-	}
-	
-	public function onCommand(\Net\ProtocolAsync $protocol, string $command) {
-		$key = array_search($protocol, $this->authProt, TRUE);
-		$kexp = explode(":", $key);
-		$name = $kexp[0];
-		$id = $kexp[1];
-		echo $command.PHP_EOL;
-		if($command=="quit") {
-			$this->endHandshake($key);
-		return;
-		}
-		$exp = explode(" ", $command);
-		if(count($exp)!=2) {
-			echo "Malformed mode select from ".$key.PHP_EOL;
-			$this->endHandshake($key);
-		return;
-		}
-		
-		if($this->authMode[$key]==NULL && $exp[0]=="mode" && !in_array($exp[1], array("admin", "node", TRUE))) {
-			echo "Unknown mode from ".$key.PHP_EOL;
-			$this->endHandshake($key);
-		return;
-		}
-		if($this->authMode[$key]==NULL && $exp[0]=="mode" && in_array($exp[1], array("admin", "node", TRUE))) {
-			$this->authMode[$key] = $exp[1];
-			#$protocol->sendOK();
-			$protocol->expect(\Net\ProtocolAsync::COMMAND);
-		return;
-		}
-		if($this->authMode[$key]!=NULL && $exp[0]=="authenticate") {
-			if($this->authMode[$key]=="admin") {
-				echo "Authenticating admin...";
-				try {
-					$user = User::authenticate($this->pdo, $exp[1]);
-					echo $user->getName()." authenticated!".PHP_EOL;
-					$protocol->sendOK();
-					$msgsock = $this->hub->getStream($name, $id);
-					$this->workers[$id] = new Server\WorkerAdmin($msgsock, $id, $user->getId());
-					$this->hub->detach($name, $id);
-					return;
-				} catch (Exception $ex) {
-					echo "Authentication failed!".PHP_EOL;
-					$this->endHandshake($key);
-				return;
-				}
-			}
-			if($this->authMode[$key]=="node") {
-				echo "Authenticating node...".PHP_EOL;
-				try {
-					$node = Node::authenticate($this->pdo, $exp[1]);
-					echo $node->getName()." authenticated!".PHP_EOL;
-					$protocol->sendOK();
-					$msgsock = $this->hub->getStream($name, $id);
-					$this->workers[$id] = new Server\WorkerNode($msgsock, $id, $node->getId());
-					$this->hub->detach($name, $id);
-					return;
-				} catch (Exception $ex) {
-					echo "Authentication failed!".PHP_EOL;
-					$this->endHandshake($key);
-				return;
-				}
-			}
-		}
-		$this->endHandshake($key);
-	}
-
-	public function onDisconnect(\Net\ProtocolAsync $protocol) {
-		$key = array_search($protocol, $this->authProt, TRUE);
-		unset($this->authFail[$key]);
-		unset($this->authProt);
-		unset($this->authMode);
-	}
-
-	public function onMessage(\Net\ProtocolAsync $protocol, string $message) {
-		
-	}
-
-	public function onOk(\Net\ProtocolAsync $protocol) {
-		
-	}
-
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized) {
-		
-	}
-
 	public function onAdd(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
 		$className = $task::class;
 		if(!in_array($className, $this->allowedIdle)) {
@@ -295,10 +201,6 @@ class Server implements SignalHandler, Net\HubServerListener, \Net\ProtocolAsync
 	}
 
 	public function onStart(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
-		
-	}
-
-	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance) {
 		
 	}
 }
