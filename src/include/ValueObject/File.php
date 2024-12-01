@@ -1,5 +1,5 @@
 <?php
-class File {
+class File implements BinaryPersistable {
 	private string $path;
 	private int $ctime;
 	private int $atime;
