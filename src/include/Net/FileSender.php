@@ -14,13 +14,13 @@ namespace Net;
  * @author hm
  */
 class FileSender implements StreamSender {
-	private $file;
-	private $handle;
-	private $size;
-	private $left;
-	private $type;
-	private $offset;
-	private $started = FALSE;
+	private \File $file;
+	private mixed $handle;
+	private int $size;
+	private int $left;
+	private int $type;
+	private int $offset;
+	private bool $started = FALSE;
 	public function __construct(\File $file, int $offset = 0) {
 		$this->file = $file;
 		$this->size = $file->getSize()-$offset;

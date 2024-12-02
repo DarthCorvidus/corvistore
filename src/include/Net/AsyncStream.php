@@ -4,16 +4,16 @@ use \plibv4\process\Task;
 use \Net\ProtocolAsync;
 use plibv4\process\Scheduler;
 class AsyncStream implements Task {
-	private $socket;
+	private mixed $socket;
 	private ProtocolAsync $protocol;
 	private bool $terminated = false;
 	private string $localBuffer = "";
-	function __construct($socket) {
+	function __construct(mixed $socket) {
 		$this->socket = $socket;
 		stream_set_blocking($this->socket, false);
 	}
 	
-	public function setProtocol(ProtocolAsync $protocol) {
+	public function setProtocol(ProtocolAsync $protocol): void {
 		$this->protocol = $protocol;
 	}
 	
@@ -42,7 +42,6 @@ class AsyncStream implements Task {
 			$written = fwrite($this->socket, $this->localBuffer);
 			$error = error_get_last();
 			if(!empty($error)) {
-				var_dump($error);
 				throw new \Exception($error["message"]);
 			}
 			if($written===0) {
@@ -59,7 +58,6 @@ class AsyncStream implements Task {
 			 * If fwrite is unable to write, but data on 'local' buffer.
 			 */
 			if($written===0) {
-				#echo "Could not write, buffering".PHP_EOL;
 				$this->localBuffer = $write;
 			}
 			$this->protocol->onWritten();
@@ -79,7 +77,6 @@ class AsyncStream implements Task {
 		#	return true;
 		#}
 		$data = fread($this->socket, $this->protocol->getPacketLength());
-		#$this->bytes = strlen($this->protocol->getPacketLength());
 		/**
 		 * I need to look into feof again. feof is not necessarily an error if
 		 * the other side was expected to close the connection.

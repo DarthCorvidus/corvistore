@@ -9,6 +9,12 @@
 	<issueHandlers>
 		<PropertyNotSetInConstructor>
 			<errorLevel type="suppress">
+				<!-- This one is actually justified, as setting the protocol at
+				     a later time is most likely a shoddy design compromise I
+				     made to get a quick overview whether the whole 'Timeshare
+				     instead of Forking' approach is reasonable. I have to
+				     revisit it.-->
+				<file name="src/include/Net/AsyncStream.php" /> 
 				<!-- Critique on this one is justified, but SSLContext just
 					serves as a factory. -->
 				<file name="src/include/Net/SSLContext.php" /> 

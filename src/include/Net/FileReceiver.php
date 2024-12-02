@@ -6,10 +6,10 @@ namespace Net;
  * @author hm
  */
 class FileReceiver implements StreamReceiver {
-	private $filename;
-	private $handle;
-	private $size;
-	private $left;
+	private string $filename;
+	private mixed $handle;
+	private int $size;
+	private int $left;
 	function __construct(string $filename) {
 		if(file_exists($filename)) {
 			throw new \InvalidArgumentException("file ".$filename." already exists.");
@@ -18,6 +18,8 @@ class FileReceiver implements StreamReceiver {
 			throw new \InvalidArgumentException("target directory ".dirname($filename)." does not exist.");
 		}
 		$this->filename = $filename;
+		$this->size = 0;
+		$this->left = 0;
 	}
 	public function receiveData(string $data): void {
 		if(!is_resource($this->handle)) {
