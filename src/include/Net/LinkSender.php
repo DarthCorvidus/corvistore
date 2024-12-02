@@ -1,10 +1,14 @@
 <?php
 namespace Net;
+/**
+ * Is to be replaced by FileGroup.
+ * @deprecated since version 0.1.0
+ */
 class LinkSender implements StreamSender {
-	private $file;
-	private $size;
-	private $pos;
-	private $target;
+	private \File $file;
+	private int $size;
+	private int $pos;
+	private string $target;
 	function __construct(\File $file) {
 		$this->file = $file;
 		$this->target = $this->file->getTarget();
