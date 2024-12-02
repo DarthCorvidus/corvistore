@@ -14,23 +14,24 @@ declare(strict_types=1);
  * @author Claus-Christoph Küthe
  */
 class CommandParser {
-	private $raw;
-	private $command;
-	private $object;
-	private $positional;
-	private $params;
-	private $posSanitized = array();
-	private $paramsSanitized = array();
-	private $imported = FALSE;
-	function __construct($command) {
+	private array $raw = array();
+	private string $command;
+	private string $object;
+	private array $positional;
+	private array $params;
+	private array $posSanitized = array();
+	private array $paramsSanitized = array();
+	private bool $imported = false;
+	function __construct(string $command) {
 		$this->raw = self::split($command);
 		$this->command = $this->raw[0];
+		$this->object = "";
 		if(isset($this->raw[1])) {
 			$this->object = $this->raw[1];
 		}
 		$this->positional = array();
 		$this->params = array();
-		foreach(array_slice($this->raw, 2) as $key => $value) {
+		foreach(array_slice($this->raw, 2) as $value) {
 			$split = explode("=", $value, 2);
 			if(count($split)==1) {
 				$this->positional[] = $value;
@@ -40,7 +41,7 @@ class CommandParser {
 		}
 	}
 	
-	private function validateParams(CPModel $model) {
+	private function validateParams(CPModel $model): void {
 		$user = array_keys($this->params);
 		$allowed = $model->getParameters();
 		// array_diff keeps the indexes, but I need new indexes.
@@ -81,7 +82,7 @@ class CommandParser {
 		}
 	}
 	
-	private function validatePositional(CPModel $model) {
+	private function validatePositional(CPModel $model): void {
 		if(count($this->positional)>$model->getPositionalCount()) {
 			throw new InvalidArgumentException(sprintf("Unexpected positional value '%s' for '%s %s'", $this->positional[$model->getPositionalCount()], $this->command, $this->object));
 		}
@@ -95,7 +96,7 @@ class CommandParser {
 		}
 	}
 	
-	function import(CPModel $model) {
+	function import(CPModel $model): void {
 		$this->posSanitized = array();
 		$this->paramsSanitized = array();
 		$this->validateParams($model);
@@ -143,23 +144,23 @@ class CommandParser {
 	return $split;
 	}
 	
-	function getCommand() {
+	function getCommand(): string {
 		return $this->command;
 	}
 	
-	function getObject() {
+	function getObject(): string {
 		return $this->object;
 	}
 	
-	function getPositional($id) {
-		if($this->imported==FALSE) {
+	function getPositional(int $id): string {
+		if($this->imported === false) {
 			throw new RuntimeException(sprintf("Accessing positional parameter '%d' without calling CommandParser::import()", $id));
 		}
 		return $this->posSanitized[$id]->getValue();
 	}
 	
-	function getParam($param) {
-		if($this->imported==FALSE) {
+	function getParam(string $param): string {
+		if($this->imported === false) {
 			throw new RuntimeException(sprintf("Accessing named parameter '%s' without calling CommandParser::import()", $param));
 		}
 		return $this->paramsSanitized[$param];

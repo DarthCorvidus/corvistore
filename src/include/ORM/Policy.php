@@ -21,10 +21,10 @@ class Policy {
 		$policy->pdo = $pdo;
 		$policy->name = $parser->getPositional(0);
 		$policy->partition = Partition::fromName($pdo, $parser->getParam("partition"));
-		$policy->versionExists = $parser->getParam("verexists");
-		$policy->versionDeleted = $parser->getParam("verdeleted");
-		$policy->retentionExists =  $parser->getParam("retexists");
-		$policy->retentionDeleted =  $parser->getParam("retdeleted");
+		$policy->versionExists = (int)$parser->getParam("verexists");
+		$policy->versionDeleted = (int)$parser->getParam("verdeleted");
+		$policy->retentionExists =  (int)$parser->getParam("retexists");
+		$policy->retentionDeleted =  (int)$parser->getParam("retdeleted");
 		$policy->create();
 	}
 	

@@ -86,12 +86,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-binary",
-                "reference": "3fa1a60afbabda2e03a1a40b63903d2214eaf38a"
+                "reference": "b4b14b16b039aca13305d1f0cf807bbf0bdb270a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-binary/zipball/3fa1a60afbabda2e03a1a40b63903d2214eaf38a",
-                "reference": "3fa1a60afbabda2e03a1a40b63903d2214eaf38a",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-binary/zipball/b4b14b16b039aca13305d1f0cf807bbf0bdb270a",
+                "reference": "b4b14b16b039aca13305d1f0cf807bbf0bdb270a",
                 "shasum": ""
             },
             "require-dev": {
@@ -112,7 +112,7 @@
                     "./vendor/bin/phpunit --bootstrap vendor/autoload.php --testdox --colors=always tests"
                 ]
             },
-            "time": "2023-10-03T15:37:42+00:00"
+            "time": "2024-12-01T13:51:06+00:00"
         },
         {
             "name": "plibv4/convert",
@@ -363,12 +363,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-uservalue",
-                "reference": "206916c7f593da0ecad4282169be45ab8d2e7154"
+                "reference": "0c45faf35bbeb45098fbdcba7adc839c17ffb6cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-uservalue/zipball/206916c7f593da0ecad4282169be45ab8d2e7154",
-                "reference": "206916c7f593da0ecad4282169be45ab8d2e7154",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-uservalue/zipball/0c45faf35bbeb45098fbdcba7adc839c17ffb6cb",
+                "reference": "0c45faf35bbeb45098fbdcba7adc839c17ffb6cb",
                 "shasum": ""
             },
             "require": {
@@ -376,7 +376,8 @@
                 "plibv4/validate": "dev-main"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9"
+                "phpunit/phpunit": "^9",
+                "vimeo/psalm": "4.x-dev"
             },
             "default-branch": true,
             "type": "library",
@@ -391,9 +392,12 @@
                 ],
                 "testdox": [
                     "./vendor/bin/phpunit --bootstrap vendor/autoload.php --testdox --colors=always tests"
+                ],
+                "psalm": [
+                    "./vendor/bin/psalm --show-info=true --no-cache"
                 ]
             },
-            "time": "2023-12-31T14:59:52+00:00"
+            "time": "2024-12-02T20:58:54+00:00"
         },
         {
             "name": "plibv4/validate",
@@ -974,12 +978,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/deprecations.git",
-                "reference": "dfbaa3c2d2e9a9df1118213f3b8b0c597bb99fab"
+                "reference": "0d0c25d81be87f7143d1dfc635974d255e26291c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/dfbaa3c2d2e9a9df1118213f3b8b0c597bb99fab",
-                "reference": "dfbaa3c2d2e9a9df1118213f3b8b0c597bb99fab",
+                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/0d0c25d81be87f7143d1dfc635974d255e26291c",
+                "reference": "0d0c25d81be87f7143d1dfc635974d255e26291c",
                 "shasum": ""
             },
             "require": {
@@ -1001,7 +1005,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Doctrine\\Deprecations\\": "lib/Doctrine/Deprecations"
+                    "Doctrine\\Deprecations\\": "src"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -1012,9 +1016,9 @@
             "homepage": "https://www.doctrine-project.org/",
             "support": {
                 "issues": "https://github.com/doctrine/deprecations/issues",
-                "source": "https://github.com/doctrine/deprecations/tree/1.1.3"
+                "source": "https://github.com/doctrine/deprecations/tree/1.1.x"
             },
-            "time": "2024-01-30T19:34:25+00:00"
+            "time": "2024-12-01T07:04:16+00:00"
         },
         {
             "name": "doctrine/instantiator",
