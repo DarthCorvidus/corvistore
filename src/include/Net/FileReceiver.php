@@ -7,7 +7,7 @@ namespace Net;
  */
 class FileReceiver implements StreamReceiver {
 	private string $filename;
-	private mixed $handle;
+	private mixed $handle = null;
 	private int $size;
 	private int $left;
 	function __construct(string $filename) {
