@@ -6,11 +6,16 @@ class Idle implements Task {
 	private int $delaySeconds = 0;
 	
 	public function __construct(int $seconds, int $milliseconds) {
-		$this->delaySeconds = $seconds;
-		$this->delayMilliseconds = $milliseconds*1000000;
+		$this->setDelay($seconds, $milliseconds);
 	}
 	
-	public function setDelay(int $seconds, int $milliseconds) {
+	public function setDelay(int $seconds, int $milliseconds): void {
+		if($seconds<0) {
+			throw new \InvalidArgumentException("seconds must not be negative");
+		}
+		if($milliseconds<0) {
+			throw new \InvalidArgumentException("milliseconds must not be negative");
+		}
 		$this->delaySeconds = $seconds;
 		$this->delayMilliseconds = $milliseconds*1000000;
 	}
@@ -29,6 +34,10 @@ class Idle implements Task {
 	}
 
 	public function __tsLoop(Scheduler $sched): bool {
+		/**
+		 * @psalm-var positive-int $this->delaySeconds
+		 * @psalm-var positive-int $this->delayMilliseconds
+		 */
 		time_nanosleep($this->delaySeconds, $this->delayMilliseconds);
 		return true;
 	}
