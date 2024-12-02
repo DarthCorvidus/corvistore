@@ -11,25 +11,32 @@ abstract class Protocol {
 	const FILE_OK = 1;
 	const FILE_RESEND = 2;
 	const FILE_CANCEL = 3;
-	static function padRandom(string $string, $padlength): string {
-		$len = strlen($string);
-		if($len==$padlength) {
-			return $string;
+	static function padRandom(string $string, int $padlength): string {
+		if($padlength<0) {
+			throw new \InvalidArgumentException("padlength not positive");
 		}
-		if($len<$padlength) {
-			return $string.random_bytes($padlength-$len);
+		$len = strlen($string);
+		if($len===$padlength) {
+			return $string;
 		}
 		/*
 		 * Throw exception here, as a longer pad length should not happen in the
 		 * context of ProtocolBase.
 		 */
 		if($len>$padlength) {
-			throw new \RuntimeException("padlength ".$padlength." shorter than strlen ".$len);
+			throw new \InvalidArgumentException("padlength ".$padlength." shorter than strlen ".$len);
 		}
+		/**
+		 * $len can only be positive and not larger than $padlength, so we can
+		 * safely assume that $final is positive.
+		 * @psalm-var positive-int $final
+		 */
+		$final = $padlength-$len;
+	return $string.random_bytes($final);
 	}
 	
 	static function getControlBlock(int $type, int $length): string {
-		return chr($type).random_bytes($length-2).chr($type);
+		return chr($type).self::padRandom("", $length-2).chr($type);
 	}
 	
 	static function determineControlBlock(string $block): int {

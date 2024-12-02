@@ -25,6 +25,24 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->assertEquals($expected, substr($block, 0, 21));
 	}
 	
+	function testPadRandomEqual() {
+		$expected = "The cat is on the mat";
+		$block = Protocol::padRandom($expected, 21);
+		$this->assertEquals($expected, $block);
+	}
+
+	function testPadRandomLonger() {
+		$expected = "The cat is on the mat";
+		$this->expectException(\InvalidArgumentException::class);
+		Protocol::padRandom($expected, 20);
+	}
+
+	function testPadRandomNegative() {
+		$expected = "The cat is on the mat";
+		$this->expectException(\InvalidArgumentException::class);
+		Protocol::padRandom($expected, -4096);
+	}
+	
 	function testCeilBlock() {
 		$this->assertEquals(0, Protocol::ceilBlock(0, 10));
 		$this->assertEquals(1024, Protocol::ceilBlock(1, 10));
