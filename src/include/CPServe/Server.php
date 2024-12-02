@@ -1,7 +1,7 @@
 <?php
 use plibv4\process\TimeshareObserver;
 use Net\AsyncStream;
-class Server implements SignalHandler, Net\HubServerListener, TimeshareObserver {
+class Server implements SignalHandler, TimeshareObserver {
 	private $hub;
 	private $workerProcess = array();
 	private $pdo;
@@ -89,35 +89,6 @@ class Server implements SignalHandler, Net\HubServerListener, TimeshareObserver 
 			unset($this->workers[$clientId]);
 			Signal::get()->clearHandler($process);
 		}
-	}
-	/*
-	public function onStart(Process $process) {
-		if($process->getRunner() instanceof RunnerServer) {
-			$id = $process->getRunner()->getId();
-			echo "Thread for client ".$id." spawned.".PHP_EOL;
-		}
-	}
-	*/
-	public function onConnect(string $name, int $id, $newClient) {
-		echo "Connection from ".$name." ".$id.PHP_EOL;
-		#echo "New IPC connection - forking off...";
-		#$this->hub->detach($name, $id);
-		#$worker = new RunnerWorker($newClient, $id);
-		#$process = new Process($worker);
-		#$process->run();
-		#echo "forked off with PID ".$process->getPid().PHP_EOL;
-	}
-	
-	public function onDetach($name, $id) {
-		$key = $name.":".$id;
-		if($name!="ipc") {
-			return;
-		}
-		$process = new Process($this->workers[$id]);
-		$process->run();
-		unset($this->authFail[$key]);
-		unset($this->authProt[$key]);
-		unset($this->authMode[$key]);
 	}
 	
 	public function hasClientListener(string $name, int $id): bool {

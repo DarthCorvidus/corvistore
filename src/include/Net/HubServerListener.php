@@ -1,15 +1,11 @@
 <?php
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace Net;
+/**
+ * @deprecated since version 0.0.1
+ */
 interface HubServerListener {
-	function onConnect(string $name, int $id, $newClient);
+	function onConnect(string $name, int $id, mixed $newClient): void;
 	function hasClientListener(string $name, int $id): bool;
 	function getClientListener(string $name, int $id): HubClientListener;
-	function onDetach(string $name, int $id);
+	function onDetach(string $name, int $id): void;
 }

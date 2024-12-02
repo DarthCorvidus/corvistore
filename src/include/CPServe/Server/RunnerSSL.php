@@ -1,5 +1,8 @@
 <?php
 namespace Server;
+/**
+ * @deprecated since version 0.0.1
+ */
 class RunnerSSL implements \Runner, \Net\HubServerListener {
 	private $clientCount = 0;
 	private $sslProtocol = array();
@@ -31,7 +34,7 @@ class RunnerSSL implements \Runner, \Net\HubServerListener {
 		$this->hub->listen();
 	}
 
-	public function onConnect(string $name, int $id, $newClient) {
+	public function onConnect(string $name, int $id, mixed $newClient): void {
 		$this->writeBuffer[$name.":".$id] = array();
 		$this->writeBuffer["ipc:".$id] = array();
 		#$this->sslProtocol[$name.":".$id] = new \Net\ProtocolReactive(new SSLProtocolListener($id));
@@ -52,7 +55,7 @@ class RunnerSSL implements \Runner, \Net\HubServerListener {
 		
 	}
 
-	public function onDetach(string $name, int $id) {
+	public function onDetach(string $name, int $id): void {
 		;
 	}
 }
