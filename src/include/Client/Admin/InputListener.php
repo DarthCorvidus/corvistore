@@ -17,11 +17,11 @@ class InputListener implements \Net\HubClientListener {
 		return FALSE;
 	}
 
-	public function onDisconnect() {
+	public function onDisconnect(): void {
 		
 	}
 
-	public function onRead(string $data) {
+	public function onRead(string $data): void {
 		$quit = (new class() implements \Net\ProtocolSendListener {
 			public function onSent(\Net\ProtocolAsync $protocol): void { exit(); }}
 		);
@@ -42,7 +42,7 @@ class InputListener implements \Net\HubClientListener {
 		
 	}
 
-	public function onWritten() {
+	public function onWritten(): void {
 		
 	}
 }

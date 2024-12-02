@@ -15,7 +15,7 @@ interface HubClientListener {
 	 * Will be called if a stream has data to read.
 	 * @param string $data
 	 */
-	function onRead(string $data);
+	function onRead(string $data): void;
 	/**
 	 * Check if HubClientListener has data to write.
 	 */
@@ -27,6 +27,6 @@ interface HubClientListener {
 	/**
 	 * Will be called after the data has been written to a stream.
 	 */
-	function onWritten();
-	function onDisconnect();
+	function onWritten(): void;
+	function onDisconnect(): void;
 }
