@@ -4,18 +4,20 @@ namespace Node;
  * Restore from the server as a client. 
  */
 class Restore {
-	private $argv;
-	private $target;
-	private $restored = 0;
-	private $ignored = 0;
-	private $size;
-	private $protocol;
-	private $timestamp;
-	private $replaceOlder = NULL;
-	private $replaceEqual = NULL;
-	private $replaceNewer = NULL;
-	private $replaceSmaller = NULL;
-	private $replaceLarger = NULL;
+	private \ArgvRestore $argv;
+	private string $target;
+	private int $restored = 0;
+	private int $ignored = 0;
+	private int $size = 0;
+	private \Net\ProtocolSync $protocol;
+	private int $timestamp;
+	private ?string $replaceOlder = NULL;
+	private ?string $replaceEqual = NULL;
+	private ?string $replaceNewer = NULL;
+	private ?string $replaceSmaller = NULL;
+	private ?string $replaceLarger = NULL;
+	private \InEx $inex;
+	private \Client\Config $config;
 	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvRestore($argv);
@@ -33,7 +35,7 @@ class Restore {
 		}
 	}
 	
-	private function queryReplace(&$keep, $reason) {
+	private function queryReplace(?string &$keep, string $reason): string {
 		if($this->argv->getSkip()) {
 			return "s";
 		}
@@ -68,34 +70,34 @@ class Restore {
 		}
 	}
 
-	function queryReplaceLarger($filepath) {
+	function queryReplaceLarger(string $filepath): string {
 		$reason = "File ".$filepath." exists and is smaller. Action:".PHP_EOL;
 		$input = $this->queryReplace($this->replaceLarger, $reason);
 	return $input;
 	}
 
-	function queryReplaceSmaller($filepath) {
+	function queryReplaceSmaller(string $filepath): string {
 		$reason = "File ".$filepath." exists and is smaller. Action:".PHP_EOL;
 		$input = $this->queryReplace($this->replaceSmaller, $reason);
 	return $input;
 	}
 	
-	function queryReplaceOlder($filepath) {
+	function queryReplaceOlder(string $filepath): string {
 		$input = $this->queryReplace($this->replaceOlder, "File ".$filepath." exists and is older. Action:");
 	return $input;
 	}
 
-	function queryReplaceEqual($filepath) {
+	function queryReplaceEqual(string $filepath): string {
 		$input = $this->queryReplace($this->replaceEqual, "File ".$filepath." exists and is equal. Action:");
 	return $input;
 	}
 	
-	function queryReplaceNewer($filepath) {
+	function queryReplaceNewer(string $filepath): string {
 		$input = $this->queryReplace($this->replaceNewer, "File ".$filepath." exists and is newer. Action:");
 	return $input;
 	}
 
-	function recurseCatalog(string $path) {
+	function recurseCatalog(string $path): void {
 		$this->protocol->sendCommand("GET CATALOG ".$path);
 		$entries = $this->protocol->getSerialized();
 		$directories = array();
@@ -135,7 +137,7 @@ class Restore {
 		}
 	}
 
-	private function restoreDirectory($path, \CatalogEntry $entry) {
+	private function restoreDirectory(string $path, \CatalogEntry $entry): void {
 		# We have to filter again.
 		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
 		$filepath = $this->target.$path.$entry->getName();
@@ -148,7 +150,7 @@ class Restore {
 		}
 	}
 	
-	private function restoreLink($path, \CatalogEntry $entry) {
+	private function restoreLink(string $path, \CatalogEntry $entry): void {
 		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
 		$filepath = $this->target.$path.$entry->getName();
 		if(is_link($filepath)) {
@@ -163,8 +165,8 @@ class Restore {
 		 */
 		$restoreListener = new \Net\StringReceiver();
 		$this->protocol->getStream($restoreListener);
-		echo $restoreListener->getString().PHP_EOL;
-		#echo "Restore link ".$filepath." → ".$this->target.$path.$restoreListener->getString().PHP_EOL;
+		#echo $restoreListener->getString().PHP_EOL;
+		echo "Restore link ".$filepath." → ".$this->target.$path.$restoreListener->getString().PHP_EOL;
 		#symlink($this->target.$restoreListener->getString(), $filepath);
 		symlink($restoreListener->getString(), $filepath);
 		#chown($filepath, $version->getOwner());
@@ -172,7 +174,7 @@ class Restore {
 		#touch($filepath, $version->getMtime());
 	}
 	
-	private function restoreFile($path, \CatalogEntry $entry) {
+	private function restoreFile(string $path, \CatalogEntry $entry): void {
 		# We have to filter again.
 		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
 		$filepath = $this->target.$path.$entry->getName();
@@ -226,11 +228,11 @@ class Restore {
 	return;
 	}
 	
-	private function restoreHierarchy() {
+	private function restoreHierarchy(): void {
 		
 	}
 
-	private function restoreParents() {
+	private function restoreParents(): string {
 		$exp = explode("/", $this->argv->getRestorePath());
 		$previous = "/";
 		foreach($exp as $key => $value) {
@@ -251,16 +253,16 @@ class Restore {
 	return $cv->convert($previous);
 	}
 	
-	private function displaySummary() {
+	private function displaySummary(): void {
 		echo "Restored:    ".$this->restored.PHP_EOL;
 		echo "Ignored:     ".$this->ignored.PHP_EOL;
 		echo "Transferred: ".number_format($this->size)." Bytes".PHP_EOL;
 	}
 	
-	function run() {
+	function run(): void {
 		#echo $this->argv->getRestorePath().PHP_EOL;
 		if($this->argv->getRestorePath()=="/") {
-			$this->recurseCatalog("/", 0);
+			$this->recurseCatalog("/");
 		} else {
 			/**
 			 * When a restore path is deeper below root, the path leading to the
