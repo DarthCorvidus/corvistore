@@ -1,12 +1,14 @@
 <?php
 class Files {
-	private $entries = array();
-	private $names = array();
+	/** @var list<File> */
+	private array $entries = array();
+	/** @var array<string, int> */
+	private array $names = array();
 	function __construct() {
 		
 	}
 	
-	function addEntry(File $file) {
+	function addEntry(File $file): void {
 		$this->entries[] = $file;
 		$this->names[$file->getBasename()] = $this->getCount()-1;
 	}

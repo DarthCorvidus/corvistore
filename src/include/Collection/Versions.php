@@ -12,12 +12,16 @@
  * @author hm
  */
 class Versions {
-	private $version = array();
+	/**
+	 * 
+	 * @var list<VersionEntry>
+	 */
+	private array $version = array();
 	function __construct() {
 		;
 	}
 	
-	function addVersion(VersionEntry $version) {
+	function addVersion(VersionEntry $version): void {
 		$this->version[] = $version;
 	}
 	
@@ -54,7 +58,7 @@ class Versions {
 	return $string;
 	}
 	
-	static function fromBinary($string): Versions {
+	static function fromBinary(string $string): Versions {
 		$versions = new Versions();
 		$amount = IntVal::uint16LE()->getValue(substr($string, 0, 2));
 		$rest = substr($string, 2);

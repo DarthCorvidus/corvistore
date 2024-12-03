@@ -6,9 +6,11 @@
  * @author Claus-Christoph Küthe
  */
 class CatalogEntries {
-	private $array;
-	private $names;
-	private $dirname;
+	/** @var list<CatalogEntry> */
+	private array $array;
+	/** @var array<string, int> */
+	private array $names;
+	private string $dirname;
 	function __construct(string $dirname) {
 		$this->array = array();
 		$this->names = array();
@@ -19,7 +21,7 @@ class CatalogEntries {
 		return $this->dirname;
 	}
 	
-	function addEntry(CatalogEntry $entry) {
+	function addEntry(CatalogEntry $entry): void {
 		$this->array[] = $entry;
 		$this->names[$entry->getName()] = $this->getCount()-1;
 	}

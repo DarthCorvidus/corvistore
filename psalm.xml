@@ -33,6 +33,16 @@
         <ignoreFiles>
             <directory name="vendor" />
 			<directory name="prototyping" />
+			<!-- This was a local only solution for first tests and is kept for
+				 reference only. -->
+			<directory name="src/include/Client/NodeLocal" />
+			<!-- CommandHandler is a mess. Not a big mess, but a mess. The
+				 problem is that there is no common ground whether the sub
+				 handlers - update, query, delete, define - should return a
+				 value or not, so it is a funny melange of return $something and
+				 return; ie void. I tend towards every command having to return
+				 something, but this needs to be designed consistently -->
+			<directory name="src/include/CommandHandler" />
 			<!-- StorageBasic is a mess which needs redesigning-->
 			<file name="src/include/StorageBasic.php" />
 			<file name="src/include/Storage/Disk.php" />
