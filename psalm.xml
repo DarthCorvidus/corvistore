@@ -43,6 +43,10 @@
 				 return; ie void. I tend towards every command having to return
 				 something, but this needs to be designed consistently -->
 			<directory name="src/include/CommandHandler" />
+			<!-- deprecated -->
+				<file name="src/include/Client/Node/RestoreListener.php" /> 
+			<!-- deprecated -->
+				<file name="src/include/Client/Node/Test.php" /> 
 			<!-- StorageBasic is a mess which needs redesigning-->
 			<file name="src/include/StorageBasic.php" />
 			<file name="src/include/Storage/Disk.php" />

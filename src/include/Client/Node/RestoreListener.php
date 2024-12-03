@@ -1,5 +1,8 @@
 <?php
 namespace Node;
+/**
+ * @deprecated since version 0.0.1
+ */
 class RestoreListener implements \Net\TransferListener {
 	private $target;
 	private $handle;

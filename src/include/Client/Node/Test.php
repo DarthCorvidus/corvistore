@@ -1,5 +1,8 @@
 <?php
 namespace Node;
+/**
+ * @deprecated since version 0.0.1
+ */
 class Test implements \Net\TransferListener {
 	private $config;
 	private $argv;
