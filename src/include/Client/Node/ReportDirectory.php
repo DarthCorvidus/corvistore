@@ -15,10 +15,10 @@ class ReportDirectory implements \TerminalTableModel, \TerminalTableLayout {
 	const GROUP = 6;
 	const PERM = 7;
 	const MAX = 8;
-	private $values = array();
-	private $catEntries;
-	private $title = array();
-	private $timestamp;
+	private array $values = array();
+	private \CatalogEntries $catEntries;
+	private array $title = array();
+	private int $timestamp;
 	function __construct(\CatalogEntries $entries, \Argv $argv) {
 		$this->catEntries = $entries;
 		$this->title = array_fill(0, self::MAX, "");
@@ -68,7 +68,7 @@ class ReportDirectory implements \TerminalTableModel, \TerminalTableLayout {
 	return "UNK";
 	}
 	
-	public function load() {
+	public function load(): void {
 		#$versions = $this->catEntry->getVersions()->filterToTimestamp($this->timestamp);
 		$sum = 0;
 		for($i=0; $i<$this->catEntries->getCount();$i++) {

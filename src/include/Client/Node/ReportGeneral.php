@@ -8,8 +8,8 @@ namespace Node;
 class ReportGeneral implements \TerminalTableModel {
 	const NAME = 0;
 	const VALUE = 1;
-	private $values;
-	private $report;
+	private array $values = array();
+	private array $report = array();
 	function __construct(array $report) {
 		$this->report = $report;
 		
@@ -27,14 +27,14 @@ class ReportGeneral implements \TerminalTableModel {
 	}
 
 	public function getTitle(int $col): string {
-		
+		return "";
 	}
 
 	public function hasTitle(): bool {
 		return false;
 	}
 
-	public function load() {
+	public function load(): void {
 		$this->values = array();
 		$this->values[0] = array("Files:", number_format($this->report["files"], 0));
 		$this->values[1] = array("Occupancy:", number_format($this->report["occupancy"], 0));
