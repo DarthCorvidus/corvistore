@@ -8,13 +8,12 @@ namespace Node;
 
 
 class Client {
-	private $pdo;
-	private $config;
-	private $hub;
-	private $protocol;
-	private $socket;
+private \Client\Config $config;
+	private \Net\ProtocolSync $protocol;
+	private mixed $socket;
+	/** @var list<string> */
 	private array $argv;
-	function __construct($argv) {
+	function __construct(array $argv) {
 		$user = posix_getuid();
 		$group = posix_getgid();
 		if($user!==0 or $group!==0) {
@@ -55,10 +54,10 @@ class Client {
 		$this->protocol->sendCommand("mode node");
 		$this->protocol->sendCommand("authenticate ".$this->config->getNode().":".trim(file_get_contents("/root/.crow-protect")));
 		#$this->protocol->expect(\Net\ProtocolReactive::OK);
-		echo $this->protocol->getOK();
+		$this->protocol->getOK();
 	}
 	
-	function run() {
+	function run(): void {
 		if($this->argv[1]=="backup") {
 			$backup = new Backup($this->socket, $this->config, $this->argv);
 			$backup->run();
@@ -72,43 +71,6 @@ class Client {
 		if($this->argv[1]=="report") {
 			$backup = new Report($this->protocol, $this->config, $this->argv);
 			$backup->run();
-		}
-
-		#$this->hub->listen();
-	return;
-		#if($this->argv[1]=="test") {
-		#	$backup = new Test($this->config, $this->argv);
-		#	$backup->run();
-		#	return;
-		#}
-		/*
-		 * I don't want PHP to throw E_WARNings around, so I use @ to silence
-		 * it and do proper error handling afterwards.
-		 */
-		
-		
-		#$socket = @stream_socket_client($this->config->getHost().":4096", $errno, $errstr, NULL, STREAM_CLIENT_CONNECT);
-		if($socket===FALSE) {
-			throw new \RuntimeException("Unable to connect to ".$this->config->getHost().":4096: ".$errstr.".");
-		}
-		fwrite($socket, "node ".$this->config->getNode().":".file_get_contents("/root/.crow-protect")."\n");
-		$protocol = new \Net\Protocol($socket);
-		$protocol->getOK();
-
-		
-		if($this->argv[1]=="backup") {
-			#$backup = new Backup($protocol, $this->config, $this->argv);
-			#$backup->run();
-		}
-
-		if($this->argv[1]=="report") {
-			#$backup = new Report($protocol, $this->config, $this->argv);
-			#$backup->run();
-		}
-
-		if($this->argv[1]=="restore") {
-			#$backup = new Restore($protocol, $this->config, $this->argv);
-			#$backup->run();
 		}
 	}
 }
