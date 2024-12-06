@@ -8,11 +8,12 @@ namespace Admin;
 
 
 class Client {
-	private $config;
-	private $argv;
-	private $hub;
-	private $protocol;
-	function __construct($argv) {
+	private \Client\Config $config;
+	private \ArgvAdmin $argv;
+	private \StreamHub $hub;
+	private \Net\ProtocolAsync $protocol;
+	private InputListener $inputListener;
+	function __construct(array $argv) {
 		$this->hub = new \StreamHub();
 		$this->config = new \Client\Config("/etc/crow-protect/client.conf");
 		$this->argv = new \ArgvAdmin($argv);
@@ -44,7 +45,7 @@ class Client {
 		$this->protocol = new \Net\ProtocolAsync(new \Admin\ProtocolListener());
 		$this->inputListener = new InputListener($this->protocol);
 		
-		$this->hub->addClientStream("ssl", 0, $socket, $this->protocol);
+		$this->hub->addClientStream("ssl", 0, $socket);
 		$this->hub->addClientListener("ssl", 0, $this->protocol);
 		
 		$this->hub->addClientStream("input", 0, STDIN);
@@ -56,7 +57,7 @@ class Client {
 		$this->protocol->expect(\Net\Protocol::OK);
 	}
 	
-	function run() {
+	function run(): void {
 		$this->hub->listen();
 	}
 }

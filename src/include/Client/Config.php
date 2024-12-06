@@ -6,9 +6,9 @@ namespace Client;
  * @author Claus-Christoph Küthe
  */
 class Config implements \ImportModel {
-	private $import;
-	private $values;
-	function __construct($path) {
+	private \Import $import;
+	private array $values;
+	function __construct(string $path) {
 		if(!file_exists($path)) {
 			throw new \RuntimeException("Client configuration at ".$path." not available.");
 		}
@@ -54,7 +54,7 @@ class Config implements \ImportModel {
 	}
 	
 	public function getImportListModel($name): \ImportModel {
-		
+		throw new \RuntimeException("Not implemented");
 	}
 
 	public function getImportListNames(): array {
@@ -62,7 +62,7 @@ class Config implements \ImportModel {
 	}
 
 	public function getImportModel($name): \ImportModel {
-		
+		throw new \RuntimeException("Not implemented");
 	}
 
 	public function getImportNames(): array {
@@ -73,6 +73,7 @@ class Config implements \ImportModel {
 		if($name=="exclude" or $name=="include") {
 			return \UserValue::asOptional();
 		}
+	throw new \RuntimeException("No ScalarListModel for ".$name);
 	}
 
 	public function getScalarListNames(): array {
@@ -80,10 +81,11 @@ class Config implements \ImportModel {
 	}
 
 	public function getScalarModel($name): \UserValue {
-		if($name=="node" or $name=="host") {
+		if($name==="node" or $name==="host") {
 			$userValue = \UserValue::asMandatory();
 			return $userValue;
 		}
+	throw new \RuntimeException("No UserValue for ".$name);
 	}
 
 	public function getScalarNames(): array {

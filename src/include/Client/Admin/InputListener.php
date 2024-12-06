@@ -39,7 +39,7 @@ class InputListener implements \Net\HubClientListener {
 	}
 
 	public function onWrite(): string {
-		
+		throw new \RuntimeException("Not implemented");
 	}
 
 	public function onWritten(): void {
