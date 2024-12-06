@@ -8,9 +8,10 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 	private Task $task;
 	private int $id;
 	private ?\User $user = null;
+	private ?\Node $node = null;
 	private \EPDO $pdo;
-	private $username;
-	private $password;
+	private string $username = "";
+	private string $password = "";
 	private FacadeProtocolListener $listener;
 	function __construct(Scheduler $sched, Task $task, FacadeProtocolListener $listener) {
 		$this->sched = $sched;
@@ -26,7 +27,7 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 			$this->modeSelect($protocol, $command);
 		return;
 		}
-		if($this->user == null) {
+		if($this->user === null) {
 			$this->authenticate($protocol, $command);
 		return;
 		}
@@ -41,16 +42,6 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 			$protocol->sendMessage("Ended session at ".date("Y-m-d H:i:s"));
 			$protocol->sendMessage("Goodbye.");
 			$this->sched->terminate($this->task);
-		return;
-		}
-		
-		if($command == "halt") {
-			$protocol->sendMessage("Shutting down server at ".date("Y-m-d H:i:s"));
-			/*
-			 * End the scheduler. Not /quite/ correct here, as PHP does not know
-			 * that sched actually implements Task itself here.
-			 */
-			$this->sched->__tsTerminate();
 		return;
 		}
 		$protocol->sendMessage("You sent: ".$command);
@@ -72,13 +63,14 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 			$this->sched->terminate($this->task);
 		return;
 		}
-		
+		/** @psalm-suppress RedundantCondition */
 		if($exp[0]=="mode" && !in_array($exp[1], array("admin", "node", TRUE))) {
 			echo "Unknown mode from ".$this->id.PHP_EOL;
 			$this->sched->terminate($this->task);
 		return;
 		}
-		
+
+		/** @psalm-suppress RedundantCondition */
 		if($exp[0]=="mode" && in_array($exp[1], array("admin", "node", TRUE))) {
 			echo "Client ".$this->id." selected ".$exp[1].PHP_EOL;
 			$this->mode = $exp[1];
@@ -116,26 +108,26 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 	
 	private function authenticateAdmin(\Net\ProtocolAsync $protocol): void {
 		try {
-			$this->user = \User::authenticate($this->pdo, $this->username.":".$this->password);
+			$user = \User::authenticate($this->pdo, $this->username.":".$this->password);
 			echo "Authentication for client ".$this->id.", username ".$this->username." suceeded".PHP_EOL;
-		} catch (Exception $ex) {
+			$protocol->sendMessage("Welcome to Corviprotect 0.0.1 Alpha");
+			$this->listener->switchAdmin($user);
+			//$protocol->sendMessage("Corviprotect v0.0.1 Alpha");
+		} catch (\Exception $ex) {
 			echo "Authentication for client ".$this->id.", username ".$this->username." failed".PHP_EOL;
 			$this->sched->terminate($this->task);
 		}
-		$protocol->sendMessage("Welcome to Corviprotect 0.0.1 Alpha");
-		$this->listener->switchAdmin($this->user);
-		//$protocol->sendMessage("Corviprotect v0.0.1 Alpha");
 	}
 
 	private function authenticateNode(\Net\ProtocolAsync $protocol): void {
 		try {
 			$node = \Node::authenticate($this->pdo, $this->username.":".$this->password);
 			echo "Authentication for client ".$this->id.", node ".$this->username." suceeded".PHP_EOL;
-		} catch (Exception $ex) {
+			$this->listener->switchNode($node);
+		} catch (\Exception $ex) {
 			echo "Authentication for client ".$this->id.", node ".$this->username." failed".PHP_EOL;
 			$this->sched->terminate($this->task);
 		}
-		$this->listener->switchNode($node);
 		//$protocol->sendMessage("Corviprotect v0.0.1 Alpha");
 	}
 	

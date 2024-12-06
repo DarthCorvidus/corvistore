@@ -5,7 +5,7 @@ use plibv4\process\Scheduler;
 use Net\ProtocolAsync;
 use Net\AsyncStream;
 class TaskServer implements Task {
-	private $socket;
+	private mixed $socket;
 	function __construct() {
 		$context = new \Net\SSLContext();
 		echo \Shared::getSSLAuthorityFile();
