@@ -11,7 +11,7 @@ class BackupStat implements \TerminalTableModel {
 	private int $updatedDirs = 0;
 	private int $deletedFiles = 0;
 	private int $deletedDirs = 0;
-	private array $values;
+	private array $values = array();
 	public function __construct() {
 		$this->startTime = microtime(true);
 	}
@@ -70,7 +70,7 @@ class BackupStat implements \TerminalTableModel {
 	}
 
 	public function getTitle(int $col): string {
-		
+		return "";
 	}
 
 	public function hasTitle(): bool {
