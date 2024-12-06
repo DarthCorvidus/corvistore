@@ -6,9 +6,9 @@ use plibv4\process\Scheduler;
 class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	private ProtocolAsync $protocol;
 	private Scheduler $scheduler;
-	private $done = false;
-	private $paused = false;
-	private $queue = 0;
+	private bool $done = false;
+	private bool $paused = false;
+	private int $queue = 0;
 	private array $files;
 	private int $transferred = 0;
 	private \plibv4\process\Task $task;
@@ -32,13 +32,14 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	function __construct() {
 		$this->stat = new BackupStat();
 		$this->filegroup = new \FileGroup();
+		$this->files = array();
 	}
 	
-	public function setProtocol(\Net\ProtocolAsync $protocol) {
+	public function setProtocol(\Net\ProtocolAsync $protocol): void {
 		$this->protocol = $protocol;
 	}
 	
-	public function setScheduler(Scheduler $sched) {
+	public function setScheduler(Scheduler $sched): void {
 		$this->scheduler = $sched;
 	}
 	
@@ -115,15 +116,6 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
 				}
 			}
-			if($file->getType()==\Catalog::TYPE_LINK) {
-				echo "Sending link ".$file->getPath().PHP_EOL;
-				try {
-					$this->protocol->sendStream(new \Net\LinkSender($file));
-					//$this->transferred += $file->getSize();
-				} catch (\Net\UploadException $e) {
-					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
-				}
-			}
 		}
 	}
 	/**
@@ -192,16 +184,6 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 				}
 			}
 			
-			if($file->getType()== \Catalog::TYPE_LINK) {
-				echo "Sending link ".$file->getPath().PHP_EOL;
-				try {
-					$this->protocol->sendStream(new \Net\LinkSender($file));
-					$this->transferred += $file->getSize();
-				} catch (\Net\UploadException $e) {
-					echo "Skipping file ".$file->getPath().": ".$e->getMessage().PHP_EOL;
-				}
-			}
-
 			#$entry = $this->protocol->getSerialized();
 			
 			#$entry = $this->catalog->newEntry($file, $parent);

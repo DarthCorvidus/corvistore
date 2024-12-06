@@ -3,18 +3,10 @@ namespace Node;
 use plibv4\process\Task;
 use plibv4\process\Scheduler;
 class RecurseDirectory implements Task {
-	private $path;
-	private $currentPath;
-	private array $directories = array();
-	private \FilesystemIterator $fsit;
-	private \RecursiveDirectoryIterator $rdi;
-	private \RecursiveIteratorIterator $rii;
-	private DirFilter $filtered;
+	private string $path;
 	private int $processed = 0;
-	private \Net\ProtocolSync $protocol;
 	private array $dirStack = array();
 	private \InEx $inex;
-	private $repeat = 0;
 	private DirectoryWalkObserver $walkObserver;
 	function __construct(string $path, \InEx $inex, DirectoryWalkObserver $walkObserver) {
 		$this->path = realpath($path);
@@ -102,6 +94,6 @@ class RecurseDirectory implements Task {
 	}
 
 	public function __tsTerminate(Scheduler $sched): bool {
-		
+		return true;
 	}
 }

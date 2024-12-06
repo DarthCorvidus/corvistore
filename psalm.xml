@@ -9,6 +9,8 @@
 	<issueHandlers>
 		<PropertyNotSetInConstructor>
 			<errorLevel type="suppress">
+				<!-- This should be reviewed. -->
+				<file name="src/include/Client/Node/Backup/ProtocolNode.php" /> 
 				<!-- This one is actually justified, as setting the protocol at
 				     a later time is most likely a shoddy design compromise I
 				     made to get a quick overview whether the whole 'Timeshare
@@ -43,10 +45,12 @@
 				 return; ie void. I tend towards every command having to return
 				 something, but this needs to be designed consistently -->
 			<directory name="src/include/CommandHandler" />
+			<!-- Unused class, will be removed -->
+			<file name="src/include/Client/Node/BackupListener.php" />
 			<!-- deprecated -->
-				<file name="src/include/Client/Node/RestoreListener.php" /> 
+			<file name="src/include/Client/Node/RestoreListener.php" /> 
 			<!-- deprecated -->
-				<file name="src/include/Client/Node/Test.php" /> 
+			<file name="src/include/Client/Node/Test.php" /> 
 			<!-- StorageBasic is a mess which needs redesigning-->
 			<file name="src/include/StorageBasic.php" />
 			<file name="src/include/Storage/Disk.php" />
