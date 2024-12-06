@@ -77,7 +77,7 @@ class BackupStat implements \TerminalTableModel {
 		return false;
 	}
 
-	public function load() {
+	public function load(): void {
 		$this->values = array();
 		$this->values[] = array("Time:", round(microtime(true)-$this->startTime, 2));
 		$this->values[] = array("Directories inspected:", $this->processedDirs);

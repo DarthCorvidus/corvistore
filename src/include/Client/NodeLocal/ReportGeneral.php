@@ -41,7 +41,7 @@ class ReportGeneral implements \TerminalTableModel {
 	return $size;
 	}
 	
-	public function load() {
+	public function load(): void {
 		$this->values = array();
 		$files = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ? and dc_id in (select dc_id from d_version where dvs_type = ?)", array($this->node->getId(), Catalog::TYPE_FILE));
 		$this->values[0] = array("Files:", number_format($files, 0));

@@ -73,7 +73,7 @@ class NodeList implements TerminalTableLayout, TerminalTableModel {
 	/**
 	 * @psalm-suppress MissingReturnType
 	 */
-	public function load() {
+	public function load(): void {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_node LEFT JOIN d_policy USING (dpo_id)");
 		$stmt->execute();

@@ -7,16 +7,15 @@ namespace Node;
  * @author Claus-Christoph Küthe
  */
 class Report {
-	private $node;
-	private $pdo;
-	private $argv;
-	private $protocol;
+	/** @var list<string> */
+	private array $argv;
+	private \Net\ProtocolSync $protocol;
 	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
 		$this->argv = $argv;
 		$this->protocol = $protocol;
 	}
 	
-	private function runGeneral() {
+	private function runGeneral(): void {
 		$this->protocol->sendCommand("REPORT");
 		$report = $this->protocol->getSerialized();
 		$model = new ReportGeneral($report);
@@ -25,7 +24,7 @@ class Report {
 		$table->printTable();
 	}
 	
-	private function runPath() {
+	private function runPath(): void {
 		$argvReport = new \ArgvReport();
 		$argv = new \Argv($this->argv, $argvReport);
 		
@@ -42,7 +41,7 @@ class Report {
 		$table->printTable();
 	}
 	
-	function run() {
+	function run(): void {
 		if(empty($this->argv[2])) {
 			$this->runGeneral();
 		} else {

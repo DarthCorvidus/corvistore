@@ -60,7 +60,7 @@ class ReportFile implements \TerminalTableModel, TerminalTableLayout {
 		}
 	}
 	
-	public function load() {
+	public function load(): void {
 		$versions = $this->catEntry->getVersions()->filterToTimestamp($this->timestamp);
 		$sum = 0;
 		for($i=0; $i<$versions->getCount();$i++) {

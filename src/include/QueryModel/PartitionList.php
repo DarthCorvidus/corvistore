@@ -62,7 +62,7 @@ class PartitionList implements TerminalTableLayout, TerminalTableModel {
 	/**
 	 * @psalm-suppress MissingReturnType
 	 */
-	public function load() {
+	public function load(): void {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_partition JOIN d_storage USING (dst_id)");
 		$stmt->setFetchMode(PDO::FETCH_ASSOC);

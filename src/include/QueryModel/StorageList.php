@@ -58,7 +58,7 @@ class StorageList implements TerminalTableLayout, TerminalTableModel {
 	/**
 	 * @psalm-suppress MissingReturnType
 	 */
-	public function load() {
+	public function load(): void {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_storage");
 		$stmt->execute();
