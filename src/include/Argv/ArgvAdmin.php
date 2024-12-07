@@ -5,7 +5,7 @@
  * @author Claus-Christoph Küthe
  */
 class ArgvAdmin {
-	private $argv;
+	private Argv $argv;
 	function __construct(array $argv) {
 		$model = new ArgvAdminModel();
 		$this->argv = new Argv($argv, $model);

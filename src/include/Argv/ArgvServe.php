@@ -5,7 +5,7 @@
  * @author Claus-Christoph Küthe
  */
 class ArgvServe {
-	private $argv;
+	private \Argv $argv;
 	function __construct(array $argv) {
 		$model = new ArgvServeModel();
 		$this->argv = new Argv($argv, $model);

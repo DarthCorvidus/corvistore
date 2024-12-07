@@ -5,15 +5,19 @@
  * @author Claus-Christoph Küthe
  */
 class ArgvRestoreModel implements ArgvModel {
-	private $posNames = array();
+	/** @var list<string> */
+	private array $posNames = array();
+	/** @var list<UserValue> */
 	private $positional = array();
+	/** @var array<string, UserValue> */
 	private $named = array();
+	/** @var list<string> */
 	private $boolean = array();
 	public function __construct() {
-		$this->positional[0] = UserValue::asMandatory();
-		$this->positional[1] = UserValue::asOptional();
+		$this->positional[] = UserValue::asMandatory();
+		$this->positional[] = UserValue::asOptional();
 		$this->positional[1]->setDefault("/");
-		$this->positional[2] = UserValue::asOptional();
+		$this->positional[] = UserValue::asOptional();
 		$this->positional[2]->setConvert(new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE));
 		
 		$this->posNames = array("mode", "path", "target");

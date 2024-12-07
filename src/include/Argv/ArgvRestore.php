@@ -5,10 +5,10 @@
  * @author Claus-Christoph Küthe
  */
 class ArgvRestore {
-	private $argv;
+	private \Argv $argv;
 	function __construct(array $argv) {
 		$model = new ArgvRestoreModel();
-		$this->argv = new Argv($argv, $model);
+		$this->argv = new \Argv($argv, $model);
 	}
 	
 	function getRestorePath(): string {

@@ -5,9 +5,12 @@
  * @author Claus-Christoph Küthe
  */
 class ArgvAdminModel implements ArgvModel {
+	/** @var list<string> */
 	private $posNames = array();
-	private $positional = array();
-	private $named = array();
+	/** @var list<UserValue> */
+	private array $positional = array();
+	/** @var array<string, UserValue> */
+	private array $named = array();
 	public function __construct() {
 		$this->named["username"] = UserValue::asOptional();
 		$this->named["password"] = UserValue::asOptional();

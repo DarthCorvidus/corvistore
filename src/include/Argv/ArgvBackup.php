@@ -5,7 +5,7 @@
  * @author Claus-Christoph Küthe
  */
 class ArgvBackup {
-	private $argv;
+	private Argv $argv;
 	function __construct(array $argv) {
 		$model = new ArgvBackupModel();
 		$this->argv = new Argv($argv, $model);

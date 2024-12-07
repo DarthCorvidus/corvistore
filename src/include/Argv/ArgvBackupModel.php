@@ -5,13 +5,17 @@
  * @author Claus-Christoph Küthe
  */
 class ArgvBackupModel implements ArgvModel {
+	/** @var list<string> */
 	private $posNames = array();
-	private $positional = array();
-	private $named = array();
+	/** @var list<UserValue> */
+	private array $positional = array();
+	/** @var array<string, UserValue> */
+	private array $named = array();
+	/** @var list<string> */
 	private $boolean = array();
 	public function __construct() {
-		$this->positional[0] = UserValue::asMandatory();
-		$this->positional[1] = UserValue::asOptional();
+		$this->positional[] = UserValue::asMandatory();
+		$this->positional[] = UserValue::asOptional();
 		$this->positional[1]->setDefault("/");
 		$this->positional[1]->setConvert(new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE));
 		
