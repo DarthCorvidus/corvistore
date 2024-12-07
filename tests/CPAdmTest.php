@@ -2,21 +2,21 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class CPAdmTest extends TestCase {
-	public function setUp() {
+	public function setUp(): void {
 		TestHelper::createDatabase();
 		TestHelper::createStorage();
 	}
 	
-	public function tearDown() {
+	public function tearDown(): void {
 		TestHelper::deleteDatabase();
 		TestHelper::deleteStorage();
 	}
-	public function testConstruct() {
+	public function testConstruct(): void {
 		$adm = new CPAdm(TestHelper::getEPDO(), array());
 		$this->assertInstanceOf(CPAdm::class, $adm);
 	}
 	
-	public function testGetCommand() {
+	public function testGetCommand(): void {
 		$adm = new CPAdm(TestHelper::getEPDO(), array());
 		$command = $adm->getCommand("define storage backup-main location=".__DIR__."/storage/basic01 type=basic description=\"main backup storage\"");
 		$command->import(new CPModelStorage());
@@ -28,7 +28,7 @@ class CPAdmTest extends TestCase {
 		$this->assertEquals(__DIR__."/storage/basic01", $command->getParam("location"));
 	}
 	
-	public function testHandleCommandUnknown() {
+	public function testHandleCommandUnknown(): void {
 		$adm = new CPAdm(TestHelper::getEPDO(), array());
 		$command = $adm->getCommand("yell at me");
 		$this->expectException(InvalidArgumentException::class);

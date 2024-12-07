@@ -6,25 +6,25 @@ use Net\FileSender;
 use Net\SafeSender;
 class SafeSenderTest extends TestCase {
 	const FILESIZE = 27389;
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		mkdir(__DIR__."/example");
 		file_put_contents(__DIR__."/example/FileReader.bin", random_bytes(self::FILESIZE));
 	}
 	
-	function setUp() {
+	function setUp(): void {
 		if(!file_exists(__DIR__."/example/FileReader.bin")) {
 			file_put_contents(__DIR__."/example/FileReader.bin", random_bytes(self::FILESIZE));
 		}
 	}
 	
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		if(file_exists(__DIR__."/example/FileReader.bin")) {
 			unlink(__DIR__."/example/FileReader.bin");
 		}
 		rmdir(__DIR__."/example");
 	}
 			
-	function testConstruct() {
+	function testConstruct(): void {
 		$expected = random_bytes(self::FILESIZE);
 		$ms = new MockSender($expected);
 		$sender = new SafeSender($ms, 1024);
@@ -33,7 +33,7 @@ class SafeSenderTest extends TestCase {
 		$this->assertEquals(FALSE, $ms->hasStarted());
 	}
 	
-	function testGetSize() {
+	function testGetSize(): void {
 		$expected = random_bytes(self::FILESIZE);
 		$ms = new MockSender($expected);
 		$sender = new SafeSender($ms, 1024);
@@ -43,7 +43,7 @@ class SafeSenderTest extends TestCase {
 		$this->assertEquals(FALSE, $ms->hasStarted());
 	}
 	
-	function testGetShort() {
+	function testGetShort(): void {
 		$expected = "The cat is on the mat.";
 		$ms = new MockSender($expected);
 		$sender = new SafeSender($ms, 1024);
@@ -81,7 +81,7 @@ class SafeSenderTest extends TestCase {
 		$this->assertEquals(TRUE, $ms->hasStarted());
 	}
 
-	function testGetLong() {
+	function testGetLong(): void {
 		$expected = random_bytes(self::FILESIZE);
 		$sender = new SafeSender(new MockSender($expected), 1024);
 		$multiple = \Net\Protocol::ceilBlock(self::FILESIZE, 10);
@@ -97,7 +97,7 @@ class SafeSenderTest extends TestCase {
 		$this->assertEquals(\Net\Protocol::FILE_OK, \Net\Protocol::determineControlBlock(substr($data, $multiple+1024)));
 	}
 	
-	function testExceptionOnStart() {
+	function testExceptionOnStart(): void {
 		$expected = random_bytes(self::FILESIZE);
 		$ms = new MockSender($expected);
 		$ms->setExceptionAfter(0);
@@ -112,7 +112,7 @@ class SafeSenderTest extends TestCase {
 		$this->assertEquals(0, $sender->getSendLeft());
 	}
 
-	function testGetCancel() {
+	function testGetCancel(): void {
 		$expected = random_bytes(self::FILESIZE);
 		$ms = new MockSender($expected);
 		$ms->setExceptionAfter(8192);

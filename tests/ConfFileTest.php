@@ -2,7 +2,7 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class ConfFileTest extends TestCase {
-	function testFromFile() {
+	function testFromFile(): void {
 		$expect["host"] = "backup.example.com";
 		$expect["node"] = "desktop01";
 		$expect["password1"] = "squishthis:!";
@@ -12,7 +12,7 @@ class ConfFileTest extends TestCase {
 		$this->assertEquals($expect, ConfFile::fromFile(__DIR__."/example.conf"));
 	}
 	
-	function testFromString() {
+	function testFromString(): void {
 		$expect["host"] = "backup.example.com";
 		$expect["node"] = "desktop01";
 		$expect["password1"] = "squishthis:!";
@@ -31,7 +31,7 @@ class ConfFileTest extends TestCase {
 		$this->assertEquals($expect, ConfFile::fromString($string));
 	}
 	
-	function testNoColon() {
+	function testNoColon(): void {
 		$string = "host: backup.example.com".PHP_EOL;
 		$string .= "node".PHP_EOL;
 		$string .= "password1: squishthis:!".PHP_EOL;
@@ -46,7 +46,7 @@ class ConfFileTest extends TestCase {
 		ConfFile::fromString($string);
 	}
 
-	function testLonelyList() {
+	function testLonelyList(): void {
 		$string = "host: backup.example.com".PHP_EOL;
 		$string .= "node: desktop01".PHP_EOL;
 		$string .= "password1: squishthis:!".PHP_EOL;

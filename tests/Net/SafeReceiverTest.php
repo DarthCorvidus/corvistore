@@ -4,18 +4,18 @@ use PHPUnit\Framework\TestCase;
 use Net\SafeReceiver;
 class SafeReceiverTest extends TestCase {
 	const FILESIZE = 27389;
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		mkdir(__DIR__."/example");
 		file_put_contents(self::getSource(), random_bytes(self::FILESIZE));
 	}
 	
-	function setUp() {
+	function setUp(): void {
 		if(!file_exists(self::getSource())) {
 			file_put_contents(self::getSource(), random_bytes(self::FILESIZE));
 		}
 	}
 
-	function tearDown() {
+	function tearDown(): void {
 		if(file_exists(self::getTarget())) {
 			unlink(self::getTarget());
 		}
@@ -29,7 +29,7 @@ class SafeReceiverTest extends TestCase {
 		return __DIR__."/example/target.bin";
 	}
 	
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		if(file_exists(self::getSource())) {
 			unlink(self::getSource());
 		}
@@ -39,14 +39,14 @@ class SafeReceiverTest extends TestCase {
 		rmdir(__DIR__."/example");
 	}
 			
-	function testConstruct() {
+	function testConstruct(): void {
 		$receiver = new SafeReceiver(new \Net\StringReceiver(), 1024);
 		$this->assertInstanceOf(SafeReceiver::class, $receiver);
 		$this->assertEquals(2048, $receiver->getRecvSize());
 		$this->assertEquals(2048, $receiver->getRecvLeft());
 	}
 	
-	function testSetSize() {
+	function testSetSize(): void {
 		$sender = new \Net\StringSender(5, "The cat is on the mat.");
 		$receiver = new \Net\StringReceiver();
 		
@@ -62,7 +62,7 @@ class SafeReceiverTest extends TestCase {
 		$this->assertEquals(1024*2, $receiver->getRecvLeft());
 	}
 
-	function testGetSmall() {
+	function testGetSmall(): void {
 		$sender = new \Net\StringSender(5, "The cat is on the mat.");
 		$mr = new \Net\MockReceiver();
 		
@@ -91,7 +91,7 @@ class SafeReceiverTest extends TestCase {
 		$this->assertEquals(FALSE, $mr->wasCancelled());
 	}
 
-	function testOnStart() {
+	function testOnStart(): void {
 		$sender = new \Net\StringSender(5, "The cat is on the mat.");
 		$inner = new \Net\StringReceiver();
 		/*
@@ -115,7 +115,7 @@ class SafeReceiverTest extends TestCase {
 		$this->assertEquals("", $inner->getString());
 	}
 	
-	function testGetLarge() {
+	function testGetLarge(): void {
 		$size = 4192;
 		$ceiled = \Net\Protocol::ceilBlock($size, 10);
 		$blocks = $ceiled/1024;
@@ -147,7 +147,7 @@ class SafeReceiverTest extends TestCase {
 		$this->assertEquals(0, $receiver->getRecvLeft());
 	}
 	
-	function testGetXLarge() {
+	function testGetXLarge(): void {
 		$size = (1024*1024*10)+517;
 		$ceiled = \Net\Protocol::ceilBlock($size, 10);
 		$blocks = $ceiled/1024;
@@ -181,7 +181,7 @@ class SafeReceiverTest extends TestCase {
 		$this->assertEquals(0, $receiver->getRecvLeft());
 	}
 
-	function testGetXLargeCancelOnEnd() {
+	function testGetXLargeCancelOnEnd(): void {
 		$size = (1024*1024*10)+517;
 		$ceiled = \Net\Protocol::ceilBlock($size, 10);
 		$blocks = $ceiled/1024;

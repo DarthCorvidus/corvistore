@@ -2,11 +2,7 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class VersionEntryTest extends TestCase {
-	function __construct() {
-		parent::__construct();
-		$this->now = time();
-	}
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		TestHelper::createDatabase();
 		TestHelper::createStorage();
 		$cpadm = new CPAdm(TestHelper::getEPDO(), array());
@@ -21,12 +17,12 @@ class VersionEntryTest extends TestCase {
 		$mockup->createRandom("/image.bin", 10);
 	}
 	
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		TestHelper::deleteDatabase();
 		TestHelper::deleteStorage();
 	}
 	
-	function testFromArray() {
+	function testFromArray(): void {
 		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
@@ -56,7 +52,7 @@ class VersionEntryTest extends TestCase {
 		$this->assertEquals(12, $entry->getCatalogId());
 	}
 	
-	function testFromId() {
+	function testFromId(): void {
 		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
@@ -74,7 +70,7 @@ class VersionEntryTest extends TestCase {
 		$this->assertInstanceOf(VersionEntry::class, VersionEntry::fromId(TestHelper::getEPDO(), 25));
 	}
 	
-	function testToBinary() {
+	function testToBinary(): void {
 		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
@@ -96,7 +92,7 @@ class VersionEntryTest extends TestCase {
 		$this->assertEquals(chr(248).chr(42).chr(0).chr(0), substr($binary, 8, 4));
 	}
 	
-	function testFromBinary() {
+	function testFromBinary(): void {
 		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
 		$example["dvs_id"] = "25";
@@ -118,7 +114,7 @@ class VersionEntryTest extends TestCase {
 		$this->assertEquals($obj, $new);
 	}
 	
-	function testFromNoValidId() {
+	function testFromNoValidId(): void {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("No version with id '27' found");
 		VersionEntry::fromId(TestHelper::getEPDO(), 27);

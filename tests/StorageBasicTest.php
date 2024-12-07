@@ -2,17 +2,17 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class StorageBasicTest extends TestCase {
-	function setUp() {
+	function setUp(): void {
 		TestHelper::createDatabase();
 		TestHelper::createStorage();
 	}
 	
-	function tearDown() {
+	function tearDown(): void {
 		TestHelper::deleteStorage();
 		TestHelper::deleteDatabase();
 	}
 	
-	function testDefine() {
+	function testDefine(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 		$command = new CommandParser("define storage backup-main02 type=basic location=".__DIR__."/storage/basic02");
@@ -23,14 +23,14 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals($target, $database);
 	}
 
-	function testUnique() {
+	function testUnique(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 		$this->expectException(Exception::class);
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 	}
 	
-	function testFromArray() {
+	function testFromArray(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 
@@ -39,14 +39,14 @@ class StorageBasicTest extends TestCase {
 		$this->assertInstanceOf(StorageBasic::class, $storage);
 	}
 	
-	function testFromName() {
+	function testFromName(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 		$storage = Storage::fromName(TestHelper::getEPDO(), "backup-main01");
 		$this->assertInstanceOf(StorageBasic::class, $storage);
 	}
 	
-	function testFromNameBogus() {
+	function testFromNameBogus(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 		$this->expectException(Exception::class);
@@ -56,7 +56,7 @@ class StorageBasicTest extends TestCase {
 	}
 
 	
-	function testFromId() {
+	function testFromId(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 
@@ -65,7 +65,7 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals("backup-main01", $storage->getName());
 	}
 
-	function testFromIdBogus() {
+	function testFromIdBogus(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Storage with id '37' not available");
 		$storage = Storage::fromId(TestHelper::getEPDO(), 37);
@@ -73,7 +73,7 @@ class StorageBasicTest extends TestCase {
 	
 	
 	
-	function testGetName() {
+	function testGetName(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 
@@ -81,7 +81,7 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals("backup-main01", $storage->getName());
 	}
 	
-	function testGetId() {
+	function testGetId(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 		$command = new CommandParser("define storage backup-main02 type=basic location=".__DIR__."/storage/basic02");
@@ -91,13 +91,13 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals("2", $storage->getId());
 	}
 	
-	function testGetHexArray() {
+	function testGetHexArray(): void {
 		$hex = StorageBasic::getHexArray(37177506666152);
 		$target = array("00", "00", "21", "d0", "10", "14", "16", "a8");
 		$this->assertEquals($target, $hex);
 	}
 	
-	function testGetPathForIdFile() {
+	function testGetPathForIdFile(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 
@@ -107,7 +107,7 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals($target, $storage->getPathForIdFile(37177506666152));
 	}
 
-	function testGetPathForIdLocation() {
+	function testGetPathForIdLocation(): void {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 
@@ -117,7 +117,7 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals($target, $storage->getPathForIdLocation(37177506666152));
 	}
 	
-	function testStore() {
+	function testStore(): void {
 		TestHelper::deleteStorage();
 		TestHelper::initServer();
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
@@ -157,7 +157,7 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals(1, $tableVersion[0]["dvs_stored"]);
 	}
 
-	function testStoreSingle() {
+	function testStoreSingle(): void {
 		TestHelper::deleteStorage();
 		TestHelper::initServer();
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
@@ -190,7 +190,7 @@ class StorageBasicTest extends TestCase {
 		$this->assertEquals(1, $tableContent[0]["dco_stored"]);
 	}
 	
-	#function testRestore() {
+	#function testRestore(): void {
 	#	$node = Node::fromName(TestHelper::getEPDO(), "test01");
 	#	$storage = Storage::fromId(TestHelper::getEPDO(), $node->getPolicy()->getPartition()->getStorageId());
 	#	$storage->restore($entry, $target)

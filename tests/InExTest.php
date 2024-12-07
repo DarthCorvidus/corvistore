@@ -2,12 +2,12 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class InExTest extends TestCase {
-	function testConstruct() {
+	function testConstruct(): void {
 		$inex = new InEx();
 		$this->assertInstanceOf(InEx::class, $inex);
 	}
 	
-	function testExclude() {
+	function testExclude(): void {
 		$inex = new InEx();
 		$inex->addExclude("/var/www");
 		$this->assertEquals(TRUE, $inex->isExcluded("/var/www"));
@@ -18,14 +18,14 @@ class InExTest extends TestCase {
 	/*
 	 * If exclude is empty, all paths are allowed.
 	 */
-	function testExcludeEmpty() {
+	function testExcludeEmpty(): void {
 		$inex = new InEx();
 		$this->assertEquals(FALSE, $inex->isExcluded("/var/www"));
 		$this->assertEquals(FALSE, $inex->isExcluded("/var/www/html"));
 		$this->assertEquals(FALSE, $inex->isExcluded("/home"));
 	}
 	
-	function testInclude() {
+	function testInclude(): void {
 		$inex = new InEx();
 		$inex->addInclude("/var/www");
 		$this->assertEquals(FALSE, $inex->isIncluded("/var/"));
@@ -37,12 +37,12 @@ class InExTest extends TestCase {
 	/*
 	 * If include is empty, all paths are allowed.
 	 */
-	function testIncludeEmpty() {
+	function testIncludeEmpty(): void {
 		$inex = new InEx();
 		$this->assertEquals(TRUE, $inex->isIncluded("/var/log/"));
 	}
 	
-	function testTransitOnly() {
+	function testTransitOnly(): void {
 		$inex = new InEx();
 		$inex->addInclude("/home/user01/Documents/work");
 		$this->assertEquals(TRUE, $inex->transitOnly("/home/"));
@@ -51,7 +51,7 @@ class InExTest extends TestCase {
 		$this->assertEquals(FALSE, $inex->transitOnly("/home/user01/Documents/work/"));
 	}
 	
-	function testValidExcluded() {
+	function testValidExcluded(): void {
 		$inex = new InEx();
 		$inex->addExclude("/var/www");
 		$this->assertEquals(FALSE, $inex->isValid("/var/www"));
@@ -59,7 +59,7 @@ class InExTest extends TestCase {
 		$this->assertEquals(TRUE, $inex->isValid("/home"));
 	}
 	
-	function testValidIncluded() {
+	function testValidIncluded(): void {
 		$inex = new InEx();
 		$inex->addInclude("/var/www");
 		$this->assertEquals(TRUE, $inex->isValid("/var/www/"));

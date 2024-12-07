@@ -10,17 +10,14 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	private $sent = NULL;
 	#const FILESIZE = 93821;
 	const FILESIZE = 1024*11;
-	function __construct() {
-		parent::__construct();
-	}
-	function setUp() {
+	function setUp(): void {
 		$this->lastString = NULL;
 		$this->lastUnserialized = array();
 		$this->lastOK = FALSE;
 		$this->sent = NULL;
 	}
 	
-	function tearDown() {
+	function tearDown(): void {
 		$this->lastString = NULL;
 		$this->lastUnserialized;
 		$this->lastOK = FALSE;
@@ -45,7 +42,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		
 	}
 	
-	static function getSourceName() {
+	static function getSourceName(): string {
 		return __DIR__."/source.bin";
 	}
 
@@ -54,7 +51,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	}
 	
 	
-	static function getTargetName() {
+	static function getTargetName(): string {
 		return __DIR__."/target.bin";
 	}
 	
@@ -62,17 +59,17 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		return array(__DIR__."/target01.bin", __DIR__."/target03.bin", __DIR__."/target02.bin");
 	}
 
-	function testConstruct() {
+	function testConstruct(): void {
 		$protocol = new ProtocolAsync($this);
 		$this->assertInstanceOf(ProtocolAsync::class, $protocol);
 	}
 	
-	function testGetDefaultSize() {
+	function testGetDefaultSize(): void {
 		$protocol = new ProtocolAsync($this);
 		$this->assertEquals(1024, $protocol->getPacketLength());
 	}
 	
-	#function testGetStackSize() {
+	#function testGetStackSize(): void {
 	#	$protocol = new ProtocolAsync($this);
 	#	$string = serialize($_SERVER);
 	#	$steps = (int)ceil(strlen($string)/$protocol->getPacketLength(" ", 0));
@@ -80,7 +77,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	#	$this->assertEquals($steps, $protocol->getStackSize());
 	#}
 	
-	function testOnWriteShortCommand() {
+	function testOnWriteShortCommand(): void {
 		$expected = chr(ProtocolAsync::COMMAND).IntVal::uint32LE()->putValue(4)."quit";
 		$protocol = new ProtocolAsync($this);
 		$protocol->sendCommand("quit");
@@ -90,7 +87,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals($expected, substr($write, 0, 1+4+4));
 	}
 	
-	function testOnReadShortCommand() {
+	function testOnReadShortCommand(): void {
 		$protocol = new ProtocolAsync($this);
 		$expected = "quit";
 		$data = chr(ProtocolAsync::COMMAND);
@@ -102,7 +99,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals(FALSE, $protocol->hasWrite());
 	}
 	
-	function testOnWriteLongMessage() {
+	function testOnWriteLongMessage(): void {
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$expected = serialize($_SERVER);
@@ -117,7 +114,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals($expected, $this->lastString);
 	}
 	
-	function testReceiveMessage() {
+	function testReceiveMessage(): void {
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$expected = serialize($_SERVER);
@@ -132,7 +129,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals($expected, $this->lastString);
 	}
 	
-	function testReceiveSerialized() {
+	function testReceiveSerialized(): void {
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$sender->sendSerialize($_SERVER);
@@ -144,7 +141,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals($_SERVER, $this->lastUnserialized);
 	}
 	
-	function testReceiveStringStressTest() {
+	function testReceiveStringStressTest(): void {
 		for($i=0;$i<2048;$i++) {
 			if($i==0) {
 				$string = "";
@@ -164,7 +161,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		}
 	}
 	
-	function testExpectedMismatch() {
+	function testExpectedMismatch(): void {
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$receiver->expect(ProtocolAsync::MESSAGE);
@@ -177,7 +174,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals($_SERVER, $this->lastUnserialized);
 	}
 	
-	function testSendOk() {
+	function testSendOk(): void {
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$receiver->expect(ProtocolAsync::OK);
@@ -190,7 +187,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
 
-	function testSeveralMessages() {
+	function testSeveralMessages(): void {
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$sender->sendMessage("Hello World!");
@@ -216,7 +213,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	/**
 	 * Test that we can send several messages at once.
 	 */
-	function testSeveralMessagesBuffered() {
+	function testSeveralMessagesBuffered(): void {
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$sender->sendMessage("Hello World!");
@@ -239,7 +236,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals(TRUE, $this->lastOK);
 	}
 	
-	function testReceiveBinaryClass() {
+	function testReceiveBinaryClass(): void {
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$file = File::fromPath(__DIR__."/ProtocolAsyncTest.php");
@@ -253,7 +250,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	}
 
 	/*
-	function testSendSmallFile() {
+	function testSendSmallFile(): void {
 		$payload = random_bytes(16);
 		$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
 
@@ -269,7 +266,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals(FALSE, $sender->hasWrite());
 	}
 	
-	function testSendBlockSizedFile() {
+	function testSendBlockSizedFile(): void {
 		$payload = random_bytes(1024);
 		$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
 		
@@ -293,7 +290,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertEquals(FALSE, $sender->hasWrite());
 	}
 	
-	function testSendLargerFile() {
+	function testSendLargerFile(): void {
 		$payload = random_bytes(self::FILESIZE);
 		$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
 
@@ -330,7 +327,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	 * are prone to be found around the packet size equivalents.
 	 */
 	/*
-	function testSendStressTest() {
+	function testSendStressTest(): void {
 		for($i=0;$i<2048;$i++) {
 			$data = "";
 			if($i==0) {
@@ -369,7 +366,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		}
 	}
 	*/
-	function testReceiveSmallFile() {
+	function testReceiveSmallFile(): void {
 		$payload = random_bytes(16);
 		file_put_contents(self::getSourceName(), $payload);
 		$file = File::fromPath(self::getSourceName());
@@ -381,7 +378,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertFileExists(self::getTargetName());
 	}
 
-	function testReceiveBlockSizedFile() {
+	function testReceiveBlockSizedFile(): void {
 		$payload = random_bytes(1024);
 		file_put_contents(self::getSourceName(), $payload);
 		$file = File::fromPath(self::getSourceName());
@@ -402,7 +399,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	 * Test at fails 2031 bytes, but it seems like the sending side is buggy. It
 	 * works if ProtocolSync is sending.
 	 */
-	function testReceiveFileStressTest() {
+	function testReceiveFileStressTest(): void {
 		for($i=1;$i<=2048;$i++) {
 			$payload = random_bytes($i);
 			file_put_contents(self::getSourceName(), $payload);
@@ -424,7 +421,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	}
 
 
-	function testReceiveFileStressTestString() {
+	function testReceiveFileStressTestString(): void {
 		for($i=1;$i<=2048;$i++) {
 			$payload = random_bytes($i);
 			$ss = new Net\StringSender(\Net\Protocol::FILE, $payload);
@@ -449,7 +446,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	}
 	
 	
-	function testReceiveLargerFile() {
+	function testReceiveLargerFile(): void {
 		$payload = random_bytes(self::FILESIZE);
 		file_put_contents(self::getSourceName(), $payload);
 		$file = File::fromPath(self::getSourceName());
@@ -467,7 +464,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertFileEquals(self::getSourceName(), self::getTargetName());
 	}
 
-	function testReceiveMultipleFileOneByOne() {
+	function testReceiveMultipleFileOneByOne(): void {
 		$payload = random_bytes(self::FILESIZE);
 		file_put_contents(self::getSourceName(), $payload);
 		$file = File::fromPath(self::getSourceName());
@@ -498,13 +495,13 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertFileEquals(self::getSourceName(), self::getTargetName());
 	}
 
-	function testOnSentFalse() {
+	function testOnSentFalse(): void {
 		$sender = new ProtocolAsync($this);
 		$sender->sendMessage("do not send", $this);
 		$this->assertEquals(FALSE, $this->sent);
 	}
 
-	function testOnSentTrue() {
+	function testOnSentTrue(): void {
 		$sender = new ProtocolAsync($this);
 		$sender->sendMessage("do not send", $this);
 		$sender->onWrite();

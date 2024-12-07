@@ -4,18 +4,18 @@ use PHPUnit\Framework\TestCase;
 use Net\FileReceiver;
 class FileReceiverTest extends TestCase {
 	const FILESIZE = 27389;
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		mkdir(__DIR__."/example");
 		file_put_contents(self::getSource(), random_bytes(self::FILESIZE));
 	}
 	
-	function setUp() {
+	function setUp(): void {
 		if(!file_exists(self::getSource())) {
 			file_put_contents(self::getSource(), random_bytes(self::FILESIZE));
 		}
 	}
 
-	function tearDown() {
+	function tearDown(): void {
 		if(file_exists(self::getTarget())) {
 			unlink(self::getTarget());
 		}
@@ -29,7 +29,7 @@ class FileReceiverTest extends TestCase {
 		return __DIR__."/example/target.bin";
 	}
 	
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		if(file_exists(self::getSource())) {
 			unlink(self::getSource());
 		}
@@ -39,12 +39,12 @@ class FileReceiverTest extends TestCase {
 		rmdir(__DIR__."/example");
 	}
 			
-	function testConstruct() {
+	function testConstruct(): void {
 		$receiver = new FileReceiver(self::getTarget());
 		$this->assertInstanceOf(FileReceiver::class, $receiver);
 	}
 	
-	function testReceiveLeft() {
+	function testReceiveLeft(): void {
 		$data = file_get_contents(self::getSource());
 		$receiver = new FileReceiver(self::getTarget());
 		$receiver->setRecvSize(filesize(self::getSource()));
@@ -55,7 +55,7 @@ class FileReceiverTest extends TestCase {
 		
 	}
 	
-	function testReceiveFile() {
+	function testReceiveFile(): void {
 		$source = file_get_contents(self::getSource());
 		$receiver = new FileReceiver(self::getTarget());
 		$receiver->setRecvSize(filesize(self::getSource()));
@@ -76,7 +76,7 @@ class FileReceiverTest extends TestCase {
 		$this->assertEquals($source, $target);
 	}
 	
-	function testWriteInvalid() {
+	function testWriteInvalid(): void {
 		$source = file_get_contents(self::getSource());
 		$receiver = new FileReceiver(self::getTarget());
 		$receiver->setRecvSize(filesize(self::getSource()));
@@ -86,14 +86,14 @@ class FileReceiverTest extends TestCase {
 		$receiver->onRecvEnd();
 	}
 	
-	function testNoReplace() {
+	function testNoReplace(): void {
 		file_put_contents(self::getTarget(), "Test");
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage("file ".self::getTarget()." already exists.");
 		$receiver = new FileReceiver(self::getTarget());
 	}
 	
-	function testNoTarget() {
+	function testNoTarget(): void {
 		file_put_contents(self::getTarget(), "Test");
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage("target directory ".__DIR__."/example02 does not exist.");

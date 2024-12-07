@@ -3,13 +3,13 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class ProtocolSyncTest extends TestCase {
 	const FILE_SIZE = 17201;
-	function testConstruct() {
+	function testConstruct(): void {
 		$stream = new StreamFake("");
 		$protocol = new \Net\ProtocolSync($stream);
 		$this->assertInstanceOf(\Net\ProtocolSync::class, $protocol);
 	}
 	
-	function tearDown() {
+	function tearDown(): void {
 		if(file_exists(self::getExamplePath())) {
 			unlink(self::getExamplePath());
 		}
@@ -19,7 +19,7 @@ class ProtocolSyncTest extends TestCase {
 		return __DIR__."/example.bin";
 	}
 	
-	function testSendCommand() {
+	function testSendCommand(): void {
 		$stream = new StreamFake("");
 		$protocol = new \Net\ProtocolSync($stream);
 		$protocol->sendCommand("HELLO WORLD");
@@ -31,7 +31,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals("HELLO WORLD", substr($data, 5, 11));
 	}
 	
-	function testSendLongMessage() {
+	function testSendLongMessage(): void {
 		$array = array();
 		for($i=0;$i<1024;$i++) {
 			$array[] = "Cat # ".$i;
@@ -51,7 +51,7 @@ class ProtocolSyncTest extends TestCase {
 	}
 	
 	/*
-	function testSendStreamSmall() {
+	function testSendStreamSmall(): void {
 		file_put_contents(self::getExamplePath(), "Hello World!");
 		$file = File::fromPath(self::getExamplePath());
 		
@@ -73,7 +73,7 @@ class ProtocolSyncTest extends TestCase {
 	 * payload is 1015 bytes long.
 	 */
 	/*
-	function testSendBlockMinusHeader() {
+	function testSendBlockMinusHeader(): void {
 		$expected = random_bytes(1024-9);
 		file_put_contents(self::getExamplePath(), $expected);
 		$file = File::fromPath(self::getExamplePath());
@@ -97,7 +97,7 @@ class ProtocolSyncTest extends TestCase {
 	 * bytes, 2048 bytes need to be transferred.
 	 */
 	/*
-	function testSendBlockSized() {
+	function testSendBlockSized(): void {
 		$expected = random_bytes(1024);
 		file_put_contents(self::getExamplePath(), $expected);
 		$file = File::fromPath(self::getExamplePath());
@@ -116,7 +116,7 @@ class ProtocolSyncTest extends TestCase {
 	}
 	*/
 	/*
-	function testSendLarge() {
+	function testSendLarge(): void {
 		$expected = random_bytes(self::FILE_SIZE);
 		file_put_contents(self::getExamplePath(), $expected);
 		$file = File::fromPath(self::getExamplePath());
@@ -137,7 +137,7 @@ class ProtocolSyncTest extends TestCase {
 	}
 	*/
 	
-	function testGetCommand() {
+	function testGetCommand(): void {
 		$payload = "HELLO WORLD";
 		$data = chr(\Net\ProtocolSync::COMMAND);
 		$data .= \IntVal::uint32LE()->putValue(strlen($payload));
@@ -150,7 +150,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals($payload, $command);
 	}
 	
-	function testGetMessage() {
+	function testGetMessage(): void {
 		$array = array();
 		for($i=0;$i<1024;$i++) {
 			$array[] = "Cat # ".$i;
@@ -165,7 +165,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals($serializedCats, $protocol->getMessage());
 	}
 	
-	function testGetSerialized() {
+	function testGetSerialized(): void {
 		$array = array();
 		for($i=0;$i<1024;$i++) {
 			$array[] = "Cat # ".$i;
@@ -180,7 +180,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals($array, $protocol->getSerialized());
 	}
 	
-	function testProtocolMismatch() {
+	function testProtocolMismatch(): void {
 		$array = array();
 		for($i=0;$i<1024;$i++) {
 			$array[] = "Cat # ".$i;
@@ -197,7 +197,7 @@ class ProtocolSyncTest extends TestCase {
 	}
 	
 	/*
-	function testGetFile() {
+	function testGetFile(): void {
 		$payload = "Hello world!";
 		$header = chr(\Net\Protocol::FILE);
 		$header .= \IntVal::uint64LE()->putValue(strlen($payload));
@@ -210,7 +210,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals($payload, $sr->getString());
 	}
 	*/
-	function testGetFileStressTest() {
+	function testGetFileStressTest(): void {
 		for($i=0;$i<=2048;$i++) {
 			if($i==0) {
 				$payload = "";
@@ -237,7 +237,7 @@ class ProtocolSyncTest extends TestCase {
 		}
 	}
 	
-	function testSendGetOk() {
+	function testSendGetOk(): void {
 		$sf = new \StreamFake("");
 		$send = new \Net\ProtocolSync($sf);
 		$receive = new \Net\ProtocolSync($sf);
@@ -246,7 +246,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals(TRUE, $sf->eof());
 	}
 	
-	function testSendGetMessage() {
+	function testSendGetMessage(): void {
 		$expected = "The cat is on the mat.";
 		$sf = new \StreamFake("");
 		$send = new \Net\ProtocolSync($sf);
@@ -257,7 +257,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals(TRUE, $sf->eof());
 	}
 
-	function testSendGetCommand() {
+	function testSendGetCommand(): void {
 		$expected = "QUIT";
 		$sf = new \StreamFake("");
 		$send = new \Net\ProtocolSync($sf);
@@ -268,7 +268,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals(TRUE, $sf->eof());
 	}
 
-	function testSendGetSerialized() {
+	function testSendGetSerialized(): void {
 		$expected = $_SERVER;
 		$sf = new \StreamFake("");
 		$send = new \Net\ProtocolSync($sf);
@@ -279,7 +279,7 @@ class ProtocolSyncTest extends TestCase {
 		$this->assertEquals(TRUE, $sf->eof());
 	}
 
-	function testSendGetStream() {
+	function testSendGetStream(): void {
 		#$expected = random_bytes(self::FILE_SIZE);
 		$expected = "The cat is on the mat.";
 		$sf = new \StreamFake("");

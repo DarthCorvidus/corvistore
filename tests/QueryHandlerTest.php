@@ -3,21 +3,17 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 
 class QueryHandlerTest extends TestCase {
-	function __construct() {
-		parent::__construct();
-	}
-
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		TestHelper::createDatabase();
 		TestHelper::createStorage();
 	}
 
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		TestHelper::deleteDatabase();
 		TestHelper::deleteStorage();
 	}
 	
-	function testInvalidQuery() {
+	function testInvalidQuery(): void {
 		$queryCommand = new CommandParser("query cake type=cheesecake diameter=28cm");
 		$query = new QueryHandler(TestHelper::getEPDO(), $queryCommand);
 		$this->expectException(Exception::class);
@@ -25,7 +21,7 @@ class QueryHandlerTest extends TestCase {
 		$query->getResult();
 	}
 	/*
-	function testQueryStorage() {
+	function testQueryStorage(): void {
 		$command01 = new CommandParser("define storage storage01 type=basic location=".__DIR__."/storage/basic01/");
 		StorageBasic::define(TestHelper::getEPDO(), $command01);
 		$command02 = new CommandParser("define storage storage02 type=basic location=".__DIR__."/storage/basic02/");
@@ -42,7 +38,7 @@ class QueryHandlerTest extends TestCase {
 		$this->assertEquals($expect, $query->getResult());
 	}
 	
-	function testQueryPartition() {
+	function testQueryPartition(): void {
 		$command01 = new CommandParser("define partition primary storage=storage01 type=common");
 		$command02 = new CommandParser("define partition secondary storage=storage02 type=common");
 		Partition::define(TestHelper::getEPDO(), $command01);

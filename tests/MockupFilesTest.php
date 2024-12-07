@@ -5,100 +5,100 @@ class MockupFilesTest extends TestCase {
 	function __construct() {
 		parent::__construct();
 	}
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		if(file_exists("/tmp/crow-protect")) {
 			exec("rm /tmp/crow-protect/ -r");
 		}
 	}
 	
-	function setUp() {
+	function setUp(): void {
 		if(file_exists("/tmp/crow-protect")) {
 			exec("rm /tmp/crow-protect/ -r");
 		}
 	}
 	
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		if(file_exists("/tmp/crow-protect")) {
 			exec("rm /tmp/crow-protect/ -r");
 		}
 	}
 
-	function testConstruct() {
+	function testConstruct(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$this->assertFileExists("/tmp/crow-protect");
 	}
 	
-	function testConstructExisting() {
+	function testConstructExisting(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$this->assertFileExists("/tmp/crow-protect");
 	}
 	
-	function testGetInternalPath() {
+	function testGetInternalPath(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$path = TestHelper::invoke($mockup, "getInternalPath", array("/vacation/2023_thailand/beach.jpg"));
 		$this->assertEquals("/tmp/crow-protect/vacation/2023_thailand/beach.jpg", $path);
 	}
 	
-	function testDelete() {
+	function testDelete(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->delete();
 		$this->assertEquals(FALSE, file_exists("/tmp/crow-protect"));
 	}
 
-	function testCreateDir() {
+	function testCreateDir(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createDir("/Pictures/2023/vacation-thailand/");
 		$this->assertFileExists("/tmp/crow-protect/Pictures/2023/vacation-thailand");
 	}
 	
-	function testCreateText() {
+	function testCreateText(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createText("/test.txt", "Hello World!");
 		$this->assertFileExists("/tmp/crow-protect/test.txt");
 	}
 	
-	function testDeepCreateText() {
+	function testDeepCreateText(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createText("/Documents/test.txt", "Hello World!");
 		$this->assertFileExists("/tmp/crow-protect/Documents/test.txt");
 	}
 
-	function testDeepCreateTextReturnPath() {
+	function testDeepCreateTextReturnPath(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$dir = $mockup->createText("/Documents/test.txt", "Hello World!");
 		$this->assertFileExists("/tmp/crow-protect/Documents/test.txt");
 		$this->assertEquals($dir, "/tmp/crow-protect/Documents/test.txt");
 	}
 	
-	function testCreateRandom() {
+	function testCreateRandom(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createRandom("/random.bin", 1024*10);
 		$this->assertFileExists("/tmp/crow-protect/random.bin");
 		$this->assertEquals(1024*1024*10, filesize("/tmp/crow-protect/random.bin"));
 	}
 
-	function testCreateRandomTiny() {
+	function testCreateRandomTiny(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createRandom("/random.bin", 15, 1);
 		$this->assertFileExists("/tmp/crow-protect/random.bin");
 		$this->assertEquals(15, filesize("/tmp/crow-protect/random.bin"));
 	}
 	
-	function testDeepCreatePath() {
+	function testDeepCreatePath(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$dir = $mockup->createRandom("/images/vacation/random.bin", 1024*10);
 		$this->assertFileExists("/tmp/crow-protect/images/vacation/random.bin");
 		$this->assertEquals($dir, "/tmp/crow-protect/images/vacation/random.bin");
 	}
 
-	function testDeepCreateRandom() {
+	function testDeepCreateRandom(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createRandom("/images/vacation/random.bin", 1024*10);
 		$this->assertFileExists("/tmp/crow-protect/images/vacation/random.bin");
 		$this->assertEquals(1024*1024*10, filesize("/tmp/crow-protect/images/vacation/random.bin"));
 	}
 	
-	function testClear() {
+	function testClear(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createRandom("/images/vacation/random01.bin", 1024*10);
 		$mockup->createRandom("/images/vacation/random02.bin", 1024*10);
@@ -108,14 +108,14 @@ class MockupFilesTest extends TestCase {
 		$this->assertEquals(FALSE, file_exists("/tmp/crow-protect/images/vacation/random.bin"));
 	}
 	
-	function testDeleteFile() {
+	function testDeleteFile(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createRandom("/images/vacation/random01.bin", 1024*10);
 		$mockup->deleteFile("/images/vacation/random01.bin");
 		$this->assertEquals(FALSE, file_exists("/tmp/crow-protect/images/vacation/random01.bin"));
 	}
 	
-	function testDeleteRecreate() {
+	function testDeleteRecreate(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createRandom("/images/vacation/random01.bin", 1024*10);
 		$oldStat = stat("/tmp/crow-protect/images/vacation/random01.bin");
@@ -127,7 +127,7 @@ class MockupFilesTest extends TestCase {
 		$this->assertNotEquals($oldStat, $newStat);
 	}
 	
-	function testCreateLink() {
+	function testCreateLink(): void {
 		$mockup = new MockupFiles("/tmp/crow-protect");
 		$mockup->createRandom("/images/vacation/random01.bin", 1024*10);
 		$mockup->createLink("/images/vacation/random01.bin", "/linkto");

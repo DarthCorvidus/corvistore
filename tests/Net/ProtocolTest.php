@@ -6,7 +6,7 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 	const FILE_SIZE = 17201;
 	private $lastString;
 	private $lastSerialized;
-	function tearDown() {
+	function tearDown(): void {
 		if(file_exists(self::getExamplePath())) {
 			unlink(self::getExamplePath());
 		}
@@ -18,32 +18,32 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		return __DIR__."/example.bin";
 	}
 	
-	function testPadRandom() {
+	function testPadRandom(): void {
 		$expected = "The cat is on the mat";
 		$block = Protocol::padRandom($expected, 4096);
 		$this->assertEquals(4096, strlen($block));
 		$this->assertEquals($expected, substr($block, 0, 21));
 	}
 	
-	function testPadRandomEqual() {
+	function testPadRandomEqual(): void {
 		$expected = "The cat is on the mat";
 		$block = Protocol::padRandom($expected, 21);
 		$this->assertEquals($expected, $block);
 	}
 
-	function testPadRandomLonger() {
+	function testPadRandomLonger(): void {
 		$expected = "The cat is on the mat";
 		$this->expectException(\InvalidArgumentException::class);
 		Protocol::padRandom($expected, 20);
 	}
 
-	function testPadRandomNegative() {
+	function testPadRandomNegative(): void {
 		$expected = "The cat is on the mat";
 		$this->expectException(\InvalidArgumentException::class);
 		Protocol::padRandom($expected, -4096);
 	}
 	
-	function testCeilBlock() {
+	function testCeilBlock(): void {
 		$this->assertEquals(0, Protocol::ceilBlock(0, 10));
 		$this->assertEquals(1024, Protocol::ceilBlock(1, 10));
 		$this->assertEquals(1024, Protocol::ceilBlock(1023, 10));
@@ -54,7 +54,7 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->assertEquals(4096, Protocol::ceilBlock(3073, 10));
 	}
 	
-	function testGetControlBlock() {
+	function testGetControlBlock(): void {
 		for($i=0;$i<=255;$i++) {
 			$block = Protocol::getControlBlock($i, 1024);
 			$this->assertEquals(1024, strlen($block));
@@ -63,21 +63,21 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		}
 	}
 	
-	function testDetermineControlBlock() {
+	function testDetermineControlBlock(): void {
 		for($i=0;$i<=255;$i++) {
 			$block = Protocol::getControlBlock($i, 1024);
 			$this->assertEquals($i, Protocol::determineControlBlock($block));
 		}
 	}
 	
-	function testMalformedControlBlock() {
+	function testMalformedControlBlock(): void {
 		$block = "The cat is on the mat.";
 		$this->expectException(\RuntimeException::class);
 		$this->expectExceptionMessage("malformed control block, 84 does not equal 46");
 		Protocol::determineControlBlock($block);
 	}
 	
-	function testAsyncSyncSendString() {
+	function testAsyncSyncSendString(): void {
 		$sf = new StreamFake("");
 		$async = new Net\ProtocolAsync($this);
 		$sync = new Net\ProtocolSync($sf);
@@ -91,7 +91,7 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->assertEquals("quit", $command);
 	}
 
-	function testSyncAsyncSendString() {
+	function testSyncAsyncSendString(): void {
 		$sf = new StreamFake("");
 		$async = new Net\ProtocolAsync($this);
 		$sync = new Net\ProtocolSync($sf);
@@ -103,7 +103,7 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->assertEquals("quit", $this->lastString);
 	}
 
-	function testAsyncSyncSendSerialized() {
+	function testAsyncSyncSendSerialized(): void {
 		$expected = $_SERVER;
 		$sf = new StreamFake("");
 		$async = new Net\ProtocolAsync($this);
@@ -118,7 +118,7 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->assertEquals($expected, $unserialized);
 	}
 
-	function testSyncAsyncSendSerialized() {
+	function testSyncAsyncSendSerialized(): void {
 		$expected = $_SERVER;
 		$sf = new StreamFake("");
 		$async = new Net\ProtocolAsync($this);
@@ -131,7 +131,7 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->assertEquals($expected, $this->lastSerialized);
 	}
 	
-	function testAsyncSyncSendStream() {
+	function testAsyncSyncSendStream(): void {
 		$expected = random_bytes(self::FILE_SIZE);
 		#$expected = "The cat is on the mat.";
 		$sf = new StreamFake("");
@@ -155,7 +155,7 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 		$this->assertEquals(self::FILE_SIZE, strlen($sr->getString()));
 	}
 
-	function testSyncAsyncSendStream() {
+	function testSyncAsyncSendStream(): void {
 		$expected = random_bytes(self::FILE_SIZE);
 		$sf = new StreamFake("");
 		$mr = new \Net\MockReceiver();

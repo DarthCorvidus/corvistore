@@ -2,21 +2,17 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class PartitionTest extends TestCase {
-	function __construct() {
-		parent::__construct();
-	}
-	
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		TestHelper::createDatabase();
 		TestHelper::createStorage();
 	}
 
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		TestHelper::deleteDatabase();
 		TestHelper::deleteStorage();
 	}
 	
-	function testDefine() {
+	function testDefine(): void {
 		$command = new CommandParser("define storage primary type=basic location=".__DIR__."/storage/basic01/");
 		Storage::define(TestHelper::getEPDO(), $command);
 
@@ -35,19 +31,19 @@ class PartitionTest extends TestCase {
 		$this->assertEquals($target, TestHelper::dumpTable(TestHelper::getEPDO(), "d_partition", "dpt_id"));
 	}
 	
-	function testDefineUnique() {
+	function testDefineUnique(): void {
 		$command = new CommandParser("define partition backup-primary storage=primary type=common");
 		$this->expectException(Exception::class);
 		Partition::define(TestHelper::getEPDO(), $command);
 	}
 	
-	function testFromArray() {
+	function testFromArray(): void {
 		$array = TestHelper::getEPDO()->row("select * from d_partition where dpt_id = ?", array(1));
 		$partition = Partition::fromArray(TestHelper::getEPDO(), $array);
 		$this->assertInstanceOf(Partition::class, $partition);
 	}
 	
-	function testFromName() {
+	function testFromName(): void {
 		$partition = Partition::fromName(TestHelper::getEPDO(), "backup-primary");
 		$this->assertInstanceOf(Partition::class, $partition);
 		$this->assertEquals("backup-primary", $partition->getName());
@@ -55,13 +51,13 @@ class PartitionTest extends TestCase {
 		$this->assertEquals("common", $partition->getType());
 	}
 	
-	function testFromNameBogus() {
+	function testFromNameBogus(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Partition 'squid' does not exist.");
 		$partition = Partition::fromName(TestHelper::getEPDO(), "squid");
 	}
 	
-	function testFromId() {
+	function testFromId(): void {
 		$partition = Partition::fromId(TestHelper::getEPDO(), 2);
 		$this->assertInstanceOf(Partition::class, $partition);
 		$this->assertEquals("backup-primary", $partition->getName());
@@ -69,7 +65,7 @@ class PartitionTest extends TestCase {
 		$this->assertEquals("common", $partition->getType());
 	}
 	
-	function testFromIdBogus() {
+	function testFromIdBogus(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Partition with id '25' does not exist.");
 		$partition = Partition::fromId(TestHelper::getEPDO(), 25);

@@ -2,21 +2,17 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class NodeTest extends TestCase {
-	function __construct() {
-		parent::__construct();
-	}
-
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		TestHelper::createDatabase();
 		TestHelper::createStorage();
 	}
 
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		TestHelper::deleteDatabase();
 		TestHelper::deleteStorage();
 	}
 	
-	function testDefine() {
+	function testDefine(): void {
 		$cpadmin = new CPAdm(TestHelper::getEPDO(), array());
 		$cpadmin->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/../storage/basic01"));
 		$cpadmin->handleCommand(new CommandParser("define partition backup-main type=common storage=basic01"));
@@ -31,13 +27,13 @@ class NodeTest extends TestCase {
 		$this->assertEquals($target, TestHelper::dumpTable(TestHelper::getEPDO(), "d_node", "dnd_id"));
 	}
 	
-	function testDefineUnique() {
+	function testDefineUnique(): void {
 		// This should be nicer, ie throw its own exception.
 		$this->expectException(PDOException::class);
 		Node::define(TestHelper::getEPDO(), new CommandParser("define node test01 policy=forever password=secret"));
 	}
 	
-	function testFromArray() {
+	function testFromArray(): void {
 		$row = TestHelper::getEPDO()->row("select * from d_node where dnd_id = ?", array(3));
 		$node = Node::fromArray(TestHelper::getEPDO(), $row);
 		$this->assertEquals(3, $node->getId());
@@ -47,7 +43,7 @@ class NodeTest extends TestCase {
 		
 	}
 	
-	function testFromName() {
+	function testFromName(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test03");
 		$this->assertEquals(3, $node->getId());
 		$this->assertEquals("test03", $node->getName());
@@ -55,13 +51,13 @@ class NodeTest extends TestCase {
 		$this->assertEquals(2, $node->getPolicy()->getId());
 	}
 	
-	function testFromNameBogus() {
+	function testFromNameBogus(): void {
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("Node 'squid' does not exist.");
 		Node::fromName(TestHelper::getEPDO(), "squid");
 	}
 	
-	function testFromId() {
+	function testFromId(): void {
 		$node = Node::fromId(TestHelper::getEPDO(), 3);
 		$this->assertEquals(3, $node->getId());
 		$this->assertEquals("test03", $node->getName());
@@ -69,32 +65,32 @@ class NodeTest extends TestCase {
 		$this->assertEquals(2, $node->getPolicy()->getId());
 	}
 	
-	function testFromIdBogus() {
+	function testFromIdBogus(): void {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("Node with id '27' does not exist.");
 		Node::fromId(TestHelper::getEPDO(), 27);
 
 	}
 	
-	function testUpdatePassword() {
+	function testUpdatePassword(): void {
 		Node::update(TestHelper::getEPDO(), new CommandParser("update node test01 password=secure123"));
 		$db = TestHelper::getEPDO()->row("select * from d_node where dnd_name = ?", array("test01"));
 		$hash = sha1("secure123".$db["dnd_salt"]);
 		$this->assertEquals($hash, $db["dnd_password"]);
 	}
 	
-	function testAuthenticateSuccess() {
+	function testAuthenticateSuccess(): void {
 		$node = Node::authenticate(TestHelper::getEPDO(), "test01:secure123");
 		$this->assertInstanceOf(Node::class, $node);
 	}
 
-	function testAuthenticateNoPass() {
+	function testAuthenticateNoPass(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Unable to read password for node test01");
 		$node = Node::authenticate(TestHelper::getEPDO(), "test01");
 	}
 
-	function testAuthenticateWrongPass() {
+	function testAuthenticateWrongPass(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Unable to authenticate");
 		$node = Node::authenticate(TestHelper::getEPDO(), "test01:letmein");

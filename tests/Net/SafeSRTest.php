@@ -9,18 +9,18 @@ use Net\MockSender;
 use Net\MockReceiver;
 class SafeSRTest extends TestCase {
 	const FILESIZE = 27389;
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		mkdir(__DIR__."/example");
 		file_put_contents(self::getSource(), random_bytes(self::FILESIZE));
 	}
 	
-	function setUp() {
+	function setUp(): void {
 		if(!file_exists(self::getSource())) {
 			file_put_contents(self::getSource(), random_bytes(self::FILESIZE));
 		}
 	}
 
-	function tearDown() {
+	function tearDown(): void {
 		if(file_exists(self::getTarget())) {
 			unlink(self::getTarget());
 		}
@@ -34,7 +34,7 @@ class SafeSRTest extends TestCase {
 		return __DIR__."/example/target.bin";
 	}
 	
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		if(file_exists(self::getSource())) {
 			unlink(self::getSource());
 		}
@@ -44,7 +44,7 @@ class SafeSRTest extends TestCase {
 		rmdir(__DIR__."/example");
 	}
 
-	function testSendReceiveSmall() {
+	function testSendReceiveSmall(): void {
 		$payload = "The cat is on the mat.";
 		$sender = new SafeSender(new StringSender(5, $payload), 1024);
 		$sr = new StringReceiver();
@@ -56,7 +56,7 @@ class SafeSRTest extends TestCase {
 		$this->assertEquals($payload, $sr->getString());
 	}
 	
-	function testSendReceiveBlock() {
+	function testSendReceiveBlock(): void {
 		$payload = random_bytes(1024);
 		$sender = new SafeSender(new StringSender(5, $payload), 1024);
 		$sr = new StringReceiver();
@@ -68,7 +68,7 @@ class SafeSRTest extends TestCase {
 		$this->assertEquals($payload, $sr->getString());
 	}
 
-	function testSendReceiveLarger() {
+	function testSendReceiveLarger(): void {
 		$payload = random_bytes(4199);
 		$sender = new SafeSender(new StringSender(5, $payload), 1024);
 		$sr = new StringReceiver();
@@ -80,7 +80,7 @@ class SafeSRTest extends TestCase {
 		$this->assertEquals($payload, $sr->getString());
 	}
 
-	function testSendReceiveXLarge() {
+	function testSendReceiveXLarge(): void {
 		$payload = random_bytes((12*1024*1024)+312);
 		$sender = new SafeSender(new StringSender(5, $payload), 1024);
 		$sr = new StringReceiver();
@@ -92,7 +92,7 @@ class SafeSRTest extends TestCase {
 		$this->assertEquals($payload, $sr->getString());
 	}
 
-	function testCancelOnStart() {
+	function testCancelOnStart(): void {
 		$payload = random_bytes((12*1024*1024)+312);
 		$ms = new MockSender($payload);
 		$ms->setExceptionAfter(0);
@@ -107,7 +107,7 @@ class SafeSRTest extends TestCase {
 		$this->assertEquals(TRUE, $mr->wasCancelled());
 	}
 	
-	function testCancelOnEnd() {
+	function testCancelOnEnd(): void {
 		$payload = random_bytes((12*1024*1024)+312);
 		$ms = new MockSender($payload);
 		$ms->setExceptionAfter(8192);

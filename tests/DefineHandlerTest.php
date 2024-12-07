@@ -6,17 +6,17 @@ class DefineHandlerTest extends TestCase {
 		parent::__construct();
 	}
 	
-	function setUp() {
+	function setUp(): void {
 		TestHelper::createDatabase();
 		TestHelper::createStorage();
 	}
 	
-	function tearDown() {
+	function tearDown(): void {
 		TestHelper::deleteStorage();
 		TestHelper::deleteDatabase();
 	}
 
-	function testInvalidDefine() {
+	function testInvalidDefine(): void {
 		$defineCommand = new CommandParser("define cake type=cheesecake diameter=28cm");
 		$handler = new DefineHandler(TestHelper::getEPDO(), $defineCommand);
 		$this->expectException(Exception::class);
@@ -24,7 +24,7 @@ class DefineHandlerTest extends TestCase {
 		$handler->run();
 	}
 	
-	function testDefineStorage() {
+	function testDefineStorage(): void {
 		$command = new CommandParser("define storage backup-main type=basic location=".__DIR__."/storage/basic01/");
 		$query = new DefineHandler(TestHelper::getEPDO(), $command);
 		$query->run();
@@ -33,7 +33,7 @@ class DefineHandlerTest extends TestCase {
 		$this->assertEquals($target, $database);
 	}
 	
-	function testDefinePartition() {
+	function testDefinePartition(): void {
 		$command = new CommandParser("define storage backup-main type=basic location=".__DIR__."/storage/basic01/");
 		$query = new DefineHandler(TestHelper::getEPDO(), $command);
 		$query->run();
@@ -47,7 +47,7 @@ class DefineHandlerTest extends TestCase {
 		$this->assertEquals($target, $database);
 	}
 	
-	function testDefinePolicy() {
+	function testDefinePolicy(): void {
 		$command = new CommandParser("define storage backup-main type=basic location=".__DIR__."/storage/basic01/");
 		$query = new DefineHandler(TestHelper::getEPDO(), $command);
 		$query->run();
@@ -62,7 +62,7 @@ class DefineHandlerTest extends TestCase {
 		$this->assertEquals($target, TestHelper::dumpTable(TestHelper::getEPDO(), "d_policy", "dpo_id"));
 	}
 	
-	function testDefineNode() {
+	function testDefineNode(): void {
 		$command = new CommandParser("define storage backup-main type=basic location=".__DIR__."/storage/basic01/");
 		$query = new DefineHandler(TestHelper::getEPDO(), $command);
 		$query->run();

@@ -5,19 +5,19 @@ use \plibv4\Binary\StringWriter;
 use \plibv4\Binary\StringReader;
 class FileGroupTest extends TestCase {
 	private array $sizes = [163107, 428421, 193744, 881860, 764330, 739675, 492817, 734690, 516814, 576884];
-	public function setUp() {
+	public function setUp(): void {
 		$mf = new MockupFiles("/tmp/corviprotect");
 		foreach($this->sizes as $key => $size) {
 			$mf->createRandom("file".$key.".bin", $size, 1);
 		}
 	}
 	
-	public function tearDown() {
+	public function tearDown(): void {
 		$mf = new MockupFiles("/tmp/corviprotect");
 		$mf->clear();
 	}
 	
-	public function testGetFileCount() {
+	public function testGetFileCount(): void {
 		$fg = new FileGroup();
 		foreach(glob("/tmp/corviprotect/file*.bin") as $value) {
 			$file = File::fromPath($value);
@@ -26,7 +26,7 @@ class FileGroupTest extends TestCase {
 		$this->assertSame(10, $fg->getFileCount());
 	}
 	
-	public function testGetPayloadSize() {
+	public function testGetPayloadSize(): void {
 		$fg = new FileGroup();
 		foreach(glob("/tmp/corviprotect/file*.bin") as $value) {
 			$file = File::fromPath($value);
@@ -35,7 +35,7 @@ class FileGroupTest extends TestCase {
 		$this->assertSame(array_sum($this->sizes), $fg->getPayloadSize());
 	}
 
-	public function testToBinary() {
+	public function testToBinary(): void {
 		$fg = new FileGroup();
 		$origFiles = array();
 		$origData = array();
@@ -66,7 +66,7 @@ class FileGroupTest extends TestCase {
 		$reader->getInt8();
 	}
 	
-	public function testFromBinary() {
+	public function testFromBinary(): void {
 		$fg = new FileGroup();
 		foreach(glob("/tmp/corviprotect/file*.bin") as $value) {
 			$file = File::fromPath($value);

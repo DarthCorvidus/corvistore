@@ -6,7 +6,7 @@ class CatalogEntryTest extends TestCase {
 		parent::__construct();
 		$this->now = time();
 	}
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		TestHelper::createDatabase();
 		TestHelper::createStorage();
 		$cpadm = new CPAdm(TestHelper::getEPDO(), array());
@@ -18,12 +18,12 @@ class CatalogEntryTest extends TestCase {
 		$cpadm->handleCommand(new CommandParser("define node test03 policy=forever password=secret"));
 	}
 	
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		TestHelper::deleteDatabase();
 		TestHelper::deleteStorage();
 	}
 
-	function testFromArray() {
+	function testFromArray(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$array["dc_id"] = 1;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test03")->getId();
@@ -34,7 +34,7 @@ class CatalogEntryTest extends TestCase {
 		$this->assertInstanceOf(CatalogEntry::class, $ce);
 	}
 	
-	function testFromId() {
+	function testFromId(): void {
 		$array["dc_id"] = 1;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test03")->getId();
 		$array["dc_dirname"] = "/";
@@ -44,28 +44,28 @@ class CatalogEntryTest extends TestCase {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->assertInstanceOf(CatalogEntry::class, $ce);
 	}
-	function testGetId() {
+	function testGetId(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->assertEquals(1, $ce->getId());
 	}
 	
-	function testGetName() {
+	function testGetName(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->assertEquals("root", $ce->getName());
 	}
 	
-	function testHasNoParentId() {
+	function testHasNoParentId(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->assertEquals(FALSE, $ce->hasParentId());
 	}
 
-	function testGetNoParentId() {
+	function testGetNoParentId(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->expectException(RuntimeException::class);
 		$ce->getParentId();
 	}
 	
-	function testHasParentId() {
+	function testHasParentId(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$array["dc_id"] = 2;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test01")->getId();
@@ -78,37 +78,37 @@ class CatalogEntryTest extends TestCase {
 		$this->assertEquals(TRUE, $ce->hasParentId());
 	}
 	
-	function testGetParentId() {
+	function testGetParentId(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 2);
 		$this->assertEquals(1, $ce->getParentId());
 	}
 	
-	function testGetNodeId() {
+	function testGetNodeId(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->assertEquals(3, $ce->getNodeId());
 	}
 	
-	function testGetVersions() {
+	function testGetVersions(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->assertInstanceOf(Versions::class, $ce->getVersions());
 	}
 	
-	function testGetDirnameRoot() {
+	function testGetDirnameRoot(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->assertEquals("/", $ce->getDirname());
 	}
 
-	function testGetDirnameRootTrailed() {
+	function testGetDirnameRootTrailed(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 1);
 		$this->assertEquals("/", $ce->getDirnameTrailed());
 	}
 
-	function testGetDirname() {
+	function testGetDirname(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 2);
 		$this->assertEquals("/root", $ce->getDirname());
 	}
 
-	function testGetDirnameTrailed() {
+	function testGetDirnameTrailed(): void {
 		$ce = CatalogEntry::fromId(TestHelper::getEPDO(), 2);
 		$this->assertEquals("/root/", $ce->getDirnameTrailed());
 	}

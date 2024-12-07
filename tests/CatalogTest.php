@@ -8,7 +8,7 @@ class CatalogTest extends TestCase {
 		$this->now = time();
 		$this->mockup = new MockupFiles("/tmp/crow-protect/");
 	}
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		#TestHelper::resetDatabase();
 		#$cpadm = new CPAdm(TestHelper::getEPDO());
 		#$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/storage/basic01/"));
@@ -17,13 +17,13 @@ class CatalogTest extends TestCase {
 		#$cpadm->handleCommand(new CommandParser("define node test01 policy=forever"));
 	}
 	
-	function setUp() {
+	function setUp(): void {
 		TestHelper::createDatabase();
 		$this->mockup->clear();
 		TestHelper::initServer();
 	}
 	
-	function tearDown() {
+	function tearDown(): void {
 		TestHelper::deleteDatabase();
 		TestHelper::deleteStorage();
 	}

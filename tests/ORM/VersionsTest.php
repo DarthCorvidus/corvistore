@@ -9,26 +9,26 @@ class VersionsTest extends TestCase {
 		$this->mockup = new MockupFiles("/tmp/crow-protect/");
 	}
 
-	function setUp() {
+	function setUp(): void {
 		TestHelper::createDatabase();
 		$this->mockup->clear();
 		TestHelper::initServer();
 	}
 
-	function tearDown() {
+	function tearDown(): void {
 		TestHelper::deleteDatabase();
 		$this->mockup->clear();
 		TestHelper::deleteStorage();
 	}
 	
-	function testConstruct() {
+	function testConstruct(): void {
 		$version = new Versions();
 		$this->assertInstanceOf(Versions::class, $version);
 	}
 	/**
 	 * Test to add a version, but not store it (mark it as stored)
 	 */
-	function testAddVersion() {
+	function testAddVersion(): void {
 		$time = time();
 		$array = array();
 		$array["dvs_id"] = 27;
@@ -43,7 +43,7 @@ class VersionsTest extends TestCase {
 		$this->assertEquals(NULL, $versions->addVersion($version));
 	}
 	
-	function testGetCount() {
+	function testGetCount(): void {
 		$versions = new Versions();
 		
 		$time = time();
@@ -84,7 +84,7 @@ class VersionsTest extends TestCase {
 		$this->assertEquals(3, $versions->getCount());
 	}
 
-	function testGetEntry() {
+	function testGetEntry(): void {
 		$versions = new Versions();
 		
 		$time = time();
@@ -125,7 +125,7 @@ class VersionsTest extends TestCase {
 		$this->assertEquals(Catalog::TYPE_FILE, $versions->getVersion(1)->getType());
 	}
 	
-	function testGetLatest() {
+	function testGetLatest(): void {
 		$versions = new Versions();
 		
 		$time = time();
@@ -165,7 +165,7 @@ class VersionsTest extends TestCase {
 		$this->assertEquals(Catalog::TYPE_DELETED, $versions->getLatest()->getType());
 	}
 	
-	function testToBinary() {
+	function testToBinary(): void {
 		$versions = new Versions();
 		
 		$time = time();
@@ -207,7 +207,7 @@ class VersionsTest extends TestCase {
 		$this->assertEquals(chr(27).chr(0).chr(0).chr(0).chr(0).chr(0).chr(0).chr(0), substr($binary, 2, 8));
 	}
 	
-	function testFromBinary() {
+	function testFromBinary(): void {
 		$versions = new Versions();
 		
 		$time = time();

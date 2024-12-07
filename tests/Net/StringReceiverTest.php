@@ -3,18 +3,18 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\StringReceiver;
 class StringReceiverTest extends TestCase {
-	function testConstruct() {
+	function testConstruct(): void {
 		$sr = new StringReceiver();
 		$this->assertInstanceOf(StringReceiver::class, $sr);
 	}
 	
-	function testGetSize() {
+	function testGetSize(): void {
 		$sr = new StringReceiver();
 		$sr->setRecvSize(7325);
 		$this->assertEquals(7325, $sr->getRecvSize());
 	}
 
-	function testReceiveDataShort() {
+	function testReceiveDataShort(): void {
 		$expected = "Hello World!";
 		$sr = new StringReceiver();
 		$sr->setRecvSize(12);
@@ -22,7 +22,7 @@ class StringReceiverTest extends TestCase {
 		$this->assertEquals($expected, $sr->getString());
 	}
 	
-	function testCancel() {
+	function testCancel(): void {
 		$expected = "Hello World!";
 		$sr = new StringReceiver();
 		$sr->receiveData($expected);
@@ -31,7 +31,7 @@ class StringReceiverTest extends TestCase {
 		$this->assertEquals("", $sr->getString());
 	}
 	
-	function testStart() {
+	function testStart(): void {
 		$expected = "Hello World!";
 		$sr = new StringReceiver();
 		$sr->receiveData($expected);

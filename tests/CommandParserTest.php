@@ -2,15 +2,15 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class CommandParserTest extends TestCase {
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		mkdir(__DIR__."/storage/basic01");
 	}
 
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		rmdir(__DIR__."/storage/basic01");
 	}
 	
-	public function testSplitSimple() {
+	public function testSplitSimple(): void {
 		$split = CommandParser::split("define storage backup-main type=directory location=/storage/backup-main/");
 		$target = array();
 		$target[] = "define";
@@ -21,7 +21,7 @@ class CommandParserTest extends TestCase {
 		$this->assertEquals($target, $split);
 	}
 	
-	public function testSplitAdditionalWhitespace() {
+	public function testSplitAdditionalWhitespace(): void {
 		$split = CommandParser::split("define    storage backup-main type=directory location=/storage/backup-main/");
 		$target = array();
 		$target[] = "define";
@@ -32,7 +32,7 @@ class CommandParserTest extends TestCase {
 		$this->assertEquals($target, $split);
 	}
 	
-	public function testSplitQuotedValue() {
+	public function testSplitQuotedValue(): void {
 		$split = CommandParser::split('define    storage backup-main type=directory description="main backup device class" location=/storage/backup-main/');
 		$target = array();
 		$target[] = "define";
@@ -45,22 +45,22 @@ class CommandParserTest extends TestCase {
 		
 	}
 
-	public function testSplitOpenQuote() {
+	public function testSplitOpenQuote(): void {
 		$this->expectException(Exception::class);
 		$split = CommandParser::split('define    storage backup-main type=directory description="main backup device class location=/storage/backup-main/');
 	}
 	
-	public function testGetCommand() {
+	public function testGetCommand(): void {
 		$command = new CommandParser('define    storage backup-main type=directory description="main backup device class" location=/storage/backup-main/');
 		$this->assertEquals("define", $command->getCommand());
 	}
 	
-	public function testGetObject() {
+	public function testGetObject(): void {
 		$command = new CommandParser('define    storage backup-main type=directory description="main backup device class" location=/storage/backup-main/');
 		$this->assertEquals("storage", $command->getObject());
 	}
 	
-	public function testGetPositional() {
+	public function testGetPositional(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$cpmodel->addParamUserValue("location", UserValue::asMandatory());
@@ -72,7 +72,7 @@ class CommandParserTest extends TestCase {
 		$this->assertEquals("backup-main", $command->getPositional(0));
 	}
 	
-	public function testGetParameter() {
+	public function testGetParameter(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$cpmodel->addParamUserValue("location", UserValue::asMandatory());
@@ -86,7 +86,7 @@ class CommandParserTest extends TestCase {
 		$this->assertEquals(__DIR__."/storage/basic01", $command->getParam("location"));
 	}
 	
-	public function testValidatePass() {
+	public function testValidatePass(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$location = UserValue::asMandatory();
@@ -99,7 +99,7 @@ class CommandParserTest extends TestCase {
 		$this->assertEquals(NULL, $command->import($cpmodel));
 	}
 
-	public function testValidateUnexpectedParameterFirst() {
+	public function testValidateUnexpectedParameterFirst(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$cpmodel->addParamUserValue("location", UserValue::asMandatory());
@@ -112,7 +112,7 @@ class CommandParserTest extends TestCase {
 		$command->import($cpmodel);
 	}
 
-	public function testValidateUnexpectedParameterSecond() {
+	public function testValidateUnexpectedParameterSecond(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$cpmodel->addParamUserValue("location", UserValue::asMandatory());
@@ -126,7 +126,7 @@ class CommandParserTest extends TestCase {
 	}
 
 	
-	public function testValidateMandatoryMissing() {
+	public function testValidateMandatoryMissing(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$cpmodel->addParamUserValue("location", UserValue::asMandatory());
@@ -139,7 +139,7 @@ class CommandParserTest extends TestCase {
 		$command->import($cpmodel);
 	}
 
-	public function testValidateMandatoryEmpty() {
+	public function testValidateMandatoryEmpty(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$cpmodel->addParamUserValue("location", UserValue::asMandatory());
@@ -152,7 +152,7 @@ class CommandParserTest extends TestCase {
 		$command->import($cpmodel);
 	}
 
-	public function testValidateFail() {
+	public function testValidateFail(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$location = UserValue::asMandatory();
@@ -167,7 +167,7 @@ class CommandParserTest extends TestCase {
 		$command->import($cpmodel);
 	}
 
-	public function testValidateUnexpectedPositionalFirst() {
+	public function testValidateUnexpectedPositionalFirst(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$location = UserValue::asMandatory();
@@ -181,7 +181,7 @@ class CommandParserTest extends TestCase {
 		$command->import($cpmodel);
 	}
 
-	public function testValidateUnexpectedPositionalSecond() {
+	public function testValidateUnexpectedPositionalSecond(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$location = UserValue::asMandatory();
@@ -196,7 +196,7 @@ class CommandParserTest extends TestCase {
 		$command->import($cpmodel);
 	}
 	
-	public function testValidateMissingPositional() {
+	public function testValidateMissingPositional(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$location = UserValue::asMandatory();
@@ -211,21 +211,21 @@ class CommandParserTest extends TestCase {
 		$command->import($cpmodel);
 	}
 
-	public function testAccessParamWithoutImport() {
+	public function testAccessParamWithoutImport(): void {
 		$command = new CommandParser('define storage example type=basic description="main backup device class" location='.__DIR__."/storage/basic01/");
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("Accessing named parameter 'type' without calling CommandParser::import()");
 		$command->getParam("type");
 	}
 	
-	public function testAccessPositionalWithoutImport() {
+	public function testAccessPositionalWithoutImport(): void {
 		$command = new CommandParser('define storage example type=basic description="main backup device class" location='.__DIR__."/storage/basic01/");
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("Accessing positional parameter '0' without calling CommandParser::import()");
 		$command->getPositional(0);
 	}
 
-	public function testGetDefaultValue() {
+	public function testGetDefaultValue(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$location = UserValue::asMandatory();
@@ -242,7 +242,7 @@ class CommandParserTest extends TestCase {
 	/**
 	 * The user is not allowed to clear out mandatory values
 	 */
-	public function testGetDefaultValueMandatoryEmpty() {
+	public function testGetDefaultValueMandatoryEmpty(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$location = UserValue::asMandatory();
@@ -260,7 +260,7 @@ class CommandParserTest extends TestCase {
 	/*
 	 * The user is allowed to clear out optional values or to leave them empty.
 	 */
-	public function testGetDefaultValueOptionalEmpty() {
+	public function testGetDefaultValueOptionalEmpty(): void {
 		$cpmodel = new CPModelTesting();
 
 		$description = UserValue::asOptional();
@@ -273,7 +273,7 @@ class CommandParserTest extends TestCase {
 		$this->assertEquals("", $command->getParam("description"));
 	}
 	
-	function testConvert() {
+	function testConvert(): void {
 		$cpmodel = new CPModelTesting();
 		$cpmodel->addParamUserValue("description", UserValue::asOptional());
 		$location = UserValue::asMandatory();

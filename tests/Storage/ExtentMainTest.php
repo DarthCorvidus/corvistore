@@ -4,11 +4,11 @@ use PHPUnit\Framework\TestCase;
 use Storage\ExtentMain;
 class ExtentMainTest extends TestCase {
 	const FILESIZE = 27389;
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		file_put_contents(self::getPath(), random_bytes(self::FILESIZE));
 	}
 	
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		if(file_exists(self::getPath())) {
 			unlink(self::getPath());
 		}
@@ -18,37 +18,37 @@ class ExtentMainTest extends TestCase {
 		return __DIR__."/example.bin";
 	}
 
-	function testFromInstance() {
+	function testFromInstance(): void {
 		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertInstanceOf(ExtentMain::class, $extent);
 	}
 	
-	function testGetTotalSize() {
+	function testGetTotalSize(): void {
 		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertEquals($file->getSize(), $extent->getTotalSize());
 	}
 	
-	function testGetVersion() {
+	function testGetVersion(): void {
 		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertEquals(1, $extent->getVersion());
 	}
 	
-	function testGetMtime() {
+	function testGetMtime(): void {
 		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertEquals($file->getMTime(), $extent->getMtime());
 	}
 	
-	function testToBinary() {
+	function testToBinary(): void {
 		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$this->assertEquals(4914, strlen($extent->toBinary()));
 	}
 	
-	function testFromBinary() {
+	function testFromBinary(): void {
 		$file = File::fromPath(self::getPath());
 		$extent = ExtentMain::fromFile($file, "testnode");
 		$new = ExtentMain::fromBinary($extent->toBinary());

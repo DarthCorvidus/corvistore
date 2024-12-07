@@ -3,17 +3,17 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\SSLContext;
 class SSLContextTest extends TestCase {
-	function testConstruct() {
+	function testConstruct(): void {
 		$context = new SSLContext();
 		$this->assertInstanceOf(SSLContext::class, $context);
 	}
 	
-	static function setUpBeforeClass() {
+	static function setUpBeforeClass(): void {
 		self::generateSSL("01");
 		self::generateSSL("02");
 	}
 
-	static function tearDownAfterClass() {
+	static function tearDownAfterClass(): void {
 		unlink(__DIR__."/ca.01.crt");
 		unlink(__DIR__."/ca.01.key");
 		unlink(__DIR__."/server.01.key");
@@ -76,12 +76,12 @@ class SSLContextTest extends TestCase {
 		#print_r(openssl_x509_parse($serverCRT));
 	}
 	
-	function testSetCA() {
+	function testSetCA(): void {
 		$context = new SSLContext();
 		$this->assertEquals(NULL, $context->setCAFile(__DIR__."/ca.01.crt"));
 	}
 	
-	function testSetBogusCA() {
+	function testSetBogusCA(): void {
 		$filename = __DIR__."/ca-bogus.crt";
 		$context = new SSLContext();
 		$this->expectException(RuntimeException::class);
@@ -89,7 +89,7 @@ class SSLContextTest extends TestCase {
 		$context->setCAFile($filename);
 	}
 
-	function testSetInvalidCA() {
+	function testSetInvalidCA(): void {
 		$filename = __DIR__."/pseudo-ca.crt";
 		$context = new SSLContext();
 		$this->expectException(RuntimeException::class);
@@ -97,12 +97,12 @@ class SSLContextTest extends TestCase {
 		$context->setCAFile($filename);
 	}
 
-	function testSetCertificateFile() {
+	function testSetCertificateFile(): void {
 		$context = new SSLContext();
 		$this->assertEquals(NULL, $context->setCertificateFile(__DIR__."/server.01.crt"));
 	}
 	
-	function testSetBogusCF() {
+	function testSetBogusCF(): void {
 		$filename = __DIR__."/server-bogus.crt";
 		$context = new SSLContext();
 		$this->expectException(RuntimeException::class);
@@ -110,7 +110,7 @@ class SSLContextTest extends TestCase {
 		$context->setCertificateFile($filename);
 	}
 
-	function testSetInvalidCF() {
+	function testSetInvalidCF(): void {
 		$filename = __DIR__."/pseudo.crt";
 		$context = new SSLContext();
 		$this->expectException(RuntimeException::class);
@@ -118,12 +118,12 @@ class SSLContextTest extends TestCase {
 		$context->setCertificateFile($filename);
 	}
 
-	function testSetKeyFile() {
+	function testSetKeyFile(): void {
 		$context = new SSLContext();
 		$this->assertEquals(NULL, $context->setPrivateKeyFile(__DIR__."/server.01.key"));
 	}
 	
-	function testSetBogusKF() {
+	function testSetBogusKF(): void {
 		$filename = __DIR__."/server-bogus.key";
 		$context = new SSLContext();
 		$this->expectException(RuntimeException::class);
@@ -131,7 +131,7 @@ class SSLContextTest extends TestCase {
 		$context->setPrivateKeyFile($filename);
 	}
 
-	function testSetInvalidKF() {
+	function testSetInvalidKF(): void {
 		$filename = __DIR__."/pseudo.key";
 		$context = new SSLContext();
 		$this->expectException(RuntimeException::class);

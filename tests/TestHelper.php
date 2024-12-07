@@ -19,7 +19,7 @@ class TestHelper {
 	return $database;
 	}
 	
-	static function createDatabase() {
+	static function createDatabase(): void {
 		$database = __DIR__."/test.sqlite";
 		$template = __DIR__."/../default-sqlite.sql";
 		if(file_exists($database)) {
@@ -28,11 +28,11 @@ class TestHelper {
 		exec("cat ". escapeshellarg($template)." | sqlite3 ". escapeshellarg($database));
 	}
 	
-	static function deleteDatabase() {
+	static function deleteDatabase(): void {
 		unlink(__DIR__."/test.sqlite");
 	}
 	
-	static function resetSerial() {
+	static function resetSerial(): void {
 		$database = __DIR__."/serial.sqlite";
 		$template = __DIR__."/../test-serial.sql";
 		if(file_exists($database)) {
@@ -45,14 +45,14 @@ class TestHelper {
 	return Shared::getCustomSQLite(__DIR__."/test.sqlite");
 	}
 	
-	static function createStorage() {
+	static function createStorage(): void {
 		$storage = array("basic01", "basic02", "basic03");
 		foreach($storage as $value) {
 			mkdir(__DIR__."/storage/".$value);
 		}
 	}
 	
-	static function deleteStorage() {
+	static function deleteStorage(): void {
 		$storage = array("basic01", "basic02", "basic03");
 		foreach($storage as $value) {
 			$storagePath = __DIR__."/storage/".$value;
@@ -62,7 +62,7 @@ class TestHelper {
 		}
 	}
 	
-	static function initServer() {
+	static function initServer(): void {
 		self::createStorage();
 		$cpadm = new CPAdm(TestHelper::getEPDO(), array());
 		$cpadm->handleCommand(new CommandParser("define storage basic01 type=basic location=".__DIR__."/storage/basic01/"));
@@ -71,14 +71,14 @@ class TestHelper {
 		$cpadm->handleCommand(new CommandParser("define node test01 policy=forever password=secret"));
 	}
 	
-	static function invoke($object, $method, array $args) {
+	static function invoke($object, $method, array $args): mixed {
 		$reflector = new ReflectionClass(get_class($object));
 		$method = $reflector->getMethod($method);
 		$method->setAccessible(true);
 	return $method->invokeArgs($object, $args);
 	}
 	
-	static function getPropertyValue($object, $propertyName) {
+	static function getPropertyValue($object, $propertyName): mixed {
 		$reflector = new ReflectionObject($object);
 		$property = $reflector->getProperty($propertyName);
 		$property->setAccessible(true);
@@ -86,13 +86,13 @@ class TestHelper {
 	}
 	
 	
-	static function fileowner($filename) {
+	static function fileowner(string $filename): string {
 		$owner = posix_getpwuid(fileowner($filename));
 		
 	return $owner["name"];
 	}
 	
-	static function filegroup($filename) {
+	static function filegroup(string $filename): string {
 		$group = posix_getgrgid(filegroup($filename));
 	return $group["name"];
 	}
