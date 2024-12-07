@@ -1,7 +1,13 @@
 <?php
 class CPServe {
-	private $pdo;
-	private $arg;
+	/**
+	 * due to the init command, the database cannot be set in the constructor,
+	 * as it does not yet exist if init is called.
+	 * @psalm-suppress PropertyNotSetInConstructor
+	 * @var \EPDO
+	 */
+	private \EPDO $pdo;
+	private \ArgvServe $arg;
 	function __construct(array $argv) {
 		$user = posix_getuid();
 		$group = posix_getgid();
@@ -11,7 +17,7 @@ class CPServe {
 		$this->arg = new ArgvServe($argv);
 	}
 
-	function runCommand() {
+	function runCommand(): void {
 		echo $this->arg->getRun().PHP_EOL;
 		$command = new CommandParser($this->arg->getRun());
 		$handler = new CommandHandler($this->pdo, $command);
@@ -19,7 +25,7 @@ class CPServe {
 		echo PHP_EOL;
 	}
 	
-	function runFile() {
+	function runFile(): void {
 		$commands = file($this->arg->getRunFile());
 		foreach($commands as $cmd) {
 			echo $cmd;
@@ -30,7 +36,7 @@ class CPServe {
 		}
 	}
 
-	function run() {
+	function run(): void {
 		if($this->arg->hasInit()) {
 			$init = new Init($this->arg);
 			$init->run();
