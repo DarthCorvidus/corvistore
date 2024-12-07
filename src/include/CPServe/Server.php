@@ -2,13 +2,7 @@
 use plibv4\process\TimeshareObserver;
 use Net\AsyncStream;
 class Server implements SignalHandler, TimeshareObserver {
-	private $hub;
-	private $workerProcess = array();
-	private $pdo;
-	private $authProt = array();
-	private $authMode = array();
-	private $authFail = array();
-	private $workers = array();
+	private \EPDO $pdo;
 	private int $clientCount = 0;
 	private \Idle $idle;
 	private plibv4\process\Timeshare $ts;
@@ -30,85 +24,27 @@ class Server implements SignalHandler, TimeshareObserver {
 		$this->ts = new plibv4\process\Timeshare();
 		$this->ts->addTimeshareObserver($this);
 		$this->workerServer = new Server\TaskServer();
-		$this->input = new Server\Input($pdo, $this->ts);
+		$this->input = new Server\Input($pdo);
 		$this->ts->addTask($this->workerServer);
 		$this->ts->addTask($this->idle);
 		$this->ts->addTask($this->input);
-		#$signal->addSignalHandler(SIGINT, $this);
-		#$signal->addSignalHandler(SIGTERM, $this);
-		if(file_exists(Shared::getIPCSocket())) {
-			unlink(Shared::getIPCSocket());
-		}
+		$signal->addSignalHandler(SIGINT, $this);
+		$signal->addSignalHandler(SIGTERM, $this);
 		$ipcServer = stream_socket_server("unix://".Shared::getIPCSocket(), $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
 		#$this->hub = new StreamHub();
 		#$this->hub->addServer("ipc", $ipcServer, $this);
 	}
 	
-	function onSignal(int $signal, array $info) {
+	function onSignal(int $signal, array $info): void {
 		if($signal==SIGINT or $signal==SIGTERM) {
-			socket_close($this->socket);
-			echo "Exiting.".PHP_EOL;
-			exit();
+			$this->ts->terminateAll();
+			echo "Exiting on SIGINT or SIGTERM.".PHP_EOL;
 		}
 	}
 
-	function run() {
-		/*
-		$runner = new \Server\RunnerSSL();
-		$sslProcess = new Process($runner);
-		$sslProcess->addProcessListener($this);
-		$sslProcess->run();
-		
-		$this->hub->listen();
-		 * 
-		 */
+	function run(): void {
 		$this->ts->run();
 		echo "Server shutdown.".PHP_EOL;
-	}
-
-	public function onEnd(Process $process) {
-		$name = $process->getRunnerName();
-		/*
-		 * If the SSL fork crashes, quit here, end the workers.
-		 */
-		if($name=="RunnerSSL") {
-			foreach($this->workerProcess as $key => $value) {
-				echo "Ending ".$value->getPid().PHP_EOL;
-				$value->sigTerm();
-			}
-			exit(0);
-		}
-		/*
-		 * If the client quits via "quit", quit is sent to the Worker via IPC,
-		 * which will end as well. Clean up here.
-		 */
-		if($name=="WorkerAdmin") {
-			$clientId = $process->getRunner()->getId();
-			echo "Removing WorkerAdmin #".$clientId.PHP_EOL;
-			unset($this->workerProcess[$clientId]);
-			unset($this->workers[$clientId]);
-			Signal::get()->clearHandler($process);
-		}
-	}
-	
-	public function hasClientListener(string $name, int $id): bool {
-		return true;
-	}
-	
-	public function getClientListener(string $name, int $id): \Net\HubClientListener {
-		$protocol = new \Net\ProtocolAsync($this);
-		$this->authProt[$name.":".$id] = $protocol;
-		$this->authFail[$name.":".$id] = 0;
-		$this->authMode[$name.":".$id] = NULL;
-	return $protocol;
-	}
-	
-	public function hasClientNamedListener(string $name, int $id): bool {
-		return false;
-	}
-	
-	public function getClientNamedListener(string $name, int $id): \Net\HubClientNamedListener {
-		;
 	}
 
 	public function onAdd(\plibv4\process\Scheduler $scheduler, \plibv4\process\Task $task): void {
