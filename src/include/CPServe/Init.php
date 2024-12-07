@@ -1,14 +1,15 @@
 <?php
 class Init {
-	private $arg;
+	private \ArgvServe $arg;
 	function __construct(ArgvServe $arg) {
 		$this->arg = $arg;
 	}
 	
-	private function initPath() {
+	private function initPath(): void {
 		if(file_exists(Shared::getInstancePath())) {
 			throw new RuntimeException("Instance directory exists at ".Shared::getInstancePath());
 		}
+		$create = array();
 		$create[] = Shared::getInstancePath();
 		$create[] = Shared::getSSLPath();
 		$create[] = Shared::getDatabasePath();
@@ -19,12 +20,11 @@ class Init {
 		}
 	}
 	
-	private function initDatabase() {
+	private function initDatabase(): void {
 		exec("cat ".escapeshellarg(__DIR__."/../../../default-sqlite.sql")." | sqlite3 ". escapeshellarg(Shared::getDatabaseFile()));
-		var_dump(file_exists(Shared::getDatabaseFile()));
 	}
 	
-	private function initSSL() {
+	private function initSSL(): void {
 		$caData = array(
 			"countryName" => "DE",
 			"stateOrProvinceName" => "ACME Province",
@@ -71,7 +71,7 @@ class Init {
 		#print_r(openssl_x509_parse($serverCRT));
 	}
 	
-	function run() {
+	function run(): void {
 		$this->initPath();
 		$this->initDatabase();
 		$this->initSSL();

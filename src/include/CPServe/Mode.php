@@ -1,7 +1,7 @@
 <?php
 interface Mode {
-	function onCommand(string $string);
-	function onStructuredData(string $data);
+	function onCommand(string $string): void;
+	function onStructuredData(string $data): void;
 	/*
 	// First batch of raw data is sent
 	function onRawStart(string $data);
@@ -18,6 +18,6 @@ interface Mode {
 	function onOK();
 	 * 
 	 */
-	function onServerMessage(string $message);
+	function onServerMessage(string $message): void;
 	function isQuit(): bool;
 }

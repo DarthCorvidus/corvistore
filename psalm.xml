@@ -45,6 +45,8 @@
 				 return; ie void. I tend towards every command having to return
 				 something, but this needs to be designed consistently -->
 			<directory name="src/include/CommandHandler" />
+			<!-- will be removed -->
+			<file name="src/include/CPServe/ModeTest.php" />
 			<!-- unused classes, will be removed -->
 			<file name="src/include/CPServe/Server/RunnerSSL.php" />
 			<file name="src/include/CPServe/Server/WorkerAdmin.php" />
