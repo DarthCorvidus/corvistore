@@ -180,18 +180,26 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 	}
 
 	public function onMessage(\Net\ProtocolAsync $protocol, string $command): void {
-		
+		// currently, the BA client should not send messages. So if it does,
+		// throw a RuntimeException.
+		throw new \RuntimeException("not implemented");
 	}
 
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized): void {
+	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
 		echo "Received serialized ".get_class($unserialized).PHP_EOL;
-		if(get_class($unserialized)=="File") {
-			$this->onSerializedFile($protocol, $unserialized, $this->fileAction);
+		if(!is_object($unserialized)) {
+			throw new \RuntimeException("unserialized value is no object");
+		}
+		if(get_class($unserialized) === \File::class) {
+			$this->onSerializedFile($protocol, $unserialized);
 			$this->fileAction = NULL;
+		return;
 		}
-		if(get_class($unserialized)=="FileGroup") {
+		if(get_class($unserialized) === \FileGroup::class) {
 			$this->onSerializedFileGroup($protocol, $unserialized);
+		return;
 		}
+	throw new \RuntimeException("unexpected unserialized object '".$unserialized::class."'");
 	}
 
 	private function getVersionEntryForFileAction(\File $file): \VersionEntry {
@@ -213,7 +221,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		/*
 		 * This should of course be set somewhere else and is just a quick fix.
 		 */
-		$protocol->setFileReceiver($this->storage);
+		//$protocol->setFileReceiver($this->storage);
 		$version = $this->getVersionEntryForFileAction($file);
 		if($file->getType()== \Catalog::TYPE_FILE || $file->getType() == \Catalog::TYPE_LINK) {
 			/**
@@ -225,7 +233,8 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$file->setServerNodeName($this->node->getName());
 			$file->setServerVersionId($version->getId());
 			$file->setServerStoreType(\File::BACK_MAIN);
-			$protocol->setFileReceiver($this->storage->store($version, $this->partition, $file));
+			$fileReceiver = $this->storage->store($version, $this->partition, $file);
+			$protocol->setFileReceiver($fileReceiver);
 			$protocol->expect(\Net\Protocol::FILE);
 		}
 		$this->checkTransactions();
