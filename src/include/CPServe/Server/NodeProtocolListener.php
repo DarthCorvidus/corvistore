@@ -4,16 +4,14 @@ use plibv4\process\Scheduler;
 use plibv4\process\Task;
 use Storage\TaskSingleStorage;
 class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolSendListener {
-	private $clientId;
-	private $node;
-	private $pdo;
-	private $createId;
-	private $catalog;
-	private $fileAction;
-	private $updateId;
-	private $storage;
-	private $partition;
-	private $transactions = 0;
+	private int $clientId;
+	private \Node $node;
+	private \EPDO $pdo;
+	private \Catalog $catalog;
+	private ?int $updateId = null; 
+	private \Storage $storage;
+	private \Partition $partition;
+	private int $transactions = 0;
 	private Scheduler $sched;
 	private Task $task;
 	private TaskSingleStorage $storageTask;
@@ -35,7 +33,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		#$this->pdo->beginTransaction();
 	}
 	
-	public function checkTransactions() {
+	public function checkTransactions(): void {
 		$this->transactions++;
 		#echo "Transactions: ".$this->transactions.PHP_EOL;;
 		if($this->transactions>=10) {
@@ -64,7 +62,9 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 
 	private function handleOne(\Net\ProtocolAsync $protocol, string $command): void {
 		if($command == "REPORT") {
+			$report = array();
 			$report["files"] = $this->pdo->result("select count(dc_id) from d_catalog where dnd_id = ? and dc_id in (select dc_id from d_version where dvs_type = ?)", array($this->node->getId(), \Catalog::TYPE_FILE));
+			$params = array();
 			$params[] = $this->node->getId();
 			$params[] = 1;
 			$report["occupancy"] = $this->pdo->result("select sum(dvs_size) from d_catalog JOIN d_version USING (dc_id) JOIN d_content USING (dvs_id) WHERE dnd_id = ? and dvs_stored = ?", $params);
@@ -124,7 +124,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 	 * @todo Proper error communication here once it is implemented.
 	 * @param \Net\ProtocolAsync $protocol
 	 * @param array $command
-	 * @return type
+	 * @return void
 	 */
 	private function handleThree(\Net\ProtocolAsync $protocol, array $command): void {
 		if($command[0]=="GET" and strtoupper($command[1])=="CATALOG") {
@@ -151,11 +151,15 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$protocol->sendStream($this->storage->restore((int)$command[2]));
 		return;
 		}
-
+		/**
+		 * @todo
+		 * I think that this is redundant. The BA client can send a file 
+		 * directly without first calling create file and then get the file
+		 * action from File::getAction.
+		 * Same goes for DELETE and UPDATE.
+		 */
 		if($command[0]=="CREATE" and $command[1]=="FILE") {
 			$protocol->expect(\Net\ProtocolAsync::SERIALIZED_PHP);
-			#$this->createId = $command[2];
-			$this->fileAction = "CREATE";
 		}
 		if($command[0]=="DELETE" and $command[1]=="ENTRY") {
 			#$protocol->expect(\Net\ProtocolAsync::SERIALIZED_PHP);
@@ -179,7 +183,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		exit();
 	}
 
-	public function onMessage(\Net\ProtocolAsync $protocol, string $command): void {
+	public function onMessage(\Net\ProtocolAsync $protocol, string $message): void {
 		// currently, the BA client should not send messages. So if it does,
 		// throw a RuntimeException.
 		throw new \RuntimeException("not implemented");
@@ -192,7 +196,6 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 		if(get_class($unserialized) === \File::class) {
 			$this->onSerializedFile($protocol, $unserialized);
-			$this->fileAction = NULL;
 		return;
 		}
 		if(get_class($unserialized) === \FileGroup::class) {
@@ -209,7 +212,12 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			return $entry->getVersions()->getLatest();
 		}
 		if($file->getAction()== \File::UPDATE) {
-			return $this->catalog->updateEntry($this->updateId, $file);
+			if($this->updateId === null) {
+				throw new \RuntimeException("updateId is null");
+			}
+			$version = $this->catalog->updateEntry($this->updateId, $file);
+			$this->updateId = null;
+		return $version;
 		}
 	throw new \RuntimeException("unexpected file action ".$file->getAction());
 	}
