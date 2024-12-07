@@ -3,9 +3,9 @@ namespace Server;
 use plibv4\process\Scheduler;
 use plibv4\process\Task;
 class AdminProtocolListener implements \Net\ProtocolAsyncListener {
-	private $clientId;
-	private $user;
-	private $pdo;
+	private int $clientId;
+	private \User $user;
+	private \EPDO $pdo;
 	private Scheduler $sched;
 	private Task $task;
 	public function __construct(Scheduler $sched, Task $task, \EPDO $pdo, int $clientId, \User $user) {
@@ -71,19 +71,19 @@ class AdminProtocolListener implements \Net\ProtocolAsyncListener {
 		exit();
 	}
 
-	public function onMessage(\Net\ProtocolAsync $protocol, string $command): void {
-		
+	public function onMessage(\Net\ProtocolAsync $protocol, string $message): void {
+		throw new \RuntimeException("not implemented");
 	}
 
 	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
-		
+		throw new \RuntimeException("not implemented");
 	}
 
 	public function onOk(\Net\ProtocolAsync $protocol): void {
-		
+		throw new \RuntimeException("not implemented");
 	}
 
 	public function onBinaryClass(\Net\ProtocolAsync $protocol, object $instance): void {
-		
+		throw new \RuntimeException("not implemented");
 	}
 }

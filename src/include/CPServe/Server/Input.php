@@ -5,7 +5,7 @@ use plibv4\process\Scheduler;
 use Server\AdminProtocolListener;
 class Input implements \plibv4\process\Task {
 	private \EPDO $pdo;
-	private array $buffer;
+	private array $buffer = array();
 	function __construct(\EPDO $pdo) {
 		$this->pdo = $pdo;
 		stream_set_blocking(STDIN, false);
@@ -63,7 +63,7 @@ class Input implements \plibv4\process\Task {
 	return true;
 	}
 	
-	function addBuffer($string): void {
+	function addBuffer(string $string): void {
 		$this->buffer[] = $string;
 	}
 

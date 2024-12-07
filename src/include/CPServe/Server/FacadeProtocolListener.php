@@ -17,11 +17,11 @@ class FacadeProtocolListener implements ProtocolAsyncListener {
 		$this->current = new PreauthProtocolListener($sched, $task, $this);
 	}
 	
-	function switchAdmin(\User $user) {
+	function switchAdmin(\User $user): void {
 		$this->current = new AdminProtocolListener($this->sched, $this->task, $this->pdo, $this->id, $user);
 	}
 	
-	function switchNode(\Node $node) {
+	function switchNode(\Node $node): void {
 		$this->current = new NodeProtocolListener($this->sched, $this->task, $this->pdo, $this->id, $node);
 	}
 
@@ -41,11 +41,11 @@ class FacadeProtocolListener implements ProtocolAsyncListener {
 		$this->current->onOk($protocol);
 	}
 
-	public function onSerialized(\Net\ProtocolAsync $protocol, $unserialized): void {
+	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
 		$this->current->onSerialized($protocol, $unserialized);
 	}
 
-	public function onBinaryClass(\Net\ProtocolAsync $protocol, $instance): void {
-		
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, object $instance): void {
+		throw new \RuntimeException("not implemented");
 	}
 }
