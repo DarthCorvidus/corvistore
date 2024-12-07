@@ -193,20 +193,28 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$this->onSerializedFileGroup($protocol, $unserialized);
 		}
 	}
+
+	private function getVersionEntryForFileAction(\File $file): \VersionEntry {
+		if($file->getAction()== \File::CREATE) {
+			echo "new entry ".$file->getPath().PHP_EOL;
+			$entry = $this->catalog->newEntry($file);
+			return $entry->getVersions()->getLatest();
+		}
+		if($file->getAction()== \File::UPDATE) {
+			return $this->catalog->updateEntry($this->updateId, $file);
+		}
+	throw new \RuntimeException("unexpected file action ".$file->getAction());
+	}
 	
-	private function onSerializedFile(\Net\ProtocolAsync $protocol, \File $file) {
+	private function onSerializedFile(\Net\ProtocolAsync $protocol, \File $file): void {
+		if(!in_array($file->getAction(), array(\File::CREATE, \File::UPDATE))) {
+			throw new \RuntimeException("unexpected file action ".$file->getAction());
+		}
 		/*
 		 * This should of course be set somewhere else and is just a quick fix.
 		 */
 		$protocol->setFileReceiver($this->storage);
-		if($file->getAction()== \File::CREATE) {
-			echo "new entry ".$file->getPath().PHP_EOL;
-			$entry = $this->catalog->newEntry($file);
-			$version = $entry->getVersions()->getLatest();
-		}
-		if($file->getAction()== \File::UPDATE) {
-			$version = $this->catalog->updateEntry($this->updateId, $file);
-		}
+		$version = $this->getVersionEntryForFileAction($file);
 		if($file->getType()== \Catalog::TYPE_FILE || $file->getType() == \Catalog::TYPE_LINK) {
 			/**
 			 * Adds Server meta information to the 8k meta block in front of a
