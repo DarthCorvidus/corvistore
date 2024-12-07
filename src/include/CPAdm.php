@@ -13,6 +13,11 @@ class CPAdm {
 	private \EPDO $pdo;
 	/** @var list<string> */
 	private array $argv = array();
+	/**
+	 * 
+	 * @param EPDO $pdo
+	 * @param list<string> $argv as initialized by PHP when run from CLI
+	 */
 	function __construct(EPDO $pdo, array $argv) {
 		$this->pdo = $pdo;
 		$this->argv = $argv;

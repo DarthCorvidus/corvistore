@@ -18,6 +18,7 @@ class CommandParser {
 	private string $command;
 	private string $object;
 	private array $positional;
+	/** @var array<string, string> */
 	private array $params;
 	private array $posSanitized = array();
 	private array $paramsSanitized = array();
@@ -33,7 +34,7 @@ class CommandParser {
 		$this->params = array();
 		foreach(array_slice($this->raw, 2) as $value) {
 			$split = explode("=", $value, 2);
-			if(count($split)==1) {
+			if(!isset($split[1])) {
 				$this->positional[] = $value;
 				continue;
 			}

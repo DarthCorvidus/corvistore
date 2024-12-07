@@ -13,6 +13,12 @@ private \Client\Config $config;
 	private mixed $socket;
 	/** @var list<string> */
 	private array $argv;
+	/**
+	 * 
+	 * @param list<string> $argv As initialized by PHP when run from CLI
+	 * @throws \RuntimeException
+	 * @throws \Exception
+	 */
 	function __construct(array $argv) {
 		$user = posix_getuid();
 		$group = posix_getgid();

@@ -6,6 +6,10 @@
  */
 class ArgvAdmin {
 	private Argv $argv;
+	/**
+	 * 
+	 * @param list<string> $argv as initialized by PHP when run from CLI
+	 */
 	function __construct(array $argv) {
 		$model = new ArgvAdminModel();
 		$this->argv = new Argv($argv, $model);

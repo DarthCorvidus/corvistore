@@ -45,8 +45,9 @@ class User {
 
 	static function authenticate(EPDO $pdo, string $conjoined): User {
 		$exp = explode(":", $conjoined, 2);
-		if(count($exp)==1) {
-			throw new Exception("Unable to read password for node ".$exp[0]);
+		
+		if(!isset($exp[1])) {
+			throw new Exception("Unable to read password for user node ".$exp[0]);
 		}
 		$node = User::fromName($pdo, $exp[0]);
 		if(sha1($exp[1].$node->getSalt())!=$node->getPassword()) {

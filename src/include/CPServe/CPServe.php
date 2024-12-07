@@ -8,6 +8,10 @@ class CPServe {
 	 */
 	private \EPDO $pdo;
 	private \ArgvServe $arg;
+	/**
+	 * 
+	 * @param list<string> $argv as initialized by PHP when run from CLI
+	 */
 	function __construct(array $argv) {
 		$user = posix_getuid();
 		$group = posix_getgid();

@@ -6,6 +6,9 @@
  */
 class ArgvBackup {
 	private Argv $argv;
+	/**
+	 * @param list<string> $argv as initialized by PHP when run from CLI
+	 */
 	function __construct(array $argv) {
 		$model = new ArgvBackupModel();
 		$this->argv = new Argv($argv, $model);

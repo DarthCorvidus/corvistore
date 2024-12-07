@@ -18,6 +18,12 @@ class Backup implements \SignalHandler {
 	const TYPE_DELETED = 0;
 	const TYPE_DIR = 1;
 	const TYPE_FILE = 2;
+	/**
+	 * 
+	 * @param resource $socket The connection to the server
+	 * @param \Client\Config $config Client configuration
+	 * @param list<string> $argv as initialized by PHP when run from CLI
+	 */
 	function __construct(mixed $socket, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvBackup($argv);

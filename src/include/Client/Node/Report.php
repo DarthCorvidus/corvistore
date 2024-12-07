@@ -10,6 +10,12 @@ class Report {
 	/** @var list<string> */
 	private array $argv;
 	private \Net\ProtocolSync $protocol;
+	/**
+	 * 
+	 * @param \Net\ProtocolSync $protocol
+	 * @param \Client\Config $config
+	 * @param list<string> $argv as initialized by PHP from CLI parameters
+	 */
 	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
 		$this->argv = $argv;
 		$this->protocol = $protocol;
@@ -42,7 +48,7 @@ class Report {
 	}
 	
 	function run(): void {
-		if(empty($this->argv[2])) {
+		if(!isset($this->argv[2])) {
 			$this->runGeneral();
 		} else {
 			$this->runPath();

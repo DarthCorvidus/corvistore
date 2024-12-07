@@ -68,7 +68,7 @@ class RecurseDirectory implements Task {
 				#echo $e::class.PHP_EOL;
 				echo $e->getMessage().PHP_EOL;
 			}
-			if($object->isDir() && $value!=="") {
+			if($object->isDir()) {
 				#echo count($this->dirStack)." ".$value.PHP_EOL;
 				$this->dirStack[] = $realPath;
 			}

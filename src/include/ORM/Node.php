@@ -47,7 +47,7 @@ class Node {
 	
 	static function authenticate(EPDO $pdo, string $conjoined): Node {
 		$exp = explode(":", $conjoined, 2);
-		if(count($exp)==1) {
+		if(!isset($exp[1])) {
 			throw new Exception("Unable to read password for node ".$exp[0]);
 		}
 		$node = Node::fromName($pdo, $exp[0]);

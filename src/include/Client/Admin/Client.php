@@ -13,6 +13,10 @@ class Client {
 	private \StreamHub $hub;
 	private \Net\ProtocolAsync $protocol;
 	private InputListener $inputListener;
+	/**
+	 * 
+	 * @param list<string> $argv as initialized by PHP when run from CLI
+	 */
 	function __construct(array $argv) {
 		$this->hub = new \StreamHub();
 		$this->config = new \Client\Config("/etc/crow-protect/client.conf");

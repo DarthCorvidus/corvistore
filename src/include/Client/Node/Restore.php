@@ -18,6 +18,12 @@ class Restore {
 	private ?string $replaceLarger = NULL;
 	private \InEx $inex;
 	private \Client\Config $config;
+	/**
+	 * 
+	 * @param \Net\ProtocolSync $protocol
+	 * @param \Client\Config $config Client configuration
+	 * @param list<string> $argv as initialized by PHP when run from CLI
+	 */
 	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvRestore($argv);
