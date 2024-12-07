@@ -30,9 +30,6 @@ class Server implements SignalHandler, TimeshareObserver {
 		$this->ts->addTask($this->input);
 		$signal->addSignalHandler(SIGINT, $this);
 		$signal->addSignalHandler(SIGTERM, $this);
-		$ipcServer = stream_socket_server("unix://".Shared::getIPCSocket(), $errno, $errstr, STREAM_SERVER_BIND|STREAM_SERVER_LISTEN);
-		#$this->hub = new StreamHub();
-		#$this->hub->addServer("ipc", $ipcServer, $this);
 	}
 	
 	function onSignal(int $signal, array $info): void {
