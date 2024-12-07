@@ -8,17 +8,19 @@
  * @author Claus-Christoph Küthe
  */
 class CPModelGeneric implements CPModel {
-	private $params = array();
-	private $positional = array();
-	protected function addParamUserValue(string $param, UserValue $value) {
+	/** @var array<string, UserValue> */
+	private array $params = array();
+	/** @var list<UserValue> */
+	private array $positional = array();
+	protected function addParamUserValue(string $param, UserValue $value): void {
 		$this->params[$param] = $value;
 	}
 
-	protected function addPositionalUserValue(UserValue $value) {
+	protected function addPositionalUserValue(UserValue $value): void {
 		$this->positional[] = $value;
 	}
 	
-	public function getParamUserValue($param): \UserValue {
+	public function getParamUserValue(string $param): \UserValue {
 		return $this->params[$param];
 	}
 

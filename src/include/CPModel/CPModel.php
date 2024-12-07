@@ -6,7 +6,7 @@
  */
 interface CPModel {
 	function getParameters(): array;
-	function getParamUserValue($param): UserValue;
+	function getParamUserValue(string $param): UserValue;
 	function getPositionalCount(): int;
 	function getPositionalUserValue(int $pos): UserValue;
 }

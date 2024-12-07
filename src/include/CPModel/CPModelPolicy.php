@@ -9,21 +9,21 @@ class CPModelPolicy extends CPModelGeneric  {
 		
 		$verexists = UserValue::asOptional();
 		$verexists->setValidate(new ValidateInteger());
-		$verexists->setDefault(0);
+		$verexists->setDefault("0");
 		$this->addParamUserValue("verexists", $verexists);
 
 		$verdelete = UserValue::asOptional();
-		$verdelete->setDefault(0);
+		$verdelete->setDefault("0");
 		$verdelete->setValidate(new ValidateInteger());
 		$this->addParamUserValue("verdeleted", $verdelete);
 
 		$retexists = UserValue::asOptional();
-		$retexists->setDefault(0);
+		$retexists->setDefault("0");
 		$retexists->setValidate(new ValidateInteger());
 		$this->addParamUserValue("retexists", $retexists);
 
 		$retdelete = UserValue::asOptional();
-		$retdelete->setDefault(0);
+		$retdelete->setDefault("0");
 		$retdelete->setValidate(new ValidateInteger());
 		$this->addParamUserValue("retdeleted", $retdelete);
 		
