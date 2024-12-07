@@ -1,7 +1,8 @@
 <?php
 namespace BinStruct;
 class VersionEntry implements \BinStruct {
-	private $values;
+	/** @var array<string, \BinVal> */
+	private array $values = array();
 	function __construct() {
 		$this->values["dvs_id"] = \IntVal::uint64LE();
 		$this->values["dvs_mtime"] = \IntVal::uint32LE();
@@ -16,7 +17,7 @@ class VersionEntry implements \BinStruct {
 	}
 
 	public function getBinStruct(string $name): \BinStruct {
-		
+		throw new \RuntimeException("not implemented");
 	}
 
 	public function getBinVal(string $name): \BinVal {
