@@ -25,7 +25,9 @@ class File implements BinaryPersistable {
 	const BACK_COPY = 2;
 	const ARCH_MAIN = 3;
 	const ARCH_COPY = 4;
+	/** @var list<string> */
 	private static array $userCache = array();
+	/** @var list<string> */
 	private static array $groupCache = array();
 	private function __construct() {
 	}

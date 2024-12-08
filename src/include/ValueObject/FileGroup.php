@@ -6,7 +6,9 @@ use plibv4\Binary\StringReader;
  * go.
  */
 class FileGroup {
+	/** @var list<string> */
 	private array $filedata = [];
+	/** @var list<File> */
 	private array $file = [];
 	private int $size = 0;
 	function __construct() {
@@ -18,6 +20,12 @@ class FileGroup {
 		$size = $file->getSize();
 		if($file->getType() === \Catalog::TYPE_FILE) {
 			$filedata = file_get_contents($file->getPath());
+			if($filedata === false) {
+				/**
+				 * @todo more specific exception
+				 */
+				throw new \RuntimeException("unable to load filedata");
+			}
 			/*
 			 * Throw FileChangedException, should file size have changed between 
 			 * creating File object and getting file contents.

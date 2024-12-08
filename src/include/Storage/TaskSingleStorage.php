@@ -7,6 +7,7 @@ use plibv4\process\Scheduler;
  * used for files smaller than < 1 MB in combination with FileGroup.
  */
 class TaskSingleStorage implements Task {
+	/** @var list<StorageJob> */
 	private array $queue = [];
 	private \Storage $storage;
 	public function __construct(\Storage $storage) {

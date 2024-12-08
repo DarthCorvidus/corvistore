@@ -35,7 +35,7 @@ class StorageList implements TerminalTableLayout, TerminalTableModel {
 		}
 		return self::LEFT;
 	}
-
+	
 	public function getCell(int $col, int $row): string {
 		return $this->values[$row][$col];
 	}
@@ -55,9 +55,7 @@ class StorageList implements TerminalTableLayout, TerminalTableModel {
 	public function hasTitle(): bool {
 		return true;
 	}
-	/**
-	 * @psalm-suppress MissingReturnType
-	 */
+
 	public function load(): void {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_storage");
