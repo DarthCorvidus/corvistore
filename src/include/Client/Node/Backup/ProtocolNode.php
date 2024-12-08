@@ -170,7 +170,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 			}
 			
 			$file->setAction(\File::CREATE);
-			$this->protocol->sendSerialize($file);
+			$this->protocol->sendBinaryClass($file);
 			if($file->getType()== \Catalog::TYPE_FILE) {
 			#if($file->getType()== \Catalog::TYPE_FILE) {
 				echo "Sending new file ".$file->getPath()." [".number_format($file->getSize())."]".PHP_EOL;

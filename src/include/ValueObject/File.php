@@ -11,10 +11,10 @@ class File implements BinaryPersistable {
 	private string $owner;
 	private string $group;
 	private int $type;
-	private int $action = 0;
 	private string $target = "";
 	private int $version = 1;
 	private string $srvNodeName = "";
+	private int $srvAction = 0;
 	private int $srvStoreType = 0;
 	private int  $srvVersionId = 0;
 	private int $srvCreated = 0;
@@ -47,6 +47,7 @@ class File implements BinaryPersistable {
 		$file->srvNodeName = $reader->getIndexedString(8, 64);
 		$file->srvCreated = $reader->getUInt64();
 		$file->srvVersionId = $reader->getUInt64();
+		$file->srvAction = $reader->getUInt8();
 		$file->srvStoreType = $reader->getUInt8();
 		
 		$file->size = $reader->getUInt64();
@@ -70,6 +71,7 @@ class File implements BinaryPersistable {
 		$writer->addIndexedString(8, $this->srvNodeName, 64);
 		$writer->addUInt64($this->srvCreated);
 		$writer->addUInt64($this->srvVersionId);
+		$writer->addUInt8($this->srvAction);
 		$writer->addUInt8($this->srvStoreType);
 		
 		$writer->addUInt64($this->size);
@@ -88,11 +90,11 @@ class File implements BinaryPersistable {
 	
 	function setAction(int $action): void {
 		Assert::isClassConstant(self::class, $action);
-		$this->action = $action;
+		$this->srvAction = $action;
 	}
 	
 	function getAction(): int {
-		return $this->action;
+		return $this->srvAction;
 	}
 	
 	function setServerNodeName(string $name): void {

@@ -267,6 +267,12 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			$this->onSerializedFilegroup($protocol, $fg);
 		return;
 		}
+		if($classname === \File::class) {
+			$file = \File::fromBinary($classdata);
+			$this->onSerializedFile($protocol, $file);
+		return;
+		}
+
 	throw new \RuntimeException("unexpected class ".$classname);
 	}
 }
