@@ -199,7 +199,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		return;
 		}
 		if(get_class($unserialized) === \FileGroup::class) {
-			$this->onSerializedFileGroup($protocol, $unserialized);
+			throw new \RuntimeException("not working anymore");
 		return;
 		}
 	throw new \RuntimeException("unexpected unserialized object '".$unserialized::class."'");
