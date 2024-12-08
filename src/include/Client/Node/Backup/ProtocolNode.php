@@ -204,7 +204,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		echo "onEnd with filegroup count ".$this->filegroup->getFileCount().PHP_EOL;
 		if($this->filegroup->getFileCount()!=0) {
 			echo "onEnd:Sending last filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
-			$this->protocol->sendSerialize($this->filegroup);
+			$this->protocol->sendBinaryClass($this->filegroup);
 		}
 		$this->iteratorDone = true;
 		/**
