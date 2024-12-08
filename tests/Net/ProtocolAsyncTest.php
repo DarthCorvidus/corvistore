@@ -5,7 +5,9 @@ use Net\ProtocolAsync;
 class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \Net\ProtocolSendListener {
 	private $lastString;
 	private $lastUnserialized;
-	private $lastBinaryClass;
+	private string $lastBinaryClassname;
+	private string $lastBinaryClassdata;
+	private BinaryPersistable $lastBinaryClass;
 	private $lastOK = TRUE;
 	private $sent = NULL;
 	#const FILESIZE = 93821;
@@ -246,9 +248,20 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 			$sender->onWritten();
 			$receiver->onRead($data);
 		}
+		$this->assertEquals(File::class, $this->lastBinaryClassname);
+		$this->assertEquals($file->toBinary(), $this->lastBinaryClassdata);
 		$this->assertEquals($file, $this->lastBinaryClass);
 	}
 
+	function testSendIncompatibleClass(): void {
+		$sender = new ProtocolAsync($this);
+		$receiver = new ProtocolAsync($this);
+		$someclass = new \Exception("test");
+		$ex = $this->expectException(TypeError::class);
+		$sender->sendBinaryClass($ex);
+	}
+
+	
 	/*
 	function testSendSmallFile(): void {
 		$payload = random_bytes(16);
@@ -533,7 +546,11 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->sent = TRUE;
 	}
 
-	public function onBinaryClass(ProtocolAsync $protocol, object $instance): void {
-		$this->lastBinaryClass = $instance;
+	public function onBinaryClass(ProtocolAsync $protocol, string $classname, string $classdata): void {
+		$this->lastBinaryClassname = $classname;
+		$this->lastBinaryClassdata = $classdata;
+		if($classname === \File::class) {
+			$this->lastBinaryClass = File::fromBinary($classdata);
+		}
 	}
 }

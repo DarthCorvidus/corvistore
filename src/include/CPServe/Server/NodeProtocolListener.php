@@ -261,7 +261,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		
 	}
 
-	public function onBinaryClass(\Net\ProtocolAsync $protocol, object $instance): void {
-		echo "Received filegroup with ".$instance->getFileCount()." files, ".number_format($instance->getSize())." bytes.".PHP_EOL;
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, string $classname, string $classdata): void {
+		throw new \RuntimeException("not implemented");
 	}
 }

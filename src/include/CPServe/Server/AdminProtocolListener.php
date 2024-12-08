@@ -83,7 +83,7 @@ class AdminProtocolListener implements \Net\ProtocolAsyncListener {
 		throw new \RuntimeException("not implemented");
 	}
 
-	public function onBinaryClass(\Net\ProtocolAsync $protocol, object $instance): void {
+	public function onBinaryClass(\Net\ProtocolAsync $protocol, string $classname, string $classdata): void {
 		throw new \RuntimeException("not implemented");
 	}
 }

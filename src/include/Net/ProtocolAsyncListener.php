@@ -18,5 +18,5 @@ interface ProtocolAsyncListener {
 	function onDisconnect(\Net\ProtocolAsync $protocol): void;
 	function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void;
 	function onOk(\Net\ProtocolAsync $protocol): void;
-	function onBinaryClass(ProtocolAsync $protocol, object $instance): void;
+	function onBinaryClass(ProtocolAsync $protocol, string $classname, string $classdata): void;
 }

@@ -252,15 +252,15 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		 */
 		
 		if($type==self::BINARY_CLASS) {
-			throw new \RuntimeException("not implemented yet");
-			#$br = new \plibv4\Binary\StringReader($string, \plibv4\Binary\StringReader::LE);
-			#$classname = $br->getIndexedString(16);
-			#$classdata = $br->getIndexedString(32);
+			$br = new \plibv4\Binary\StringReader($string, \plibv4\Binary\StringReader::LE);
+			$classname = $br->getIndexedString(16);
+			$classdata = $br->getIndexedString(32);
 			/*
 			 * This actually works.
 			 */
 			#$instance = $classname::fromBinary($classdata);
 			#$this->listener->onBinaryClass($this, $instance);
+			$this->listener->onBinaryClass($this, $classname, $classdata);
 		}
 
 	}

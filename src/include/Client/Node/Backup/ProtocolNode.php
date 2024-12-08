@@ -232,7 +232,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		return $this->stat;
 	}
 
-	public function onBinaryClass(ProtocolAsync $protocol, mixed $instance): void {
-		
+	public function onBinaryClass(ProtocolAsync $protocol, string $classname, string $classdata): void {
+		throw new \RuntimeException("not implemented");
 	}
 }
