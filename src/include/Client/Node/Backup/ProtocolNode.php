@@ -89,10 +89,11 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		 * Files entries left.
 		 */
 		if($this->iteratorDone && empty($this->files)) {
-			if($this->filegroup->getFileCount()>0) {
-				#echo "Sending last filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
-				$this->protocol->sendBinaryClass($this->filegroup);
-			}
+			$this->sendFilegroupIfNecessary(true);
+			#if($this->filegroup->getFileCount()>0) {
+			#	#echo "Sending last filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
+			#	$this->protocol->sendBinaryClass($this->filegroup);
+			#}
 			$this->protocol->sendCommand("DONE");
 			$this->done = true;
 		}
@@ -138,6 +139,32 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 		#}
 	return false;
 	}
+	/**
+	 * Checks if a filegroup needs to be send.
+	 * @param bool $force Send filegroup no matter what if true.
+	 * @return void
+	 */
+	private function sendFilegroupIfNecessary(bool $force = false): void {
+		$count = $this->filegroup->getFileCount();
+		// No files, no service ;-)
+		if($count === 0) {
+			return;
+		}
+		$size = $this->filegroup->getPayloadSize();
+		// Do not send if below threshold AND $force is false
+		if($force == false && $count < self::FILEGROUP_AMOUNT_MAX and $size < self::FILEGROUP_SIZE_MAX) {
+			return;
+		}
+		if($force == true) {
+			echo "Force-sending filegroup with ".$count." files [". number_format($size)."]".PHP_EOL;
+		} else {
+			echo "Sending filegroup with ".$count." files [". number_format($size)."]".PHP_EOL;
+		}
+		
+		$this->protocol->sendBinaryClass($this->filegroup);
+		$this->stat->addNewFile($this->filegroup->getFileCount());
+		$this->filegroup = new \FileGroup();
+	}
 	
 	private function uploadNew(\CatalogEntries $catalogEntries, \CatFileDiff $diff): void {
 		#echo "Uploading for ".$catalogEntries->getDirname().PHP_EOL;
@@ -157,15 +184,9 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 				$file->setAction(\File::CREATE);
 				$this->filegroup->addFile($file);
 				/**
-				 * Send Filegroup to Server if either maximum
+				 * Send filegroup to server if necessary
 				 */
-				if($this->filegroup->getFileCount()== self::FILEGROUP_AMOUNT_MAX or $this->filegroup->getPayloadSize()>= self::FILEGROUP_SIZE_MAX) {
-					echo "Sending filegroup with ".$this->filegroup->getFileCount()." files [". number_format($this->filegroup->getPayloadSize())."]".PHP_EOL;
-					//$this->protocol->sendBinaryClass($this->filegroup);
-					$this->protocol->sendBinaryClass($this->filegroup);
-					$this->stat->addNewFile($this->filegroup->getFileCount());
-					$this->filegroup = new \FileGroup();
-				}
+				$this->sendFilegroupIfNecessary();
 			continue;
 			}
 			
@@ -201,11 +222,13 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	
 
 	public function onEnd(\plibv4\process\Task $task): void {
-		echo "onEnd with filegroup count ".$this->filegroup->getFileCount().PHP_EOL;
-		if($this->filegroup->getFileCount()!=0) {
-			echo "onEnd:Sending last filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
-			$this->protocol->sendBinaryClass($this->filegroup);
-		}
+		#echo "onEnd with filegroup count ".$this->filegroup->getFileCount().PHP_EOL;
+		#$this->sendFilegroupIfNecessary(true);
+		#if($this->filegroup->getFileCount()!=0) {
+		#	$this->sendFilegroupIfNecessary(true);
+		#	#echo "onEnd:Sending last filegroup with ".number_format($this->filegroup->getPayloadSize()).PHP_EOL;
+		#	#$this->protocol->sendBinaryClass($this->filegroup);
+		#}
 		$this->iteratorDone = true;
 		/**
 		 * If there are no more files to be processed, send DONE here.
