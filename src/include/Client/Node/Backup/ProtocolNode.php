@@ -162,7 +162,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 				if($this->filegroup->getFileCount()== self::FILEGROUP_AMOUNT_MAX or $this->filegroup->getPayloadSize()>= self::FILEGROUP_SIZE_MAX) {
 					echo "Sending filegroup with ".$this->filegroup->getFileCount()." files [". number_format($this->filegroup->getPayloadSize())."]".PHP_EOL;
 					//$this->protocol->sendBinaryClass($this->filegroup);
-					$this->protocol->sendSerialize($this->filegroup);
+					$this->protocol->sendBinaryClass($this->filegroup);
 					$this->stat->addNewFile($this->filegroup->getFileCount());
 					$this->filegroup = new \FileGroup();
 				}

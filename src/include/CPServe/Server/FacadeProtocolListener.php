@@ -46,6 +46,6 @@ class FacadeProtocolListener implements ProtocolAsyncListener {
 	}
 
 	public function onBinaryClass(\Net\ProtocolAsync $protocol, string $classname, string $classdata): void {
-		throw new \RuntimeException("not implemented");
+		$this->current->onBinaryClass($protocol, $classname, $classdata);
 	}
 }

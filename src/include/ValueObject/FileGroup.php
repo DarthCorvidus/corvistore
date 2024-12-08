@@ -5,7 +5,7 @@ use plibv4\Binary\StringReader;
  * Class to hold small file data and metadata, in order to transfer them in one
  * go.
  */
-class FileGroup {
+class FileGroup implements BinaryPersistable {
 	/** @var list<string> */
 	private array $filedata = [];
 	/** @var list<File> */

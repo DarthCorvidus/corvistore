@@ -262,6 +262,11 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 	}
 
 	public function onBinaryClass(\Net\ProtocolAsync $protocol, string $classname, string $classdata): void {
-		throw new \RuntimeException("not implemented");
+		if($classname === \FileGroup::class) {
+			$fg = \FileGroup::fromBinary($classdata);
+			$this->onSerializedFilegroup($protocol, $fg);
+		return;
+		}
+	throw new \RuntimeException("unexpected class ".$classname);
 	}
 }
