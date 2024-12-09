@@ -9,20 +9,20 @@
  * @author Claus-Christoph Küthe
  */
 class StorageBasic extends Storage implements \Net\StreamReceiver {
-	private $versionEntry;
-	private $partition;
-	private $writeHandle;
-	private $storeId;
-	private $recvSize;
-	private $recvLeft;
-	private $file;
-	private $sem;
+	private ?\VersionEntry $versionEntry;
+	private ?\Partition $partition;
+	private mixed $writeHandle;
+	private ?int $storeId;
+	private int $recvSize = 0;
+	private int $recvLeft = 0;
+	private ?\File $file;
+	private mixed $sem;
 	function __construct() {
 		parent::__construct();
 		$this->sem = sem_get(posix_getppid());
 		
 	}
-	static function getHexArray(int $id) {
+	static function getHexArray(int $id): array {
 		$hex = str_pad(dechex($id), 16, 0, STR_PAD_LEFT);
 		$grouped = array();
 		for($i=0;$i<8;$i++) {
@@ -31,12 +31,12 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	return $grouped;
 	}
 	
-	function getPathForIdFile(int $id) {
+	function getPathForIdFile(int $id): string {
 		$hexArray = self::getHexArray($id);
 		return $this->location."/".implode("/", array_slice($hexArray, 0, 7))."/".$hexArray[7].".cp";
 	}
 
-	function getPathForIdLocation(int $id) {
+	function getPathForIdLocation(int $id): string {
 		$hexArray = self::getHexArray($id);
 		return $this->location."/".implode("/", array_slice($hexArray, 0, 7))."/";
 	}
@@ -82,6 +82,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 	
 	public function restore(int $version): \Net\StreamSender {
+		$param = array();
 		$param[] = $version;
 		#$param[] = $this->getPartitionId();
 		$param[] = 1;
@@ -131,7 +132,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		fclose($this->writeHandle);
 	}
 
-	public function onFail() {
+	public function onFail(): void {
 		$this->partition = NULL;
 		$this->versionEntry = NULL;
 		$this->storeId = NULL;
@@ -146,6 +147,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 	
 	private function getStoreId(VersionEntry $versionEntry, Partition $partition, int $serial): int {
+		$new = [];
 		$new["dvs_id"] = $versionEntry->getId();
 		$new["dst_id"] = $this->getId();
 		$new["dpt_id"] = $partition->getId();
@@ -157,7 +159,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	return $storeId;
 	}
 
-	private function endStore(VersionEntry $entry, int $storeId) {
+	private function endStore(VersionEntry $entry, int $storeId): void {
 		#plibv4\profiler\Profiler::startTimer("finalizeStored");
 		$this->pdo->update("d_content", array("dco_stored"=>1), array("dco_id"=>$storeId));
 		$entry->setStored($this->pdo);
@@ -193,7 +195,11 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 
 	public function getFree(): int {
-		return disk_free_space($this->location);
+		$free = disk_free_space($this->location);
+		if($free === false) {
+			throw new \RuntimeException("unable to determine free disk space at ".$this->location);
+		}
+	return (int)disk_free_space($this->location);
 	}
 
 	public function getUsed(\Partition $partition = NULL): int {
