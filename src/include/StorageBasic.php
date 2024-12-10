@@ -8,20 +8,18 @@
  *
  * @author Claus-Christoph Küthe
  */
+use Storage\StorageBasicContext;
 class StorageBasic extends Storage implements \Net\StreamReceiver {
-	private ?\VersionEntry $versionEntry;
-	private ?\Partition $partition;
+	private ?StorageBasicContext $context;
 	private mixed $writeHandle;
-	private ?int $storeId;
 	private int $recvSize = 0;
 	private int $recvLeft = 0;
-	private ?\File $file;
 	private mixed $sem;
 	function __construct() {
 		parent::__construct();
 		$this->sem = sem_get(posix_getppid());
-		
 	}
+	
 	static function getHexArray(int $id): array {
 		$hex = str_pad(dechex($id), 16, 0, STR_PAD_LEFT);
 		$grouped = array();
@@ -42,9 +40,10 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 
 	public function store(VersionEntry $entry, Partition $partition, File $file): \Net\StreamReceiver {
-		$this->versionEntry = $entry;
-		$this->partition = $partition;
-		$this->file = $file;
+		$this->context = new StorageBasicContext($file, $partition, $entry);
+		#$this->versionEntry = $entry;
+		#$this->partition = $partition;
+		#$this->file = $file;
 	return $this;
 	}
 	
@@ -93,15 +92,19 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 	
 	public function onRecvCancel(): void {
-		echo "Transfer cancelled, cleaning up.".PHP_EOL;
-		if(file_exists($this->getPathForIdFile($this->storeId))) {
-			unlink($this->getPathForIdFile($this->storeId));
+		if($this->context === null) {
+			throw new \RuntimeException("storage context missing");
 		}
-		$this->pdo->delete("d_content", array("dco_id"=>$this->storeId));
-		$this->partition = NULL;
-		$this->file = NULL;
-		$this->versionEntry = NULL;
-		$this->storeId = NULL;
+		echo "Transfer cancelled, cleaning up.".PHP_EOL;
+		if(file_exists($this->getPathForIdFile($this->context->getStoreId()))) {
+			unlink($this->getPathForIdFile($this->context->getStoreId()));
+		}
+		$this->pdo->delete("d_content", array("dco_id"=>$this->context->getStoreId()));
+		$this->context = null;
+		#$this->partition = NULL;
+		#$this->file = NULL;
+		#$this->versionEntry = NULL;
+		#$this->storeId = NULL;
 		fclose($this->writeHandle);
 	}
 	
@@ -124,18 +127,23 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	}
 
 	public function onRecvEnd(): void {
-		$this->endStore($this->versionEntry, $this->storeId);
-		$this->partition = NULL;
-		$this->file = NULL;
-		$this->versionEntry = NULL;
-		$this->storeId = NULL;
+		if($this->context === null) {
+			throw new \RuntimeException("storage context missing");
+		}
+		$this->endStore($this->context->getVersionEntry(), $this->context->getStoreId());
+		$this->context = null;
+		#$this->partition = NULL;
+		#$this->file = NULL;
+		#$this->versionEntry = NULL;
+		#$this->storeId = NULL;
 		fclose($this->writeHandle);
 	}
 
 	public function onFail(): void {
-		$this->partition = NULL;
-		$this->versionEntry = NULL;
-		$this->storeId = NULL;
+		#$this->partition = NULL;
+		#$this->versionEntry = NULL;
+		#$this->storeId = NULL;
+		$this->context = null;
 		fclose($this->writeHandle);
 	}
 
@@ -168,6 +176,9 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	
 	
 	public function onRecvStart(): void {
+		if($this->context === null) {
+			throw new \RuntimeException("storage context missing");
+		}
 		// First try on sem_acquire will not block.
 		while(sem_acquire($this->sem, TRUE)===FALSE) {
 			// Show debug message here.
@@ -177,7 +188,9 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 			break;
 		}
 		$serial = $this->getSerial();
-		$this->storeId = $this->getStoreId($this->versionEntry, $this->partition, $serial);
+		$storeId = $this->getStoreId($this->context->getVersionEntry(), $this->context->getPartition(), $serial);
+		$this->context->setStoreId($storeId);
+		
 		sem_release($this->sem);
 		
 		$path = $this->getPathForIdFile($serial);
@@ -187,7 +200,9 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 			mkdir($location, 0700, true);
 		}
 		$this->writeHandle = fopen($path, "w");
-		fwrite($this->writeHandle, str_pad($this->file->toBinary(), 8192, "\0"));
+		$header = $this->context->getFile()->toBinary();
+		
+		fwrite($this->writeHandle, str_pad($header, 8192, "\0"));
 		if($this->writeHandle==FALSE) {
 			throw new Exception("could not open ".$path);
 		}
