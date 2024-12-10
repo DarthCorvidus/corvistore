@@ -12,10 +12,10 @@ use Storage\StorageBasicContext;
 class StorageBasic extends Storage implements \Net\StreamReceiver {
 	private ?StorageBasicContext $context;
 	private mixed $writeHandle;
-	private mixed $sem;
+	#private mixed $sem;
 	function __construct() {
 		parent::__construct();
-		$this->sem = sem_get(posix_getppid());
+		#$this->sem = sem_get(posix_getppid());
 	}
 	
 	private function assertContext(): void {
@@ -135,11 +135,6 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		fclose($this->writeHandle);
 	}
 
-	public function onFail(): void {
-		$this->context = null;
-		fclose($this->writeHandle);
-	}
-
 	private function getSerial(): int {
 		$param = array();
 		$param[] = $this->getId();
@@ -173,18 +168,18 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 			throw new \RuntimeException("storage context missing");
 		}
 		// First try on sem_acquire will not block.
-		while(sem_acquire($this->sem, TRUE)===FALSE) {
-			// Show debug message here.
-			echo "Mutex for Process ".posix_getpid().PHP_EOL;
-			// Block until semaphore is acquired, then quit.
-			sem_acquire($this->sem);
-			break;
-		}
+		#while(sem_acquire($this->sem, TRUE)===FALSE) {
+		#	// Show debug message here.
+		#	echo "Mutex for Process ".posix_getpid().PHP_EOL;
+		#	// Block until semaphore is acquired, then quit.
+		#	sem_acquire($this->sem);
+		#	break;
+		#}
 		$serial = $this->getSerial();
 		$storeId = $this->getStoreId($this->context->getVersionEntry(), $this->context->getPartition(), $serial);
 		$this->context->setStoreId($storeId);
 		
-		sem_release($this->sem);
+		#sem_release($this->sem);
 		
 		$path = $this->getPathForIdFile($serial);
 		$location = $this->getPathForIdLocation($serial);

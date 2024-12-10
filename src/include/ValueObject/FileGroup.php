@@ -64,7 +64,6 @@ class FileGroup implements BinaryPersistable {
 	}
 	
 	function toBinary(): string {
-		$binary = "";
 		$writer = new StringWriter(StringWriter::LE);
 		$writer->addUInt8(count($this->file));
 		foreach($this->file as $key => $value) {
