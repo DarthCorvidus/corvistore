@@ -8,7 +8,7 @@
  * @author Claus-Christoph Küthe
  */
 class TestHelper {
-	static function dumpTable(EPDO $pdo, $table, $sort) {
+	static function dumpTable(EPDO $pdo, string $table, string $sort): array {
 		$database = array();
 		$stmt = $pdo->prepare("select * from ".$table." order by ".$sort);
 		$stmt->setFetchMode(PDO::FETCH_ASSOC);
@@ -71,14 +71,14 @@ class TestHelper {
 		$cpadm->handleCommand(new CommandParser("define node test01 policy=forever password=secret"));
 	}
 	
-	static function invoke($object, $method, array $args): mixed {
+	static function invoke(object $object, string $method, array $args): mixed {
 		$reflector = new ReflectionClass(get_class($object));
 		$method = $reflector->getMethod($method);
 		$method->setAccessible(true);
 	return $method->invokeArgs($object, $args);
 	}
 	
-	static function getPropertyValue($object, $propertyName): mixed {
+	static function getPropertyValue(object $object, string $propertyName): mixed {
 		$reflector = new ReflectionObject($object);
 		$property = $reflector->getProperty($propertyName);
 		$property->setAccessible(true);

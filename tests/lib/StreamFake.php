@@ -12,8 +12,8 @@
  * @author hm
  */
 class StreamFake implements \Net\Stream {
-	private $data;
-	private $pos;
+	private string $data;
+	private int $pos;
 	function __construct(string $data) {
 		$this->data = $data;
 		$this->pos = 0;

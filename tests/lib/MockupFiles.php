@@ -8,7 +8,7 @@
  * @author Claus-Christoph Küthe
  */
 class MockupFiles {
-	private $path;
+	private string $path;
 	function __construct(string $path) {
 		if(!file_exists($path)) {
 			mkdir($path, 0700);
@@ -17,20 +17,20 @@ class MockupFiles {
 		$this->path = $convert->convert($path);
 	}
 	
-	function getInternalPath($path) {
+	function getInternalPath(string $path): string {
 		if($path[0]!="/") {
 			$path = "/".$path;
 		}
 		return $this->path.$path;
 	}
 	
-	function delete() {
+	function delete(): void {
 		if(file_exists($this->path)) {
 			$this->deleteRecurse($this->path);
 		}
 	}
 	
-	private function deleteRecurse($path) {
+	private function deleteRecurse(string $path): void {
 		foreach(glob($path."/*") as $key => $value) {
 			if(is_dir($value)) {
 				$this->deleteRecurse($value);
@@ -42,12 +42,12 @@ class MockupFiles {
 		rmdir($path);
 	}
 	
-	function clear() {
+	function clear(): void {
 		$this->delete();
 		mkdir($this->path, 0700);
 	}
 
-	function createDir($path) {
+	function createDir(string $path): void {
 		if($path=="/" || $path==".") {
 			return;
 		}
@@ -60,7 +60,7 @@ class MockupFiles {
 		}
 	}
 	
-	function createText($path, $text): string {
+	function createText(string $path, string $text): string {
 		$this->createDir(dirname($path));
 		#$dirname = dirname($path);
 		#if(!file_exists($dirname)) {
@@ -71,18 +71,25 @@ class MockupFiles {
 	return $this->getInternalPath($path);
 	}
 	
-	function createLink($target, $link) {
+	function createLink(string $target, string $link): void {
 		symlink($this->getInternalPath($target), $this->getInternalPath($link));
 	}
 	
-	function createRandom($path, int $size, int $blocksize=1024): string {
+	function createRandom(string $path, int $size, int $blocksize=1024): string {
 		$this->createDir(dirname($path));
+		if($size<=0) {
+			throw new \RuntimeException("size must be positive");
+		}
+		if($blocksize<=0) {
+			throw new \RuntimeException("blocksize must be positive");
+		}
+
 		file_put_contents($this->getInternalPath($path), random_bytes($size*$blocksize));
 		clearstatcache();
 	return $this->getInternalPath($path);
 	}
 	
-	function deleteFile($path) {
+	function deleteFile(string $path): void {
 		if(!file_exists($this->getInternalPath($path))) {
 			return;
 		}

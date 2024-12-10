@@ -30,7 +30,7 @@ class PolicyTest extends TestCase {
 		$command = new CommandParser("define policy keepv10d5month partition=backup-main02 verexists=10 verdeleted=5 retexists=31 retdeleted=15");
 		Policy::define(TestHelper::getEPDO(), $command);
 		
-		
+		$target = array();
 		$target[0] = array("dpo_id" => "1", "dpo_name"=>"forever", "dpo_version_exists" => "0", "dpo_version_deleted"=>"0", "dpo_retention_exists" => "0", "dpo_retention_deleted"=>"0", "dpt_id"=>"2");
 		$target[1] = array("dpo_id" => "2", "dpo_name"=>"month", "dpo_version_exists" => "0", "dpo_version_deleted"=>"0", "dpo_retention_exists" => "31", "dpo_retention_deleted"=>"15", "dpt_id"=>"1");
 		$target[2] = array("dpo_id" => "3", "dpo_name"=>"keepv10d5", "dpo_version_exists" => "10", "dpo_version_deleted"=>"5", "dpo_retention_exists" => "0", "dpo_retention_deleted"=>"0", "dpt_id"=>"1");

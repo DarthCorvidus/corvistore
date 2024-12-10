@@ -8,17 +8,17 @@
  * @author Claus-Christoph Küthe
  */
 class CPModelTesting implements CPModel {
-	private $params = array();
-	private $positional = array();
-	public function addParamUserValue(string $param, UserValue $value) {
+	private array $params = array();
+	private array $positional = array();
+	public function addParamUserValue(string $param, UserValue $value): void {
 		$this->params[$param] = $value;
 	}
 
-	public function addPositionalUserValue(UserValue $value) {
+	public function addPositionalUserValue(UserValue $value): void {
 		$this->positional[] = $value;
 	}
 	
-	public function getParamUserValue($param): \UserValue {
+	public function getParamUserValue(string $param): \UserValue {
 		return $this->params[$param];
 	}
 

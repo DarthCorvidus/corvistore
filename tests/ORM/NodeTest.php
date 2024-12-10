@@ -21,6 +21,7 @@ class NodeTest extends TestCase {
 		$node1 = Node::define(TestHelper::getEPDO(), new CommandParser("define node test01 policy=forever password=secret"));
 		$node2 = Node::define(TestHelper::getEPDO(), new CommandParser("define node test02 policy=forever password=secret"));
 		$node3 = Node::define(TestHelper::getEPDO(), new CommandParser("define node test03 policy=month password=secret"));
+		$target = array();
 		$target[0] = array("dnd_id" => "1", "dnd_name"=>"test01", "dpo_id"=>"1", "dnd_password" => $node1->getPassword(), "dnd_salt" => $node1->getSalt());
 		$target[1] = array("dnd_id" => "2", "dnd_name"=>"test02", "dpo_id"=>"1", "dnd_password" => $node2->getPassword(), "dnd_salt" => $node2->getSalt());
 		$target[2] = array("dnd_id" => "3", "dnd_name"=>"test03", "dpo_id"=>"2", "dnd_password" => $node3->getPassword(), "dnd_salt" => $node3->getSalt());

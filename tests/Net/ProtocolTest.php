@@ -4,8 +4,8 @@ use PHPUnit\Framework\TestCase;
 use Net\Protocol;
 class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 	const FILE_SIZE = 17201;
-	private $lastString;
-	private $lastSerialized;
+	private ?string $lastString;
+	private mixed $lastSerialized;
 	function tearDown(): void {
 		if(file_exists(self::getExamplePath())) {
 			unlink(self::getExamplePath());

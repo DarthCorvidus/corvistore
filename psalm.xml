@@ -29,12 +29,15 @@
 				<file name="src/include/ORM/Partition.php" /> 
 				<file name="src/include/ORM/Policy.php" /> 
 				<file name="src/include/ORM/User.php" /> 
-				<file name="src/include/ORM/VersionEntry.php" /> 
+				<file name="src/include/ORM/VersionEntry.php" />
+				<!-- review -->
+				<file name="tests/libtest/MockReceiverTest.php" /> 
 			</errorLevel>
 		</PropertyNotSetInConstructor>
 	</issueHandlers>
 	<projectFiles>
         <directory name="src" />
+		<directory name="tests" />
         <ignoreFiles>
             <directory name="vendor" />
 			<directory name="prototyping" />

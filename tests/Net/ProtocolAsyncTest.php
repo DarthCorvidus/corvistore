@@ -3,8 +3,8 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\ProtocolAsync;
 class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \Net\ProtocolSendListener {
-	private $lastString;
-	private $lastUnserialized;
+	private ?string $lastString;
+	private mixed $lastUnserialized;
 	private string $lastBinaryClassname;
 	private string $lastBinaryClassdata;
 	private BinaryPersistable $lastBinaryClass;
@@ -13,7 +13,7 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 	#const FILESIZE = 93821;
 	const FILESIZE = 1024*11;
 	function setUp(): void {
-		$this->lastString = NULL;
+		$this->lastString = null;
 		$this->lastUnserialized = array();
 		$this->lastOK = FALSE;
 		$this->sent = NULL;

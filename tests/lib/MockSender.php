@@ -4,12 +4,12 @@
  */
 namespace Net;
 class MockSender implements StreamSender {
-    private $data;
-    private $pointer = 0;
-    private $exceptionAfter = PHP_INT_MAX;
-    private $started = false;
-    private $ended = false;
-    private $cancelled = false;
+    private string $data;
+    private int $pointer = 0;
+    private int $exceptionAfter = PHP_INT_MAX;
+    private bool $started = false;
+    private bool $ended = false;
+    private bool $cancelled = false;
     
 	public function __construct(string $data) {
         $this->data = $data;
@@ -54,7 +54,7 @@ class MockSender implements StreamSender {
         $this->cancelled = true;
     }
 
-    public function setExceptionAfter(int $bytes) {
+    public function setExceptionAfter(int $bytes): void {
         $this->exceptionAfter = $bytes;
     }
 

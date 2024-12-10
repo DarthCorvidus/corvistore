@@ -2,26 +2,7 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class VersionsTest extends TestCase {
-	private $mockup;
-	function __construct() {
-		parent::__construct();
-		$this->now = time();
-		$this->mockup = new MockupFiles("/tmp/crow-protect/");
-	}
-
-	function setUp(): void {
-		TestHelper::createDatabase();
-		$this->mockup->clear();
-		TestHelper::initServer();
-	}
-
-	function tearDown(): void {
-		TestHelper::deleteDatabase();
-		$this->mockup->clear();
-		TestHelper::deleteStorage();
-	}
-	
-	function testConstruct(): void {
+function testConstruct(): void {
 		$version = new Versions();
 		$this->assertInstanceOf(Versions::class, $version);
 	}

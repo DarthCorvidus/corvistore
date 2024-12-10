@@ -25,6 +25,7 @@ class VersionEntryTest extends TestCase {
 	function testFromArray(): void {
 		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
+		$example = array();
 		$example["dvs_id"] = "25";
 		$example["dvs_type"] = Catalog::TYPE_FILE;
 		#$example["dvs_atime"] = "11021";
@@ -55,6 +56,7 @@ class VersionEntryTest extends TestCase {
 	function testFromId(): void {
 		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
+		$example = array();
 		$example["dvs_id"] = "25";
 		$example["dvs_atime"] = "11021";
 		$example["dvs_mtime"] = "11000";
@@ -73,6 +75,7 @@ class VersionEntryTest extends TestCase {
 	function testToBinary(): void {
 		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
+		$example = array();
 		$example["dvs_id"] = "25";
 		$example["dvs_type"] = Catalog::TYPE_FILE;
 		$example["dvs_atime"] = "11021";
@@ -95,6 +98,7 @@ class VersionEntryTest extends TestCase {
 	function testFromBinary(): void {
 		$time = time();
 		$datetime = date("Y-m-d H:i:sP", $time);
+		$example = array();
 		$example["dvs_id"] = "25";
 		$example["dvs_type"] = Catalog::TYPE_FILE;
 		$example["dvs_atime"] = "11021";

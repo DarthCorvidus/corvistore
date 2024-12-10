@@ -4,11 +4,11 @@
  */
 namespace Net;
 class MockReceiver implements StreamReceiver {
-	private $recvSize;
-	private $data = "";
-	private $startCalled = false;
-	private $endCalled = false;
-	private $cancelCalled = false;
+	private int $recvSize = 0;
+	private string $data = "";
+	private bool $startCalled = false;
+	private bool $endCalled = false;
+	private bool $cancelCalled = false;
 
 	public function setRecvSize(int $size): void {
 		$this->recvSize = $size;

@@ -120,8 +120,8 @@ class FileTest extends TestCase {
 	
 	function testSetGetAction(): void {
 		$object = File::fromPath("/tmp/");
-		$object->setAction(FILE::UPDATE);
-		$this->assertEquals(FILE::UPDATE, $object->getAction());
+		$object->setAction(File::UPDATE);
+		$this->assertEquals(File::UPDATE, $object->getAction());
 	}
 	
 	function testSetInvalidAction(): void {

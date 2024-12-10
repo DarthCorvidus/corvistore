@@ -26,7 +26,7 @@ class SSLContextTest extends TestCase {
 	}
 	
 	
-	static function generateSSL($id) {
+	static function generateSSL(string $id): void {
 		$caData = array(
 			"countryName" => "DE",
 			"stateOrProvinceName" => "Baden-Wuerttemberg",

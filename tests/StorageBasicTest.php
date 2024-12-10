@@ -18,6 +18,7 @@ class StorageBasicTest extends TestCase {
 		$command = new CommandParser("define storage backup-main02 type=basic location=".__DIR__."/storage/basic02");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_storage", "dst_id");
+		$target = array();
 		$target[0] = array("dst_id" => 1, "dst_name" => "backup-main01", "dst_location"=>__DIR__."/storage/basic01", "dst_type"=>"basic");
 		$target[1] = array("dst_id" => 2, "dst_name" => "backup-main02", "dst_location"=>__DIR__."/storage/basic02", "dst_type"=>"basic");
 		$this->assertEquals($target, $database);

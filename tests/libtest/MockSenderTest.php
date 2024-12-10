@@ -5,7 +5,7 @@
 use Net\MockSender;
 use PHPUnit\Framework\TestCase;
 class MockSenderTest extends TestCase {
-    public function testSendData() {
+    public function testSendData(): void {
         $sender = new MockSender("Hello World!");
         $sender->onSendStart();
         $this->assertTrue($sender->hasStarted());
@@ -17,14 +17,14 @@ class MockSenderTest extends TestCase {
         $this->assertTrue($sender->hasEnded());
     }
 
-    public function testExceptionAfter() {
+    public function testExceptionAfter(): void {
         $sender = new MockSender("Hello World!");
         $sender->setExceptionAfter(5);
         $this->expectException(\RuntimeException::class);
 		$sender->getSendData(10);
     }
 
-    public function testCancel() {
+    public function testCancel(): void {
         $sender = new MockSender("Hello World!");
         $sender->onSendCancel();
         $this->assertTrue($sender->wasCancelled());

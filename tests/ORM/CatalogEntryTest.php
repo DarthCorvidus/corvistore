@@ -2,10 +2,6 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class CatalogEntryTest extends TestCase {
-	function __construct() {
-		parent::__construct();
-		$this->now = time();
-	}
 	static function setUpBeforeClass(): void {
 		TestHelper::createDatabase();
 		TestHelper::createStorage();
@@ -25,6 +21,7 @@ class CatalogEntryTest extends TestCase {
 
 	function testFromArray(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
+		$array = array();
 		$array["dc_id"] = 1;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test03")->getId();
 		$array["dc_dirname"] = "/";
@@ -35,6 +32,7 @@ class CatalogEntryTest extends TestCase {
 	}
 	
 	function testFromId(): void {
+		$array = array();
 		$array["dc_id"] = 1;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test03")->getId();
 		$array["dc_dirname"] = "/";
@@ -67,6 +65,7 @@ class CatalogEntryTest extends TestCase {
 	
 	function testHasParentId(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
+		$array = array();
 		$array["dc_id"] = 2;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test01")->getId();
 		$array["dc_dirname"] = "/root";

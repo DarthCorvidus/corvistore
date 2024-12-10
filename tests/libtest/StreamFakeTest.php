@@ -3,17 +3,17 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 #include __DIR__."/../lib/StreamFake.php";
 class StreamFakeTest extends TestCase {
-	function testConstruct() {
+	function testConstruct(): void {
 		$sf = new StreamFake("Hello world!");
 		$this->assertInstanceOf(StreamFake::class, $sf);
 	}
 	
-	function getData() {
+	function getData(): void {
 		$stream = new StreamFake("Hello world!");
 		$this->assertEquals("Hello world!", $stream->getData());
 	}
 	
-	function testRead() {
+	function testRead(): void {
 		$expect = random_bytes(1024*10);
 		$stream = new StreamFake($expect);
 		$read = "";
@@ -23,7 +23,7 @@ class StreamFakeTest extends TestCase {
 		$this->assertEquals($expect, $read);
 	}
 
-	function testWrite() {
+	function testWrite(): void {
 		$expect = random_bytes(1024*10);
 		$stream = new StreamFake("");
 		for($i=0;$i<10;$i++) {
