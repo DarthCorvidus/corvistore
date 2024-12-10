@@ -17,10 +17,14 @@ class StorageBasicContext {
 	private \File $file;
 	private mixed $writeHandle;
 	private ?int $storeId = null;
+	private int $size;
+	private int $left;
 	function __construct(\File $file, \Partition $partition, \VersionEntry $versionEntry) {
 		$this->file = $file;
 		$this->partition = $partition;
 		$this->versionEntry = $versionEntry;
+		$this->size = $this->file->getSize();
+		$this->left = $this->size;
 	}
 	
 	public function getFile(): \File {
@@ -44,5 +48,17 @@ class StorageBasicContext {
 			throw new \RuntimeException("no store id set");
 		}
 		return $this->storeId;
+	}
+	
+	public function getLeft(): int {
+		return $this->left;
+	}
+	
+	public function subtractLeft(int $chunk): void {
+		$this->left -= $chunk;
+	}
+	
+	public function getSize(): int {
+		return $this->size;
 	}
 }

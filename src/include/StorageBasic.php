@@ -12,12 +12,17 @@ use Storage\StorageBasicContext;
 class StorageBasic extends Storage implements \Net\StreamReceiver {
 	private ?StorageBasicContext $context;
 	private mixed $writeHandle;
-	private int $recvSize = 0;
-	private int $recvLeft = 0;
 	private mixed $sem;
 	function __construct() {
 		parent::__construct();
 		$this->sem = sem_get(posix_getppid());
+	}
+	
+	private function assertContext(): void {
+		// 'this should not happen'
+		if($this->context === null) {
+			throw new \RuntimeException(self::class." not properly initialized to receive stream data");
+		}
 	}
 	
 	static function getHexArray(int $id): array {
@@ -41,9 +46,6 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 
 	public function store(VersionEntry $entry, Partition $partition, File $file): \Net\StreamReceiver {
 		$this->context = new StorageBasicContext($file, $partition, $entry);
-		#$this->versionEntry = $entry;
-		#$this->partition = $partition;
-		#$this->file = $file;
 	return $this;
 	}
 	
@@ -101,48 +103,39 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		}
 		$this->pdo->delete("d_content", array("dco_id"=>$this->context->getStoreId()));
 		$this->context = null;
-		#$this->partition = NULL;
-		#$this->file = NULL;
-		#$this->versionEntry = NULL;
-		#$this->storeId = NULL;
 		fclose($this->writeHandle);
 	}
 	
 	public function setRecvSize(int $size): void {
-		$this->recvSize = $size;
-		$this->recvLeft = $size;
+		//Not necessary, as size is determined by context.
+		#$this->recvSize = $size;
+		#$this->recvLeft = $size;
 	}
 	
 	public function getRecvSize():int {
-		return $this->recvSize;
+		$this->assertContext();
+		return $this->context->getSize();
 	}
 	
 	function getRecvLeft(): int {
-		return $this->recvLeft;
+		$this->assertContext();
+		return $this->context->getLeft();
 	}
 	
 	public function receiveData(string $data): void {
+		$this->assertContext();
 		fwrite($this->writeHandle, $data);
-		$this->recvLeft -= strlen($data);
+		$this->context->subtractLeft(strlen($data));
 	}
 
 	public function onRecvEnd(): void {
-		if($this->context === null) {
-			throw new \RuntimeException("storage context missing");
-		}
+		$this->assertContext();
 		$this->endStore($this->context->getVersionEntry(), $this->context->getStoreId());
 		$this->context = null;
-		#$this->partition = NULL;
-		#$this->file = NULL;
-		#$this->versionEntry = NULL;
-		#$this->storeId = NULL;
 		fclose($this->writeHandle);
 	}
 
 	public function onFail(): void {
-		#$this->partition = NULL;
-		#$this->versionEntry = NULL;
-		#$this->storeId = NULL;
 		$this->context = null;
 		fclose($this->writeHandle);
 	}
