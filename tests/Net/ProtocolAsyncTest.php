@@ -3,24 +3,24 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\ProtocolAsync;
 class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \Net\ProtocolSendListener {
-	private ?string $lastString;
+	private string $lastString = "";
 	private mixed $lastUnserialized;
 	private string $lastBinaryClassname;
 	private string $lastBinaryClassdata;
 	private BinaryPersistable $lastBinaryClass;
-	private $lastOK = TRUE;
-	private $sent = NULL;
+	private bool $lastOK = TRUE;
+	private ?bool $sent = NULL;
 	#const FILESIZE = 93821;
 	const FILESIZE = 1024*11;
 	function setUp(): void {
-		$this->lastString = null;
+		$this->lastString = "";
 		$this->lastUnserialized = array();
 		$this->lastOK = FALSE;
 		$this->sent = NULL;
 	}
 	
 	function tearDown(): void {
-		$this->lastString = NULL;
+		$this->lastString = "";
 		$this->lastUnserialized;
 		$this->lastOK = FALSE;
 		$this->sent = NULL;
@@ -32,13 +32,13 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		}
 		foreach(self::getSourceNames() as $value) {
 			if(file_exists($value)) {
-				unlink($filename);
+				unlink($value);
 			}
 		}
 
 		foreach(self::getTargetNames() as $value) {
 			if(file_exists($value)) {
-				unlink($filename);
+				unlink($value);
 			}
 		}
 		
@@ -255,10 +255,13 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 
 	function testSendIncompatibleClass(): void {
 		$sender = new ProtocolAsync($this);
-		$receiver = new ProtocolAsync($this);
 		$someclass = new \Exception("test");
-		$ex = $this->expectException(TypeError::class);
-		$sender->sendBinaryClass($ex);
+		$this->expectException(TypeError::class);
+		/**
+		 * It's the point of the test ;-)
+		 * @psalm-suppress InvalidArgument
+		 */
+		$sender->sendBinaryClass($someclass);
 	}
 
 	
