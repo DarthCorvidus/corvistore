@@ -105,6 +105,10 @@ class StorageBasicTest extends TestCase {
 		$pdo = TestHelper::getEPDO();
 		$storage = StorageBasic::fromName(TestHelper::getEPDO(), "backup-main01");
 		$target = __DIR__."/storage/basic01/00/00/21/d0/10/14/16/a8.cp";
+		/**
+		 * @todo This is plain wrong, but ok for now
+		 * @psalm-suppress UndefinedMethod
+		 */
 		$this->assertEquals($target, $storage->getPathForIdFile(37177506666152));
 	}
 
@@ -115,6 +119,10 @@ class StorageBasicTest extends TestCase {
 		$pdo = TestHelper::getEPDO();
 		$storage = StorageBasic::fromName(TestHelper::getEPDO(), "backup-main01");
 		$target = __DIR__."/storage/basic01/00/00/21/d0/10/14/16/";
+		/**
+		 * @todo This is plain wrong, but ok for now
+		 * @psalm-suppress UndefinedMethod
+		 */
 		$this->assertEquals($target, $storage->getPathForIdLocation(37177506666152));
 	}
 	
