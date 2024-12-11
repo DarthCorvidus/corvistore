@@ -50,7 +50,7 @@ class StreamClient implements Stream {
 		}
 	}
 
-	public function write(string $string): int {
+	public function write(string $data): int {
 		while(true) {
 			$write = array($this->socket);
 			$read = array();
