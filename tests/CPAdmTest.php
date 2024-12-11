@@ -33,6 +33,6 @@ class CPAdmTest extends TestCase {
 		$command = $adm->getCommand("yell at me");
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("Invalid command 'yell'.");
-		$result = $adm->handleCommand($command);
+		$adm->handleCommand($command);
 	}
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class ConfFileTest extends TestCase {
 	function testFromFile(): void {
+		$expect = array();
 		$expect["host"] = "backup.example.com";
 		$expect["node"] = "desktop01";
 		$expect["password1"] = "squishthis:!";
@@ -13,6 +14,7 @@ class ConfFileTest extends TestCase {
 	}
 	
 	function testFromString(): void {
+		$expect = array();
 		$expect["host"] = "backup.example.com";
 		$expect["node"] = "desktop01";
 		$expect["password1"] = "squishthis:!";

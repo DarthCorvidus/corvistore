@@ -2,12 +2,7 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class CatalogTest extends TestCase {
-	private $mockup;
-	function __construct() {
-		parent::__construct();
-		$this->now = time();
-		$this->mockup = new MockupFiles("/tmp/crow-protect/");
-	}
+	private MockupFiles $mockup;
 	static function setUpBeforeClass(): void {
 		#TestHelper::resetDatabase();
 		#$cpadm = new CPAdm(TestHelper::getEPDO());
@@ -19,6 +14,7 @@ class CatalogTest extends TestCase {
 	
 	function setUp(): void {
 		TestHelper::createDatabase();
+		$this->mockup = new MockupFiles("/tmp/crow-protect/");
 		$this->mockup->clear();
 		TestHelper::initServer();
 	}
@@ -28,22 +24,24 @@ class CatalogTest extends TestCase {
 		TestHelper::deleteStorage();
 	}
 	
-	function testConstruct() {
+	function testConstruct(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
 		$this->assertInstanceOf(Catalog::class, $catalog);
 	}
 	
-	function testAddNewDirectory() {
+	function testAddNewDirectory(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$file = File::fromPath("/tmp/");
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
 		$catalogEntry = $catalog->newEntry($file);
 		
+		$catTarget = array();
 		$catTarget[0] = array("dc_id" => 1, "dc_name" => "tmp", "dc_dirname" => "/", "dnd_id" => 1, "dc_parent" => NULL);
 		$catDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
 		$this->assertEquals($catTarget, $catDB);
 		
+		$verTarget = array();
 		$verTarget[0]["dvs_id"] = 1;
 		$verTarget[0]["dvs_atime"] = NULL;
 		$verTarget[0]["dvs_ctime"] = NULL;
@@ -62,7 +60,7 @@ class CatalogTest extends TestCase {
 		$this->assertEquals($verTarget, $verDB);
 	}
 	/*
-	function testCreateDirectoryUnique() {
+	function testCreateDirectoryUnique(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$source = new SourceObject($node, "/tmp/");
 		$catalog = new Catalog(TestHelper::getEPDO());
@@ -75,7 +73,7 @@ class CatalogTest extends TestCase {
 		$this->assertEquals($target, $database);
 	}
 
-	function testCreateDirAllTheWayUp() {
+	function testCreateDirAllTheWayUp(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createDir("/Pictures/vacations/2023_thailand");
 		$source = new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/2023_thailand");
@@ -92,7 +90,7 @@ class CatalogTest extends TestCase {
 		$this->assertEquals($target, $database);
 	}
 
-	function testCreateAllTheWayUpUnique() {
+	function testCreateAllTheWayUpUnique(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createDir("/Pictures/vacations/2023_thailand");
 		$source = new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/2023_thailand");
@@ -112,7 +110,7 @@ class CatalogTest extends TestCase {
 	}
 	*/
 	
-	function testAddNewParented() {
+	function testAddNewParented(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createDir("/Pictures/vacations/2023_thailand");
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
@@ -122,6 +120,7 @@ class CatalogTest extends TestCase {
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/2023_thailand"), $catalogEntry);
+		$target = array();
 		$target[0] = array("dc_id" => 1, "dc_dirname" => "/", "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
 		$target[1] = array("dc_id" => 2, "dc_dirname" => "/tmp", "dc_name" => "crow-protect", "dnd_id" => 1, "dc_parent" => 1);
 		$database = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
@@ -129,7 +128,7 @@ class CatalogTest extends TestCase {
 	}
 
 	/*
-	function testCreateParentedUnique() {
+	function testCreateParentedUnique(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createDir("/Pictures/vacations/2023_thailand");
 		$catalog = new Catalog(TestHelper::getEPDO());
@@ -147,7 +146,7 @@ class CatalogTest extends TestCase {
 	}
 	*/
 	
-	function testAddNewFile() {
+	function testAddNewFile(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createRandom("/beach.bin", 12);
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
@@ -156,12 +155,14 @@ class CatalogTest extends TestCase {
 		$file = File::fromPath("/tmp/crow-protect/beach.bin");
 		$entry = $catalog->newEntry($file, $cp->getId());
 		
+		$catTarget = array();
 		$catTarget[0] = array("dc_id" => 1, "dc_dirname" => "/", "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);
 		$catTarget[1] = array("dc_id" => 2, "dc_dirname" => "/tmp", "dc_name" => "crow-protect", "dnd_id" => 1, "dc_parent" => 1);
 		$catTarget[2] = array("dc_id" => 3, "dc_dirname" => "/tmp/crow-protect", "dc_name" => "beach.bin", "dnd_id" => 1, "dc_parent" => 2);
 		$catDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_catalog", "dc_id");
 		$verDB = TestHelper::dumpTable(TestHelper::getEPDO(), "d_version", "dvs_id");
 
+		$verTarget = array();
 		$verTarget["dvs_id"] = 3;
 		$verTarget["dvs_atime"] = NULL;
 		$verTarget["dvs_ctime"] = NULL;
@@ -184,7 +185,7 @@ class CatalogTest extends TestCase {
 	 * Testing if the sort order of Versions is correct, oldest first, newer
 	 * later.
 	 */
-	function testCheckLatest() {
+	function testCheckLatest(): void {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$this->mockup->createRandom("/beach.bin", 12);
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);

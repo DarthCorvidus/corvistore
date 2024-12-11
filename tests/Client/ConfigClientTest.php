@@ -3,29 +3,30 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Client\Config;
 class ConfigClientTest extends TestCase {
-	function testConstruct() {
+	function testConstruct(): void {
 		$config = new Config(__DIR__."/include.conf");
 		$this->assertInstanceOf(Config::class, $config);
 	}
 	
-	function testConstructBogus() {
+	function testConstructBogus(): void {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("Client configuration at ".__DIR__."/squid.conf not available.");
 		new Config(__DIR__."/squid.conf");
 	}
 	
-	function testConstructDir() {
+	function testConstructDir(): void {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("Client configuration at ".__DIR__." not a file.");
 		new Config(__DIR__);
 	}
 	
-	function testGetNode() {
+	function testGetNode(): void {
 		$config = new Config(__DIR__."/include.conf");
 		$this->assertEquals("test01", $config->getNode());
 	}
 	
-	function testGetExclude() {
+	function testGetExclude(): void {
+		$expected = array();
 		$expected[] = "/virtual/";
 		$expected[] = "/storage/";
 		$expected[] = "/var/lib/crow-protect/";
@@ -33,25 +34,26 @@ class ConfigClientTest extends TestCase {
 		$this->assertEquals($expected, $config->getExclude());
 	}
 	
-	function testGetInclude() {
+	function testGetInclude(): void {
+		$expected = array();
 		$expected[] = "/home/user/";
 		$config = new Config(__DIR__."/include.conf");
 		$this->assertEquals($expected, $config->getInclude());
 	}
 	
-	function testGetInExExclude() {
+	function testGetInExExclude(): void {
 		$config = new Config(__DIR__."/exclude.conf");
 		$this->assertEquals(TRUE, $config->getInEx()->isValid("/home"));
 		$this->assertEquals(FALSE, $config->getInEx()->isValid("/storage"));
 	}
 	
-	function testGetInExInclude() {
+	function testGetInExInclude(): void {
 		$config = new Config(__DIR__."/include.conf");
 		$this->assertEquals(TRUE, $config->getInEx()->isValid("/home/user"));
 		$this->assertEquals(FALSE, $config->getInEx()->isValid("/storage"));
 	}
 	
-	function testGetHost() {
+	function testGetHost(): void {
 		$config = new Config(__DIR__."/include.conf");
 		$this->assertEquals("backup.example.com", $config->getHost());
 	}

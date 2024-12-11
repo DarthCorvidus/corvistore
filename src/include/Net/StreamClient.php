@@ -58,7 +58,7 @@ class StreamClient implements Stream {
 			#	echo "Stream not ready to write.".PHP_EOL;
 			#	continue;
 			#}
-			return fwrite($this->socket, $string);
+			return fwrite($this->socket, $data);
 		}
 	}
 
