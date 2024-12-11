@@ -30,6 +30,8 @@
 				<file name="src/include/ORM/Policy.php" /> 
 				<file name="src/include/ORM/User.php" /> 
 				<file name="src/include/ORM/VersionEntry.php" />
+				<!-- Unit tests -->
+				<file name="tests/Net/ProtocolAsyncTest.php" /> 
 				<!-- review -->
 				<file name="tests/libtest/MockReceiverTest.php" /> 
 			</errorLevel>
