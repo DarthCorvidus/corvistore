@@ -2,6 +2,9 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\LinkSender;
+/**
+ * @psalm-suppress DeprecatedClass
+ */
 class LinkSenderTest extends TestCase {
 	const FILESIZE = 27389;
 	function setUp(): void {

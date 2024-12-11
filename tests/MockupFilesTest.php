@@ -2,9 +2,6 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 class MockupFilesTest extends TestCase {
-	function __construct() {
-		parent::__construct();
-	}
 	static function setUpBeforeClass(): void {
 		if(file_exists("/tmp/crow-protect")) {
 			exec("rm /tmp/crow-protect/ -r");
