@@ -27,11 +27,11 @@ class ReplaceQuery {
 	return $options;
 	}
 	
-	private function query(): string {
+	private function query(string $file): string {
 		if($this->defaultAnswer !== "") {
 			return $this->defaultAnswer;
 		}
-		echo $this->reason.PHP_EOL;
+		echo sprintf($this->reason, $file).PHP_EOL;
 		while(true) {
 			echo $this->getQueryOptions();
 			$input = trim(fgets($this->input));
@@ -52,7 +52,7 @@ class ReplaceQuery {
 		}
 	}
 	
-	public function replace(): bool {
-		return $this->query()==="r";
+	public function replace(string $filepath): bool {
+		return $this->query($filepath)==="r";
 	}
 }

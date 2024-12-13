@@ -4,16 +4,16 @@ use PHPUnit\Framework\TestCase;
 use Node\ReplaceQuery;
 class ReplaceQueryTest extends TestCase {
 	private function getQuestion(): string {
-		return "File already exists.";
+		return "File %s already exists.";
 	}
 
 	function testConstruct(): void {
-		$rq = new ReplaceQuery("File already exists.");
+		$rq = new ReplaceQuery($this->getQuestion());
 		$this->assertInstanceOf(ReplaceQuery::class, $rq);
 	}
 	
-	private function getFirst(): string {
-		$first = $this->getQuestion().PHP_EOL;
+	private function getFirst(string $filename): string {
+		$first = sprintf($this->getQuestion(), $filename).PHP_EOL;
 		$first .= $this->getOptions();
 	return $first;
 	}
@@ -29,32 +29,32 @@ class ReplaceQueryTest extends TestCase {
 	}
 	
 	function testSetDefaultReplace(): void {
-		$rq = new ReplaceQuery("File already exists.");
+		$rq = new ReplaceQuery($this->getQuestion());
 		$rq->setDefault("r");
-		$this->assertSame(true, $rq->replace());
+		$this->assertSame(true, $rq->replace("test.txt"));
 	}
 	
 	function testSetDefaultSkip(): void {
-		$rq = new ReplaceQuery("File already exists.");
+		$rq = new ReplaceQuery($this->getQuestion());
 		$rq->setDefault("s");
-		$this->assertSame(false, $rq->replace());
+		$this->assertSame(false, $rq->replace("test.txt"));
 	}
 	
 	function testSetInvalidDefault(): void {
-		$rq = new ReplaceQuery("File already exists.");
+		$rq = new ReplaceQuery($this->getQuestion());
 		$this->expectException(\InvalidArgumentException::class);
 		$rq->setDefault("k");
 	}
 	
 	function testCancel(): void {
-		$rq = new ReplaceQuery("File already exists.");
+		$rq = new ReplaceQuery($this->getQuestion());
 		$mem = fopen("php://memory", "r+");
 		fwrite($mem, "c\n");
 		rewind($mem);
 		$rq->setInput($mem);
-		$this->expectOutputString($this->getFirst());
+		$this->expectOutputString($this->getFirst("test.txt"));
 		$this->expectException(\Exception::class);
-		$rq->replace();
+		$rq->replace("test.txt");
 	}
 
 	function testReplaceOnce(): void {
@@ -65,19 +65,19 @@ class ReplaceQueryTest extends TestCase {
 		$rq->setInput($mem);
 		
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(true, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(true, $rq->replace("test.txt"));
 		ob_end_clean();
 		
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(true, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(true, $rq->replace("test.txt"));
 		ob_end_clean();
 		
 		
-		$this->expectOutputString($this->getFirst());
+		$this->expectOutputString($this->getFirst("test.txt"));
 		$this->expectException(\Exception::class);
-		$this->assertSame(true, $rq->replace());
+		$this->assertSame(true, $rq->replace("test.txt"));
 	}
 	
 
@@ -89,16 +89,16 @@ class ReplaceQueryTest extends TestCase {
 		$rq->setInput($mem);
 		
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(true, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(true, $rq->replace("test.txt"));
 		ob_end_clean();
 		
 		// After using 'R' instead of r, replace will always yield true.
 		$this->expectOutputString("");
-		$this->assertSame(true, $rq->replace());
-		$this->assertSame(true, $rq->replace());
-		$this->assertSame(true, $rq->replace());
-		$this->assertSame(true, $rq->replace());
+		$this->assertSame(true, $rq->replace("test.txt"));
+		$this->assertSame(true, $rq->replace("test.txt"));
+		$this->assertSame(true, $rq->replace("test.txt"));
+		$this->assertSame(true, $rq->replace("test.txt"));
 	}
 
 	function testSkipOnce(): void {
@@ -109,71 +109,71 @@ class ReplaceQueryTest extends TestCase {
 		$rq->setInput($mem);
 		
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(false, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(false, $rq->replace("test.txt"));
 		ob_end_clean();
 		
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(false, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(false, $rq->replace("test.txt"));
 		ob_end_clean();
 		
-		$this->expectOutputString($this->getFirst());
+		$this->expectOutputString($this->getFirst("test.txt"));
 		$this->expectException(\Exception::class);
-		$this->assertSame(true, $rq->replace());
+		$this->assertSame(true, $rq->replace("test.txt"));
 	}
 
 	function testSkipAlways(): void {
-		$rq = new ReplaceQuery($this->getQuestion());
+		$rq = new ReplaceQuery($this->getQuestion("test.txt"));
 		$mem = fopen("php://memory", "r+");
 		fwrite($mem, "S\n");
 		rewind($mem);
 		$rq->setInput($mem);
 		
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(false, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(false, $rq->replace("test.txt"));
 		ob_end_clean();
 		
 		$this->expectOutputString("");
-		$this->assertSame(false, $rq->replace());
-		$this->assertSame(false, $rq->replace());
-		$this->assertSame(false, $rq->replace());
-		$this->assertSame(false, $rq->replace());
-		$this->assertSame(false, $rq->replace());
+		$this->assertSame(false, $rq->replace("test.txt"));
+		$this->assertSame(false, $rq->replace("test.txt"));
+		$this->assertSame(false, $rq->replace("test.txt"));
+		$this->assertSame(false, $rq->replace("test.txt"));
+		$this->assertSame(false, $rq->replace("test.txt"));
 	}
 
 	function testReplaceMixed(): void {
-		$rq = new ReplaceQuery($this->getQuestion());
+		$rq = new ReplaceQuery($this->getQuestion("test.txt"));
 		$mem = fopen("php://memory", "r+");
 		fwrite($mem, "r\ns\ns\nr\nc\n");
 		rewind($mem);
 		$rq->setInput($mem);
 		
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(true, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(true, $rq->replace("test.txt"));
 		ob_end_clean();
 		
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(false, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(false, $rq->replace("test.txt"));
 		ob_end_clean();
 
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(false, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(false, $rq->replace("test.txt"));
 		ob_end_clean();
 
 		ob_start();
-		$this->expectOutputString($this->getFirst());
-		$this->assertSame(true, $rq->replace());
+		$this->expectOutputString($this->getFirst("test.txt"));
+		$this->assertSame(true, $rq->replace("test.txt"));
 		ob_end_clean();
 
 		
-		$this->expectOutputString($this->getFirst());
+		$this->expectOutputString($this->getFirst("test.txt"));
 		$this->expectException(\Exception::class);
-		$this->assertSame(true, $rq->replace());
+		$this->assertSame(true, $rq->replace("test.txt"));
 	}
 
 }
