@@ -10,8 +10,8 @@ class FileReceiver implements StreamReceiver {
 	private mixed $handle = null;
 	private int $size;
 	private int $left;
-	function __construct(string $filename) {
-		if(file_exists($filename)) {
+	function __construct(string $filename, bool $replace = false) {
+		if(file_exists($filename) && !$replace) {
 			throw new \InvalidArgumentException("file ".$filename." already exists.");
 		}
 		if(!is_dir(dirname($filename))) {
