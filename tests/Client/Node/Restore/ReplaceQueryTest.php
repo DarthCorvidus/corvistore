@@ -124,7 +124,7 @@ class ReplaceQueryTest extends TestCase {
 	}
 
 	function testSkipAlways(): void {
-		$rq = new ReplaceQuery($this->getQuestion("test.txt"));
+		$rq = new ReplaceQuery($this->getQuestion());
 		$mem = fopen("php://memory", "r+");
 		fwrite($mem, "S\n");
 		rewind($mem);
@@ -144,7 +144,7 @@ class ReplaceQueryTest extends TestCase {
 	}
 
 	function testReplaceMixed(): void {
-		$rq = new ReplaceQuery($this->getQuestion("test.txt"));
+		$rq = new ReplaceQuery($this->getQuestion());
 		$mem = fopen("php://memory", "r+");
 		fwrite($mem, "r\ns\ns\nr\nc\n");
 		rewind($mem);

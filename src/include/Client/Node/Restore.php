@@ -11,11 +11,11 @@ class Restore {
 	private int $size = 0;
 	private \Net\ProtocolSync $protocol;
 	private int $timestamp;
-	private ?string $replaceOlder = NULL;
+	private ReplaceQuery $replaceOlder;
 	private ?string $replaceEqual = NULL;
-	private ?string $replaceNewer = NULL;
-	private ?string $replaceSmaller = NULL;
-	private ?string $replaceLarger = NULL;
+	private ReplaceQuery $replaceNewer;
+	private ReplaceQuery $replaceSmaller;
+	private ReplaceQuery $replaceLarger;
 	private \InEx $inex;
 	private \Client\Config $config;
 	/**
@@ -31,6 +31,18 @@ class Restore {
 		$this->protocol = $protocol;
 		$this->target = $this->argv->getTargetPath();
 		$this->timestamp = strtotime($this->argv->getTimestamp());
+		$this->replaceNewer = new ReplaceQuery("%s exists but is newer than backup. Action:");
+		$this->replaceOlder = new ReplaceQuery("%s exists, but is older than backup. Action:");
+		
+		$this->replaceSmaller = new ReplaceQuery("%s exists but is smaller than backup. Action:");
+		$this->replaceLarger = new ReplaceQuery("%s exists, but is larger than backup. Action:");
+		if($this->argv->getSkip()) {
+			$this->replaceOlder->setDefault("s");
+			$this->replaceNewer->setDefault("s");
+			$this->replaceLarger->setDefault("s");
+			$this->replaceSmaller->setDefault("s");
+		}
+		
 		/*
 		 * As long as the product is in a „pre alpha state“, in-place restores
 		 * are disabled, to prevent data loss due to a failed test run.
@@ -41,68 +53,6 @@ class Restore {
 		}
 	}
 	
-	private function queryReplace(?string &$keep, string $reason): string {
-		if($this->argv->getSkip()) {
-			return "s";
-		}
-		if($keep != NULL) {
-			return $keep;
-		}
-		echo $reason.PHP_EOL;
-		while(true) {
-			echo "[r]eplace once".PHP_EOL;
-			echo "[R]eplace always".PHP_EOL;
-			echo "[s]kip (or enter)".PHP_EOL;
-			echo "[S]kip always".PHP_EOL;
-			echo "[c]ancel".PHP_EOL;
-			echo "> ";
-			$input = trim(fgets(STDIN));
-			if($input=="S") {
-				$keep = "s";
-			return "s";
-			}
-			if($input=="R") {
-				$keep = "r";
-			return "r";
-			}
-			if($input=="c") {
-				$this->displaySummary();
-				$this->protocol->sendCommand("QUIT");
-				exit(0);
-			}
-			if(in_array($input, array("c", "s", "r", "S", "R"))) {
-				return $input;
-			}
-		}
-	}
-
-	function queryReplaceLarger(string $filepath): string {
-		$reason = "File ".$filepath." exists and is smaller. Action:".PHP_EOL;
-		$input = $this->queryReplace($this->replaceLarger, $reason);
-	return $input;
-	}
-
-	function queryReplaceSmaller(string $filepath): string {
-		$reason = "File ".$filepath." exists and is smaller. Action:".PHP_EOL;
-		$input = $this->queryReplace($this->replaceSmaller, $reason);
-	return $input;
-	}
-	
-	function queryReplaceOlder(string $filepath): string {
-		$input = $this->queryReplace($this->replaceOlder, "File ".$filepath." exists and is older. Action:");
-	return $input;
-	}
-
-	function queryReplaceEqual(string $filepath): string {
-		$input = $this->queryReplace($this->replaceEqual, "File ".$filepath." exists and is equal. Action:");
-	return $input;
-	}
-	
-	function queryReplaceNewer(string $filepath): string {
-		$input = $this->queryReplace($this->replaceNewer, "File ".$filepath." exists and is newer. Action:");
-	return $input;
-	}
-
 	function recurseCatalog(string $path): void {
 		$this->protocol->sendCommand("GET CATALOG ".$path);
 		$entries = $this->protocol->getSerialized();
@@ -184,32 +134,48 @@ class Restore {
 		# We have to filter again.
 		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
 		$filepath = $this->target.$path.$entry->getName();
-		if(file_exists($filepath)) {
-			if(filesize($filepath)<$version->getSize() && $this->queryReplaceSmaller($filepath)=="s") {
-				$this->ignored++;
-			return;
-			}
-			if(filesize($filepath)>$version->getSize() && $this->queryReplaceLarger($filepath)=="s") {
-				$this->ignored++;
-			return;
-			}
+		$replace = false;
+		try {
+			if(file_exists($filepath)) {
+				// The most likely case is that a file exists, but is newer.
+				if(filemtime($filepath)>$version->getMtime() && !$this->replaceNewer->replace($filepath)) {
+					echo "Skipping on user intervention".PHP_EOL;
+					$this->ignored++;
+				return;
+				}
 
-			if(filemtime($filepath)<$version->getMtime() && $this->queryReplaceOlder($filepath)=="s") {
-				$this->ignored++;
-				return;
-			}
-			
-			// Currently, I see no use in replacing files with the same timestamp.
-			if(filemtime($filepath)==$version->getMtime()) {
-				$this->ignored++;
-				return;
-			}
+				if(filemtime($filepath)<$version->getMtime() && !$this->replaceOlder->replace($filepath)) {
+					$this->ignored++;
+					return;
+				}
 
-			if(filemtime($filepath)>$version->getMtime() && $this->queryReplaceNewer($filepath)=="s") {
-				$this->ignored++;
+
+				if(filesize($filepath)>$version->getSize() && !$this->replaceLarger->replace($filepath)) {
+					$this->ignored++;
+					return;
+				}
+				if(filesize($filepath)>$version->getSize() && !$this->replaceSmaller->replace($filepath)) {
+					$this->ignored++;
+					return;
+				}
+
+				// Currently, I see no use in replacing files with the same timestamp.
+				if(filemtime($filepath)==$version->getMtime()) {
+					$this->ignored++;
 				return;
+				}
+
+				#if(filemtime($filepath)>$version->getMtime() && $this->queryReplaceNewer($filepath)=="s") {
+				#	$this->ignored++;
+				#return;
+				#}
+			$replace = true;
 			}
-			
+		} catch(\Exception $e) {
+			echo "Aborting on user request.".PHP_EOL;
+			$this->displaySummary();
+			$this->protocol->sendCommand("QUIT");
+			exit(0);
 		}
 		echo "Restore file to ".$filepath.PHP_EOL;
 		$this->protocol->sendCommand("GET VERSION ".$version->getId());
@@ -217,7 +183,7 @@ class Restore {
 		 * I opted against having Restore implement TransferListener; 
 		 * I prefer to be sure to get a clean slate on each restore.
 		 */
-		$restoreListener = new \Net\FileReceiver($filepath);
+		$restoreListener = new \Net\FileReceiver($filepath, $replace);
 		$this->protocol->getStream($restoreListener);
 		chown($filepath, $version->getOwner());
 		chgrp($filepath, $version->getGroup());
