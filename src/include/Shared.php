@@ -12,6 +12,36 @@ class Shared {
 		;
 	}
 	
+	/**
+	 * Converts a path into 'breadcrumbs' of consecutively longer paths, ie
+	 * /etc/something/somewhere becomes [/etc, /etc/something, /etc/something/somewhere].
+	 * @param string $path must not be empty string or root directory
+	 * @return list<string>
+	 * @throws \RuntimeException
+	 */
+	public static function getBreadcrumbs(string $path): array {
+		if($path === "") {
+			throw new \RuntimeException("empty string as path");
+		}
+		if($path === "/") {
+			throw new \RuntimeException("unexpected '/' as path");
+		}
+		if($path[0] !== "/") {
+			throw new \RuntimeException("path must have a leading '/'");
+		}
+		$breadcrumbs = array();
+		$convert = new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE);
+		$untrailed = $convert->convert($path);
+		$exp = explode("/", $untrailed);
+		$sub = array_slice($exp, 1);
+		$previous = "";
+		foreach($sub as $value) {
+			$breadcrumbs[] = $previous."/".$value;
+			$previous = $previous."/".$value;
+		}
+	return $breadcrumbs;
+	}
+	
 	static function getCustomSQLite(string $path): EPDO {
 		Assert::fileExists($path);
 		$pdo = new EPDO("sqlite:".$path, "", "");
