@@ -7,7 +7,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	private string $restoreTarget;
 	private array $breadcrumbs = array();
 	private int $timestamp;
-	/** @var list<\VersionEntry> */
+	/** @var list<\CatalogEntry> */
 	private array $queue = array();
 	public function __construct(\ArgvRestore $argvRestore) {
 		$this->restoreSource = $argvRestore->getRestorePath();
@@ -123,7 +123,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		return array_shift($this->queue);
 	}
 	
-	private function continue(\Net\ProtocolAsync $protocol) {
+	private function continue(\Net\ProtocolAsync $protocol): void {
 		if(empty($this->queue)) {
 			$protocol->sendCommand("QUIT");
 		return;
