@@ -7,6 +7,8 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	private string $restoreTarget;
 	private array $breadcrumbs = array();
 	private int $timestamp;
+	/** @var list<\VersionEntry> */
+	private array $queue = array();
 	public function __construct(\ArgvRestore $argvRestore) {
 		$this->restoreSource = $argvRestore->getRestorePath();
 		$this->restoreTarget = $argvRestore->getTargetPath();
@@ -54,17 +56,18 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
 		if($unserialized::class === \CatalogEntry::class && !empty($this->breadcrumbs)) {
 			$this->restoreBreadcrumb($protocol, $unserialized);
+		return;
 		}
 		if($unserialized::class === \CatalogEntries::class) {
 			$this->onCatalogEntries($protocol, $unserialized);
+		return;
 		}
-		
+	throw new \RuntimeException("I do not know how to react to ".$unserialized::class);
 	}
 	
 	private function restoreBreadcrumb(\Net\ProtocolAsync $protocol, \CatalogEntry $entry): void {
-		#$path = array_shift($this->breadcrumbs);
 		$path = $entry->getDirname();
-		$this->restoreDirectory($path, $entry);
+		$this->restoreDirectory($entry);
 		array_shift($this->breadcrumbs);
 		if(empty($this->breadcrumbs)) {
 			echo "Sending GET CATALOG ".$entry->getDirname().$entry->getName()."/".PHP_EOL;
@@ -75,7 +78,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		$protocol->sendCommand("GET PATH ".$this->breadcrumbs[0]);
 	}
 	
-	private function restoreDirectory(string $path, \CatalogEntry $entry): void {
+	private function restoreDirectory(\CatalogEntry $entry): void {
 		# We have to filter again.
 		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
 		$catalogDirname = $entry->getDirname();
@@ -93,7 +96,42 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	}
 	
 	private function onCatalogEntries(\Net\ProtocolAsync $protocol, \CatalogEntries $entries): void {
-		$protocol->sendCommand("QUIT");
+		$count = $entries->getCount();
+		for($i=0;$i<$count;$i++) {
+			$entry = $entries->getEntry($i);
+			$versions = $entry->getVersions()->filterToTimestamp($this->timestamp);
+			if($versions->getCount()===0) {
+				continue;
+			}
+			$latest = $versions->getLatest();
+			if($latest->getType() === \Catalog::TYPE_DIR) {
+				$this->restoreDirectory($entry);
+				// Put directories to a queue
+				$this->queue[] = $entry;
+			continue;
+			}
+			#$protocol->sendCommand("GET VERSION ".$latest->getId());
+		}
+		/*
+		 * call continue to send a query for the next catalog; this approach
+		 * allows for a kind of rate limiting.
+		 */
+		$this->continue($protocol);
+	}
+	
+	private function getNext(): \CatalogEntry {
+		return array_shift($this->queue);
+	}
+	
+	private function continue(\Net\ProtocolAsync $protocol) {
+		if(empty($this->queue)) {
+			$protocol->sendCommand("QUIT");
+		return;
+		}
+		$next = $this->getNext();
+		$query = $next->getDirname()."/".$next->getName();
+		echo "Querying server for catalog of ".$query."(Queue: ".count($this->queue).")".PHP_EOL;
+		$protocol->sendCommand("GET CATALOG ".$query);
 	}
 		
 }
