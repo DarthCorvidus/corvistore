@@ -148,7 +148,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 
 		if($command[0]=="GET" and $command[1]=="VERSION") {
-			$protocol->sendStream($this->storage->restore((int)$command[2]));
+			$protocol->sendStream($this->storage->restore((int)$command[2], $this->node));
 		return;
 		}
 		/**

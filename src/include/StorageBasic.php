@@ -82,7 +82,16 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		$this->pdo->commit();
 	}
 	
-	public function restore(int $version): \Net\StreamSender {
+	public function restore(int $version, Node $node): \Net\StreamSender {
+		/**
+		 * Check if node X is allowed to access file version Y, otherwise a
+		 * malicious client can download files of other nodes by brute forcing
+		 * version ids.
+		 */
+		$nodeId = $this->pdo->result("select dnd_id from d_catalog JOIN d_version USING (dc_id) WHERE dvs_id = ? and dnd_id = ?", array($version, $node->getId()));
+		if($node->getId()!==$nodeId) {
+			throw new \RuntimeException("Invalid version id for node");
+		}
 		$param = array();
 		$param[] = $version;
 		#$param[] = $this->getPartitionId();
