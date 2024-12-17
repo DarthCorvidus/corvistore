@@ -22,6 +22,7 @@ class Restore {
 	private RestoreProtocolListener $restoreProtocolListener;
 	private \Net\AsyncStream $asyncStream;
 	private \plibv4\process\Scheduler $scheduler;
+	private $start = 0;
 	/**
 	 * 
 	 * @param \Net\ProtocolSync $protocol
@@ -29,6 +30,7 @@ class Restore {
 	 * @param list<string> $argv as initialized by PHP when run from CLI
 	 */
 	function __construct(mixed $socket, \Client\Config $config, array $argv) {
+		$this->start = hrtime(true);
 		$this->config = $config;
 		$this->argv = new \ArgvRestore($argv);
 		$this->inex = $config->getInEx();
@@ -298,5 +300,7 @@ class Restore {
 	}
 	function run(): void {
 		$this->runOld();
+		$now = hrtime(true);
+		echo "Time spent: ".(($now-$this->start)/1000000000).PHP_EOL;
 	}
 }
