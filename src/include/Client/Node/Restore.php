@@ -1,7 +1,7 @@
 <?php
 namespace Node;
 /*
- * Restore from the server as a client. 
+ * Restore from the server as a client.
  */
 class Restore {
 	private \ArgvRestore $argv;
@@ -9,7 +9,9 @@ class Restore {
 	private int $restored = 0;
 	private int $ignored = 0;
 	private int $size = 0;
+	/** @psalm-suppress PropertyNotSetInConstructor */
 	private \Net\ProtocolSync $protocol;
+	/** @psalm-suppress PropertyNotSetInConstructor */
 	private \Net\ProtocolAsync $protocolNew;
 	private int $timestamp;
 	private ReplaceQuery $replaceOlder;
@@ -19,10 +21,13 @@ class Restore {
 	private ReplaceQuery $replaceLarger;
 	private \InEx $inex;
 	private \Client\Config $config;
+	/** @psalm-suppress PropertyNotSetInConstructor */
 	private RestoreProtocolListener $restoreProtocolListener;
+	/** @psalm-suppress PropertyNotSetInConstructor */
 	private \Net\AsyncStream $asyncStream;
+	/** @psalm-suppress PropertyNotSetInConstructor */
 	private \plibv4\process\Scheduler $scheduler;
-	private $start = 0;
+	private int $start = 0;
 	/**
 	 * 
 	 * @param \Net\ProtocolSync $protocol
@@ -65,7 +70,7 @@ class Restore {
 		$this->protocol = new \Net\ProtocolSync(new \Net\StreamClient($socket));
 	}
 	
-	private function constructNew(mixed $socket) {
+	private function constructNew(mixed $socket): void {
 		$this->restoreProtocolListener = new RestoreProtocolListener($this->argv);
 		$this->protocolNew = new \Net\ProtocolAsync($this->restoreProtocolListener);
 		$this->asyncStream = new \Net\AsyncStream($socket);
@@ -253,7 +258,7 @@ class Restore {
 		echo "Transferred: ".number_format($this->size)." Bytes".PHP_EOL;
 	}
 	
-	public function runOld() {
+	public function runOld(): void {
 		#echo $this->argv->getRestorePath().PHP_EOL;
 		if($this->argv->getRestorePath()=="/") {
 			$this->recurseCatalog("/");
@@ -294,7 +299,7 @@ class Restore {
 		$this->protocol->sendCommand("QUIT");
 	}
 
-	public function runNew() {
+	public function runNew(): void {
 		$this->restoreProtocolListener->start($this->protocolNew);
 		$this->scheduler->run();
 	}
