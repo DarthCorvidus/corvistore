@@ -10,6 +10,7 @@ class Restore {
 	private int $ignored = 0;
 	private int $size = 0;
 	private \Net\ProtocolSync $protocol;
+	private \Net\ProtocolAsync $protocolNew;
 	private int $timestamp;
 	private ReplaceQuery $replaceOlder;
 	private ?string $replaceEqual = NULL;
@@ -18,18 +19,23 @@ class Restore {
 	private ReplaceQuery $replaceLarger;
 	private \InEx $inex;
 	private \Client\Config $config;
+	private RestoreProtocolListener $restoreProtocolListener;
+	private \Net\AsyncStream $asyncStream;
+	private \plibv4\process\Scheduler $scheduler;
 	/**
 	 * 
 	 * @param \Net\ProtocolSync $protocol
 	 * @param \Client\Config $config Client configuration
 	 * @param list<string> $argv as initialized by PHP when run from CLI
 	 */
-	function __construct(\Net\ProtocolSync $protocol, \Client\Config $config, array $argv) {
+	function __construct(mixed $socket, \Client\Config $config, array $argv) {
 		$this->config = $config;
 		$this->argv = new \ArgvRestore($argv);
 		$this->inex = $config->getInEx();
-		$this->protocol = $protocol;
 		$this->target = $this->argv->getTargetPath();
+		
+		$this->constructOld($socket);
+		
 		$this->timestamp = strtotime($this->argv->getTimestamp());
 		$this->replaceNewer = new ReplaceQuery("%s exists but is newer than backup. Action:");
 		$this->replaceOlder = new ReplaceQuery("%s exists, but is older than backup. Action:");
@@ -51,6 +57,20 @@ class Restore {
 			echo "in place restore is not yet supported.".PHP_EOL;
 			exit();
 		}
+	}
+	
+	private function constructOld(mixed $socket): void {
+		$this->protocol = new \Net\ProtocolSync(new \Net\StreamClient($socket));
+	}
+	
+	private function constructNew(mixed $socket) {
+		$this->restoreProtocolListener = new RestoreProtocolListener($this->argv);
+		$this->protocolNew = new \Net\ProtocolAsync($this->restoreProtocolListener);
+		$this->asyncStream = new \Net\AsyncStream($socket);
+		$this->asyncStream->setProtocol($this->protocolNew);
+		
+		$this->scheduler = new \plibv4\process\Timeshare();
+		$this->scheduler->addTask($this->asyncStream);
 	}
 	
 	function recurseCatalog(string $path): void {
@@ -231,7 +251,7 @@ class Restore {
 		echo "Transferred: ".number_format($this->size)." Bytes".PHP_EOL;
 	}
 	
-	function run(): void {
+	public function runOld() {
 		#echo $this->argv->getRestorePath().PHP_EOL;
 		if($this->argv->getRestorePath()=="/") {
 			$this->recurseCatalog("/");
@@ -270,5 +290,13 @@ class Restore {
 		}
 		$this->displaySummary();
 		$this->protocol->sendCommand("QUIT");
+	}
+
+	public function runNew() {
+		$this->restoreProtocolListener->start($this->protocolNew);
+		$this->scheduler->run();
+	}
+	function run(): void {
+		$this->runOld();
 	}
 }

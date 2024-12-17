@@ -70,7 +70,7 @@ private \Client\Config $config;
 		}
 	
 		if($this->argv[1]=="restore") {
-			$backup = new Restore($this->protocol, $this->config, $this->argv);
+			$backup = new Restore($this->socket, $this->config, $this->argv);
 			$backup->run();
 		}
 
