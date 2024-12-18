@@ -110,7 +110,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 				$this->queue[] = $entry;
 			continue;
 			}
-			#$protocol->sendCommand("GET VERSION ".$latest->getId());
+			$protocol->sendCommand("GET VERSION ".$latest->getId());
 		}
 		/*
 		 * call continue to send a query for the next catalog; this approach
@@ -130,7 +130,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		}
 		$next = $this->getNext();
 		$query = $next->getDirname()."/".$next->getName();
-		echo "Querying server for catalog of ".$query."(Queue: ".count($this->queue).")".PHP_EOL;
+		echo "Querying server for catalog of ".$query." (Queue: ".count($this->queue).")".PHP_EOL;
 		$protocol->sendCommand("GET CATALOG ".$query);
 	}
 		

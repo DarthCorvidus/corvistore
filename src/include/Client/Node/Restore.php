@@ -41,7 +41,7 @@ class Restore {
 		$this->inex = $config->getInEx();
 		$this->target = $this->argv->getTargetPath();
 		
-		$this->constructOld($socket);
+		$this->constructNew($socket);
 		
 		$this->timestamp = strtotime($this->argv->getTimestamp());
 		$this->replaceNewer = new ReplaceQuery("%s exists but is newer than backup. Action:");
@@ -73,6 +73,8 @@ class Restore {
 	private function constructNew(mixed $socket): void {
 		$this->restoreProtocolListener = new RestoreProtocolListener($this->argv);
 		$this->protocolNew = new \Net\ProtocolAsync($this->restoreProtocolListener);
+		
+		$this->protocolNew->setFileReceiver(new \Net\FileReceiverNew($this->argv->getTargetPath()));
 		$this->asyncStream = new \Net\AsyncStream($socket);
 		$this->asyncStream->setProtocol($this->protocolNew);
 		
@@ -304,7 +306,7 @@ class Restore {
 		$this->scheduler->run();
 	}
 	function run(): void {
-		$this->runOld();
+		$this->runNew();
 		$now = hrtime(true);
 		echo "Time spent: ".(($now-$this->start)/1000000000).PHP_EOL;
 	}

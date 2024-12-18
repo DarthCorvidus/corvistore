@@ -98,7 +98,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 		$param[] = 1;
 		$result = $this->pdo->row("select dco_serial from d_content where dvs_id = ? and dco_stored = ? limit 1", $param);
 		$path = $this->getPathForIdFile($result["dco_serial"]);
-		$fileSender = new \Net\FileSender(File::fromPath($path), 8192);
+		$fileSender = new \Net\FileSender(File::fromPath($path), 0);
 	return $fileSender;
 	}
 	
