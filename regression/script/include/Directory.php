@@ -3,6 +3,9 @@ namespace Regression;
 class Directory {
 	private $files;
 	private $path;
+	private int $countMissingFiles = 0;
+	private int $countDifferentFiles = 0;
+	private int $countDifferentModes = 0;
 	function __construct(string $path) {
 		$this->recurse($path, "/");
 		$this->path = $path;
@@ -38,6 +41,7 @@ class Directory {
 		foreach($this->files as $key => $value) {
 			if(!isset($directory->files[$key])) {
 				echo "\t".$key." does not exist other directory.".PHP_EOL;
+				$this->countMissingFiles++;
 				$ret = FALSE;
 				continue;
 			}
@@ -45,13 +49,19 @@ class Directory {
 			$theirs = $directory->files[$key];
 			if($ours->getChecksum()!=$theirs->getChecksum()) {
 				echo "\t".$key." checksum not equal.".PHP_EOL;
+				$this->countDifferentFiles++;
 				$ret = FALSE;
 			}
 			if($ours->getMode()!=$theirs->getMode()) {
 				echo "\t".$key." mode not equal.".PHP_EOL;
+				$this->countDifferentModes++;
 				$ret = FALSE;
 			}
 		}
+		echo "Compared ".$this->path." vs ".$directory->path.":".PHP_EOL;
+		echo "\tMissing files: ".$this->countMissingFiles.PHP_EOL;
+		echo "\tDifferent files: ".$this->countDifferentFiles.PHP_EOL;
+		echo "\tDifferent modes: ".$this->countDifferentModes.PHP_EOL;
 	return $ret;
 	}
 }
