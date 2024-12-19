@@ -16,6 +16,7 @@ class FileTransportContainerTest extends TestCase {
 		$file = File::fromPath("/tmp/corviprotect/file1.bin");
 		$binary = $file->toBinary();
 		file_put_contents("/tmp/corviprotect/file2.bin", str_pad($binary, 8192, "\0") . "The cat is on the mat");
+		symlink("/tmp/corviprotect/file1.bin", "/tmp/corviprotect/file4.bin");
 	}
 
 	public function tearDown(): void {
@@ -24,6 +25,7 @@ class FileTransportContainerTest extends TestCase {
 		if (file_exists("/tmp/corviprotect/file3.bin")) {
 			unlink("/tmp/corviprotect/file3.bin");
 		}
+		unlink("/tmp/corviprotect/file4.bin");
 		rmdir("/tmp/corviprotect");
 	}
 
@@ -32,6 +34,13 @@ class FileTransportContainerTest extends TestCase {
 		$fc = FileTransportContainer::fromFile($file);
 		$this->assertSame($file, $fc->getFile());
 		$this->assertSame("The cat is on the mat", $fc->getData());
+	}
+
+	function testFromPathLink(): void {
+		$file = File::fromPath("/tmp/corviprotect/file4.bin");
+		$fc = FileTransportContainer::fromFile($file);
+		$this->assertSame($file, $fc->getFile());
+		$this->assertSame("/tmp/corviprotect/file1.bin", $fc->getData());
 	}
 
 	function testToBinary(): void {

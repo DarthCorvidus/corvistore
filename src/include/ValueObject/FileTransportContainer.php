@@ -22,6 +22,12 @@ class FileTransportContainer implements \BinaryPersistable {
 		if ($file->getSize() === 0) {
 			return;
 		}
+		if($file->getType() === \Catalog::TYPE_LINK) {
+			// Links are stored as data on the backup server
+			$this->data = $file->getTarget();
+		return;
+		}
+
 		$data = @file_get_contents($file->getPath());
 		if ($data === FALSE) {
 			throw new \RuntimeException("File '".$file->getPath()."' vanished before transfer");
