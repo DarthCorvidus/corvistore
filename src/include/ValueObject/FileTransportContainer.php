@@ -18,12 +18,28 @@ class FileTransportContainer implements \BinaryPersistable {
 		
 	}
 
+	private function loadData(\File $file): void {
+		if ($file->getSize() === 0) {
+			return;
+		}
+		$data = @file_get_contents($file->getPath());
+		if ($data === FALSE) {
+			throw new \RuntimeException("File '".$file->getPath()."' vanished before transfer");
+		}
+		/**
+		 * We could reload File, but then the file may change again and so on; the idea is that the
+		 * backup process as such may try several times when catching FileChangedException.
+		 */
+		if(strlen($data) !== $file->getSize()) {
+			throw new \FileChangedException("File '".$file->getPath()."' changed size during transfer");
+		}
+		$this->data = $data;
+	}
+
 	public static function fromFile(\File $file): FileTransportContainer {
 		$new = new FileTransportContainer();
 		$new->meta = $file;
-		if ($file->getSize() !== 0) {
-			$new->data = file_get_contents($file->getPath());
-		}
+		$new->loadData($file);
 	return $new;
 	}
 
