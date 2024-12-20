@@ -6,57 +6,30 @@ use plibv4\Binary\StringReader;
  * go.
  */
 class FileGroup implements BinaryPersistable {
-	/** @var list<string> */
-	private array $filedata = [];
-	/** @var list<File> */
-	private array $file = [];
 	private int $size = 0;
+	/** @var list<\FileTransportContainer> */
+	private array $container = [];
 	function __construct() {
 		;
 	}
 	
-	function addFile(File $file): void {
+	function addFile(\FileTransportContainer $container): void {
 		$filedata = "";
-		$size = $file->getSize();
-		if($file->getType() === \Catalog::TYPE_FILE) {
-			$filedata = file_get_contents($file->getPath());
-			if($filedata === false) {
-				/**
-				 * @todo more specific exception
-				 */
-				throw new \RuntimeException("unable to load filedata");
-			}
-			/*
-			 * Throw FileChangedException, should file size have changed between 
-			 * creating File object and getting file contents.
-			 * The ba client can then retry.
-			 */
-			if($size != strlen($filedata)) {
-				throw new FileChangedException("file changed while adding to FileGroup");
-			}
-		}
-		/**
-		 * For symlinks, the target path is stored within the 'data' part of
-		 * the file.
-		 */
-		if($file->getType() === \Catalog::TYPE_LINK) {
-			$filedata = $file->getTarget();
-		}
-		$this->file[] = $file;
-		$this->filedata[] = $filedata;
+		$size = $container->getFile()->getSize();
+		$this->container[] = $container;
 		$this->size += $size;
 	}
 	
 	function getFileCount(): int {
-		return count($this->file);
+		return count($this->container);
 	}
 	
 	function getFile(int $i): File {
-		return $this->file[$i];
+		return $this->container[$i]->getFile();
 	}
 
 	function getFileData(int $i): string {
-		return $this->filedata[$i];
+		return $this->container[$i]->getData();
 	}
 	
 	function getPayloadSize(): int {
@@ -65,10 +38,9 @@ class FileGroup implements BinaryPersistable {
 	
 	function toBinary(): string {
 		$writer = new StringWriter(StringWriter::LE);
-		$writer->addUInt8(count($this->file));
-		foreach($this->file as $key => $value) {
-			$writer->addIndexedString(16, $value->toBinary());
-			$writer->addIndexedString(32, $this->filedata[$key]);
+		$writer->addUInt8(count($this->container));
+		foreach($this->container as $key => $value) {
+			$writer->addIndexedString(32, $value->toBinary());
 		}
 	return $writer->getBinary();
 	}
@@ -78,10 +50,9 @@ class FileGroup implements BinaryPersistable {
 		$reader = new StringReader($binary, StringReader::LE);
 		$count = $reader->getUInt8();
 		for($i = 0; $i<$count; $i++) {
-			$fg->file[] = File::fromBinary($reader->getIndexedString(16));
-			$filedata = $reader->getIndexedString(32);
-			$fg->size += strlen($filedata);
-			$fg->filedata[] = $filedata;
+			$container = FileTransportContainer::fromBinary($reader->getIndexedString(32));
+			$fg->container[] = $container;
+			$fg->size += $container->getFile()->getSize();
 		}
 	return $fg;
 	}

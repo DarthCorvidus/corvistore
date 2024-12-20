@@ -20,8 +20,8 @@ class FileGroupTest extends TestCase {
 	public function testGetFileCount(): void {
 		$fg = new FileGroup();
 		foreach(glob("/tmp/corviprotect/file*.bin") as $value) {
-			$file = File::fromPath($value);
-			$fg->addFile($file);
+			$container = FileTransportContainer::fromFile(File::fromPath($value));
+			$fg->addFile($container);
 		}
 		$this->assertSame(10, $fg->getFileCount());
 	}
@@ -30,7 +30,7 @@ class FileGroupTest extends TestCase {
 		$fg = new FileGroup();
 		foreach(glob("/tmp/corviprotect/file*.bin") as $value) {
 			$file = File::fromPath($value);
-			$fg->addFile($file);
+			$fg->addFile(FileTransportContainer::fromFile($file));
 		}
 		$this->assertSame(array_sum($this->sizes), $fg->getPayloadSize());
 	}
@@ -43,7 +43,7 @@ class FileGroupTest extends TestCase {
 		$loadedData = array();
 		foreach(glob("/tmp/corviprotect/file*.bin") as $value) {
 			$file = File::fromPath($value);
-			$fg->addFile($file);
+			$fg->addFile(FileTransportContainer::fromFile($file));
 			$origFiles[] = $file;
 			$origData[] = file_get_contents($value);
 		}
@@ -52,8 +52,9 @@ class FileGroupTest extends TestCase {
 		$count = $reader->getUInt8();
 		$this->assertEquals($count, 10);
 		for($i = 0; $i<$count; $i++) {
-			$loadedFiles[] = File::fromBinary($reader->getIndexedString(16));
-			$loadedData[] = $reader->getIndexedString(32);
+			$tc = FileTransportContainer::fromBinary($reader->getIndexedString(32));
+			$loadedFiles[] = $tc->getFile();
+			$loadedData[] = $tc->getData();
 		}
 		for($i = 0; $i<$count; $i++) {
 			$this->assertSame($origData[$i], $loadedData[$i]);
@@ -70,7 +71,7 @@ class FileGroupTest extends TestCase {
 		$fg = new FileGroup();
 		foreach(glob("/tmp/corviprotect/file*.bin") as $value) {
 			$file = File::fromPath($value);
-			$fg->addFile($file);
+			$fg->addFile(FileTransportContainer::fromFile($file));
 		}
 		$binary = $fg->toBinary();
 		$newFg = FileGroup::fromBinary($binary);

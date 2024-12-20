@@ -182,7 +182,7 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 			#$this->protocol->sendCommand("CREATE FILE ".$file->getPath());
 			if($this->eligibleForFilegroup($file)) {
 				$file->setAction(\File::CREATE);
-				$this->filegroup->addFile($file);
+				$this->filegroup->addFile(\FileTransportContainer::fromFile($file));
 				/**
 				 * Send filegroup to server if necessary
 				 */
