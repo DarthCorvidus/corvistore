@@ -15,6 +15,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 	private Scheduler $sched;
 	private Task $task;
 	private TaskSingleStorage $storageTask;
+	const MAX_FTC_SIZE = 1048576;
 	public function __construct(Scheduler $sched, Task $task, \EPDO $pdo, int $clientId, \Node $node) {
 		$this->clientId = $clientId;
 		$this->node = $node;
@@ -183,7 +184,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			throw new \RuntimeException("unable to get version ".$versionId." for node ".$this->node->getName());
 		}
 		$version = \VersionEntry::fromArray($row);
-		if($version->getSize()<10485760) {
+		if($version->getSize()<self::MAX_FTC_SIZE) {
 			$ftc = $this->storage->restoreSingle($version);
 			$protocol->sendBinaryClass($ftc);
 		return;
