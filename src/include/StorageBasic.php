@@ -100,7 +100,7 @@ class StorageBasic extends Storage implements \Net\StreamReceiver {
 	/**
 	 * 
 	 * @param VersionEntry $version Do not create VersionEntry from ID alone if ID comes from untrusted source (ie client)
-	 * @return \Net\StreamSender
+	 * @return \FileTransportContainer
 	 */
 	public function restoreSingle(\VersionEntry $version): \FileTransportContainer {
 		$param = array();
