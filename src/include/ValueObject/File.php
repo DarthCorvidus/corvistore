@@ -156,6 +156,18 @@ class File implements BinaryPersistable {
 		}
 	}
 	
+	function restoreMeta(string $restorePath): void {
+		chown($restorePath, $this->getOwner());
+		chgrp($restorePath, $this->getGroup());
+		/*
+		 * This is one of the very rare occurrences I found a bug in PHP:
+		 * chown and chgrp reset any sticky bit, so we have to call chmod
+		 * last.
+		 */
+		chmod($restorePath, $this->getPerms());
+		touch($restorePath, $this->getMtime());
+	}
+	
 	private function getOwnerName(int $uid): string {
 		if(isset(self::$userCache[$uid])) {
 			return self::$userCache[$uid];
