@@ -148,7 +148,7 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 		}
 
 		if($command[0]=="GET" and $command[1]=="VERSION") {
-			$protocol->sendStream($this->storage->restore((int)$command[2], $this->node));
+			$this->restoreFile($protocol, (int)$command[2]);
 		return;
 		}
 		/**
@@ -175,6 +175,20 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 			#$this->catalog->deleteEntry((int)$command[2]);
 			##$this->fileAction = "CREATE";
 		}
+	}
+	
+	private function restoreFile(\Net\ProtocolAsync $protocol, int $versionId): void {
+		$row = $this->pdo->row("select * from d_catalog JOIN d_version USING (dc_id) WHERE dvs_id = ? and dnd_id = ?", array($versionId, $this->node->getId()));
+		if(empty($row)) {
+			throw new \RuntimeException("unable to get version ".$versionId." for node ".$this->node->getName());
+		}
+		$version = \VersionEntry::fromArray($row);
+		if($version->getSize()<10485760) {
+			$ftc = $this->storage->restoreSingle($version);
+			$protocol->sendBinaryClass($ftc);
+		return;
+		}
+		$protocol->sendStream($this->storage->restore($version));
 	}
 	
 	public function onDisconnect(\Net\ProtocolAsync $protocol): void {

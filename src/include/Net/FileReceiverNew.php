@@ -101,16 +101,7 @@ class FileReceiverNew implements StreamReceiver {
 			return;
 		}
 		fclose($this->handle);
-		chown($this->filename, $this->meta->getOwner());
-		chgrp($this->filename, $this->meta->getGroup());
-		/*
-		 * This is one of the very rare occurrences I found a bug in PHP:
-		 * chown and chgrp reset any sticky bit, so we have to call chmod
-		 * last.
-		 */
-		chmod($this->filename, $this->meta->getPerms());
-		touch($this->filename, $this->meta->getMtime());
-		
+		$this->meta->restoreMeta($this->filename);
 	}
 
 	public function onRecvStart(): void {

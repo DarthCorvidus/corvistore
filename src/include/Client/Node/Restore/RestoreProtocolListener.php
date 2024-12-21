@@ -30,9 +30,27 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	}
 
 	public function onBinaryClass(\Net\ProtocolAsync $protocol, string $classname, string $classdata): void {
-		echo $classname.PHP_EOL;
+		if($classname === \FileTransportContainer::class) {
+			$this->onBinaryClassFTC($classdata);
+		return;
+		}
 		throw new \RuntimeException("not implemented onBinaryClass");
 	}
+	
+	private function onBinaryClassFTC(string $classdata): void {
+		$ftc = \FileTransportContainer::fromBinary($classdata);
+		$restorePath = $this->restoreTarget."".$ftc->getFile()->getPath();
+		if($ftc->getFile()->getType() === \Catalog::TYPE_FILE) {
+			#echo "Restoring FTC file to ".$restorePath.PHP_EOL;
+			file_put_contents($restorePath, $ftc->getData());
+			$ftc->getFile()->restoreMeta($restorePath);
+		}
+		if($ftc->getFile()->getType() === \Catalog::TYPE_LINK) {
+			#echo "Restoring FTC link to ".$restorePath.PHP_EOL;
+			symlink($ftc->getData(), $restorePath);
+		}
+	}
+	
 
 	public function onCommand(\Net\ProtocolAsync $protocol, string $command): void {
 		echo $command.PHP_EOL;
