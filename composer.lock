@@ -195,13 +195,13 @@
             "default-branch": true,
             "type": "library",
             "extra": {
-                "branch-alias": {
-                    "dev-main": "3.x-dev"
-                },
                 "phpstan": {
                     "includes": [
                         "extension.neon"
                     ]
+                },
+                "branch-alias": {
+                    "dev-main": "3.x-dev"
                 }
             },
             "autoload": {
@@ -438,12 +438,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/deprecations.git",
-                "reference": "02c46054f3c34755a533d07ce27b87b20afd8cdc"
+                "reference": "7014f6c1c322bb040c7db23ed44516b9a4535d20"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/02c46054f3c34755a533d07ce27b87b20afd8cdc",
-                "reference": "02c46054f3c34755a533d07ce27b87b20afd8cdc",
+                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/7014f6c1c322bb040c7db23ed44516b9a4535d20",
+                "reference": "7014f6c1c322bb040c7db23ed44516b9a4535d20",
                 "shasum": ""
             },
             "require": {
@@ -453,7 +453,7 @@
                 "doctrine/coding-standard": "^9 || ^12",
                 "phpstan/phpstan": "1.4.10 || 2.0.3",
                 "phpstan/phpstan-phpunit": "^1.0 || ^2",
-                "phpunit/phpunit": "^7.5 || ^8.5 || ^9.5",
+                "phpunit/phpunit": "^7.5 || ^8.5 || ^9.6 || ^10.5 || ^11.5",
                 "psr/log": "^1 || ^2 || ^3"
             },
             "suggest": {
@@ -476,7 +476,7 @@
                 "issues": "https://github.com/doctrine/deprecations/issues",
                 "source": "https://github.com/doctrine/deprecations/tree/1.1.x"
             },
-            "time": "2024-12-03T23:11:46+00:00"
+            "time": "2024-12-20T07:18:16+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -1548,12 +1548,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "f80235cb4d3caa59ae09be3adf1ded27521d1a9c"
+                "reference": "8afd8554c471373b47b5a59138e8feea69e60bfe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/f80235cb4d3caa59ae09be3adf1ded27521d1a9c",
-                "reference": "f80235cb4d3caa59ae09be3adf1ded27521d1a9c",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/8afd8554c471373b47b5a59138e8feea69e60bfe",
+                "reference": "8afd8554c471373b47b5a59138e8feea69e60bfe",
                 "shasum": ""
             },
             "require": {
@@ -1643,7 +1643,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-12-05T13:48:26+00:00"
+            "time": "2024-12-20T07:00:31+00:00"
         },
         {
             "name": "plibv4/argv",
@@ -1966,16 +1966,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-profiler",
-                "reference": "77103313c775effb87042a04b9ff0fb0ccd548f2"
+                "reference": "83a67b6568c9fb21602375f44ba2b22893162fe8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-profiler/zipball/77103313c775effb87042a04b9ff0fb0ccd548f2",
-                "reference": "77103313c775effb87042a04b9ff0fb0ccd548f2",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-profiler/zipball/83a67b6568c9fb21602375f44ba2b22893162fe8",
+                "reference": "83a67b6568c9fb21602375f44ba2b22893162fe8",
                 "shasum": ""
             },
             "require": {
                 "plibv4/terminaltable": "dev-main"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "9.6.x-dev",
+                "vimeo/psalm": "6.x-dev"
             },
             "default-branch": true,
             "type": "library",
@@ -1984,7 +1988,22 @@
                     "src/"
                 ]
             },
-            "time": "2023-06-26T15:02:53+00:00"
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
+                ],
+                "testdox": [
+                    "./vendor/bin/phpunit --bootstrap vendor/autoload.php --testdox --colors=always tests"
+                ],
+                "psalm": [
+                    "./vendor/bin/psalm --show-info=true --no-cache"
+                ],
+                "psatest": [
+                    "./vendor/bin/psalm --show-info=true --no-cache",
+                    "./vendor/bin/phpunit --bootstrap vendor/autoload.php tests/"
+                ]
+            },
+            "time": "2024-12-22T15:03:41+00:00"
         },
         {
             "name": "plibv4/terminaltable",
@@ -3535,8 +3554,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -3612,8 +3631,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -3691,8 +3710,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -3755,12 +3774,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "2369cb908b33d7b7518cce042615de430142497f"
+                "reference": "6c1cb6eb3827aac159ca7a43d3cc39ccc066a3eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/2369cb908b33d7b7518cce042615de430142497f",
-                "reference": "2369cb908b33d7b7518cce042615de430142497f",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/6c1cb6eb3827aac159ca7a43d3cc39ccc066a3eb",
+                "reference": "6c1cb6eb3827aac159ca7a43d3cc39ccc066a3eb",
                 "shasum": ""
             },
             "require": {
@@ -3776,8 +3795,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -3828,7 +3847,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-10T14:38:51+00:00"
+            "time": "2024-11-04T09:32:35+00:00"
         },
         {
             "name": "symfony/polyfill-php73",
@@ -3851,8 +3870,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {
@@ -3928,8 +3947,8 @@
             "type": "library",
             "extra": {
                 "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
+                    "url": "https://github.com/symfony/polyfill",
+                    "name": "symfony/polyfill"
                 }
             },
             "autoload": {

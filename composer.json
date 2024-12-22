@@ -95,9 +95,9 @@
 		"test": "./vendor/bin/phpunit --bootstrap  tests/autoload-composer.php tests/",
 		"testdox": "./vendor/bin/phpunit --bootstrap tests/autoload-composer.php --testdox --colors=always tests/",
 		"psalm": "./vendor/bin/psalm --show-info=true --no-cache",
-		"check": [
-			"./vendor/bin/phpunit --bootstrap tests/autoload-composer.php tests/",
-			"./vendor/bin/psalm --show-info=true --no-cache"
+		"psatest": [
+			"./vendor/bin/psalm --show-info=true --no-cache",
+			"./vendor/bin/phpunit --bootstrap tests/autoload-composer.php tests/"
 		]
 	},
 	"config": {
