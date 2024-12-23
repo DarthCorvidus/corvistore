@@ -116,20 +116,23 @@ class File implements BinaryPersistable {
 	
 	function reload(): void {
 		clearstatcache();
-		$stat = @stat($this->path);
+		$stat = @lstat($this->path);
 		if($stat===FALSE) {
 			throw new Exception("unable to stat ".$this->path);
+		}
+		if($this->path==="/root/restore/etc/os-release") {
+			
 		}
 		$this->ctime = $stat["ctime"];
 		$this->atime = $stat["atime"];
 		$this->mtime = $stat["mtime"];
-		$this->permissions = fileperms($this->path);
+		$this->permissions = $stat["mode"];
 		// group & user names are cached
 		$this->uid = $stat["uid"];
 		$this->owner = $this->getOwnerName($stat["uid"]);
 		$this->gid = $stat["gid"];
 		$this->group = $this->getGroupName($stat["gid"]); 
-		$this->size = filesize($this->path);
+		$this->size = $stat["size"];
 		$this->type = Catalog::TYPE_OTHER;
 		//usually, most files are files, so check for file first and end early.
 		if(is_file($this->path) && !is_link($this->path)) {
