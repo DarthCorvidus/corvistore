@@ -37,41 +37,10 @@ class RecurseDirectory implements Task {
 		$next = array_shift($this->dirStack);
 		//echo count($this->dirStack).PHP_EOL;
 		$files = new \Files();
-		foreach(glob($next."/{,.}*", GLOB_BRACE) as $value) {
-			$object = new \SplFileInfo($value);
-			#echo $object->getBasename().PHP_EOL;
-			if($object->getBasename()==="." or $object->getBasename()==="..") {
-				continue;
-			}
-			$this->processed++;
-			$realPath = $object->getRealPath();
-			if(!$this->inex->isValid($realPath)) {
-				continue;
-			}
-			/*
-			 * Skip early if file is link.
-			 */
-			if($object->isLink()) {
-				$file = \File::fromPath($value);
-				$files->addEntry($file);
-				continue;
-			}
-			if(!$object->isDir() && !$object->isFile()) {
-				echo "Skipping unknown file type ".$realPath.PHP_EOL;
-				continue;
-			}
-			
-			try {
-				$file = \File::fromPath($value);
-				$files->addEntry($file);
-			} catch(\Exception $e) {
-				#echo $e::class.PHP_EOL;
-				echo $e->getMessage().PHP_EOL;
-			}
-			if($object->isDir()) {
-				#echo count($this->dirStack)." ".$value.PHP_EOL;
-				$this->dirStack[] = $realPath;
-			}
+		$files = \Files::fromDirectory($next, $this->inex);
+		$directories = $files->getDirectories();
+		for($i=0;$i<$directories->getCount();$i++) {
+			$this->dirStack[] = $directories->getEntry($i)->getPath();
 		}
 		$this->walkObserver->onFiles($this, $next, $files);
 	return true;
