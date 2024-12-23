@@ -49,13 +49,13 @@ class CatalogEntries {
 			$file = $files->getEntry($i);
 			// Determine files which are missing in the catalog.
 			if(!$this->hasName($file->getBasename())) {
-				$diff->addNew($file);
+				$diff->addClientOnly($file);
 				continue;
 			}
 			// check if file is equal;
 			$catalogEntry = $this->getByName($file->getBasename());
 			if(!$file->isEqual($catalogEntry)) {
-				$diff->addChanged($file);
+				$diff->addDifferent($file, $catalogEntry);
 			}
 		}
 		
@@ -63,7 +63,7 @@ class CatalogEntries {
 			$catalogEntry = $this->getEntry($i);
 			$latest = $catalogEntry->getVersions()->getLatest();
 			if(!$files->hasName($catalogEntry->getName()) && $latest->getType()!= Catalog::TYPE_DELETED) {
-				$diff->addDeleted($catalogEntry);
+				$diff->addServerOnly($catalogEntry);
 			}
 		}
 

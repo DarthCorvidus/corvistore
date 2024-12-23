@@ -4,36 +4,43 @@
  * between the filesystem / the catalog tucked away in one class.
  */
 class CatFileDiff {
-	private Files $new;
-	private CatalogEntries $deleted;
-	private Files $changed;
+	private Files $clientOnly;
+	private CatalogEntries $serverOnly;
+	private Files $differentFiles;
+	private CatalogEntries $differentCatalogEntries;
 	function __construct(string $dirname) {
-		$this->new = new Files();
-		$this->changed = new Files();
-		$this->deleted = new CatalogEntries($dirname);
+		$this->clientOnly = new Files();
+		$this->differentFiles = new Files();
+		$this->differentCatalogEntries = new CatalogEntries($dirname);
+		$this->serverOnly = new CatalogEntries($dirname);
 	}
 	
-	function addNew(File $file): void {
-		$this->new->addEntry($file);
+	function addClientOnly(File $file): void {
+		$this->clientOnly->addEntry($file);
 	}
 	
-	function getNew(): Files {
-		return $this->new;
+	function getClientOnly(): Files {
+		return $this->clientOnly;
 	}
 	
-	function addChanged(File $file): void {
-		$this->changed->addEntry($file);
+	function addDifferent(File $file, CatalogEntry $entry): void {
+		$this->differentFiles->addEntry($file);
+		$this->differentCatalogEntries->addEntry($entry);
 	}
 	
-	function getChanged(): Files {
-		return $this->changed;
+	function getDifferentFiles(): Files {
+		return $this->differentFiles;
 	}
 	
-	function addDeleted(CatalogEntry $catalog): void {
-		$this->deleted->addEntry($catalog);
+	function getDifferentCatalogEntries(): CatalogEntries {
+		return $this->differentCatalogEntries;
 	}
 	
-	function getDeleted(): CatalogEntries {
-		return $this->deleted;
+	function addServerOnly(CatalogEntry $catalog): void {
+		$this->serverOnly->addEntry($catalog);
+	}
+	
+	function getServerOnly(): CatalogEntries {
+		return $this->serverOnly;
 	}
 }

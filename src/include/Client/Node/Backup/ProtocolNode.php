@@ -100,8 +100,8 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	}
 	
 	private function uploadChanged(\CatalogEntries $catalogEntries, \CatFileDiff $diff): void {
-		for($i=0;$i<$diff->getChanged()->getCount();$i++) {
-			$file = $diff->getChanged()->getEntry($i);
+		for($i=0;$i<$diff->getDifferentFiles()->getCount();$i++) {
+			$file = $diff->getDifferentFiles()->getEntry($i);
 			$entry = $catalogEntries->getByName($file->getBasename());
 			$file->setAction(\File::UPDATE);
 			$this->protocol->sendCommand("UPDATE FILE ".$entry->getId());
@@ -168,13 +168,13 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	
 	private function uploadNew(\CatalogEntries $catalogEntries, \CatFileDiff $diff): void {
 		#echo "Uploading for ".$catalogEntries->getDirname().PHP_EOL;
-		for($i=0;$i<$diff->getNew()->getCount();$i++) {
-			$file = $diff->getNew()->getEntry($i);
+		for($i=0;$i<$diff->getClientOnly()->getCount();$i++) {
+			$file = $diff->getClientOnly()->getEntry($i);
 			#echo "\tWill send ".$file->getPath().PHP_EOL;
 		}
-		for($i=0;$i<$diff->getNew()->getCount();$i++) {
+		for($i=0;$i<$diff->getClientOnly()->getCount();$i++) {
 			#pcntl_signal_dispatch();
-			$file = $diff->getNew()->getEntry($i);
+			$file = $diff->getClientOnly()->getEntry($i);
 			// Skip files for now.
 			#if($file->getType()!= \Catalog::TYPE_DIR) {
 			#	continue;
