@@ -114,9 +114,12 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	}
 	
 	private function onCatalogEntries(\Net\ProtocolAsync $protocol, \CatalogEntries $entries): void {
-		$count = $entries->getCount();
-		for($i=0;$i<$count;$i++) {
-			$entry = $entries->getEntry($i);
+		$files = \Files::fromDirectory($this->restoreTarget.$entries->getDirname());
+		$diff = $entries->getDiff($files);
+		$missing = $diff->getServerOnly();
+		//$different = $diff->getChanged();
+		for($i=0;$i<$missing->getCount();$i++) {
+			$entry = $missing->getEntry($i);
 			$versions = $entry->getVersions()->filterToTimestamp($this->timestamp);
 			if($versions->getCount()===0) {
 				continue;
@@ -128,6 +131,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 				$this->queue[] = $entry;
 			continue;
 			}
+			//echo "Requesting ".$entry->getDirnameTrailed().$entry->getName()." with version id ".$latest->getId().PHP_EOL;
 			$protocol->sendCommand("GET VERSION ".$latest->getId());
 		}
 		/*
