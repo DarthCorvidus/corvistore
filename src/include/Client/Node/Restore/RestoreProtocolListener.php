@@ -9,7 +9,17 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	private int $timestamp;
 	/** @var list<\CatalogEntry> */
 	private array $queue = array();
+	private ReplaceQuery $replaceNewer;
+	private ReplaceQuery $replaceOlder;
+	private ReplaceQuery $replaceSmaller;
+	private ReplaceQuery $replaceLarger;
 	public function __construct(\ArgvRestore $argvRestore) {
+		$this->replaceNewer = new ReplaceQuery("%s exists but is newer than backup. Action:");
+		$this->replaceOlder = new ReplaceQuery("%s exists, but is older than backup. Action:");
+		
+		$this->replaceSmaller = new ReplaceQuery("%s exists but is smaller than backup. Action:");
+		$this->replaceLarger = new ReplaceQuery("%s exists, but is larger than backup. Action:");
+
 		$this->restoreSource = $argvRestore->getRestorePath();
 		$this->restoreTarget = $argvRestore->getTargetPath();
 		if($this->restoreSource != "/") {
@@ -85,7 +95,16 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	
 	private function restoreBreadcrumb(\Net\ProtocolAsync $protocol, \CatalogEntry $entry): void {
 		$path = $entry->getDirname();
-		$this->restoreDirectory($entry);
+		$versions = $entry->getVersions()->filterToTimestamp($this->timestamp);
+		/**
+		 * If no version does exist at point in time, we can just return doing
+		 * nothing.
+		 */
+		if($versions->getCount() === 0) {
+			return;
+		}
+		$version = $versions->getLatest();
+		$this->restoreDirectory($entry, $version);
 		array_shift($this->breadcrumbs);
 		if(empty($this->breadcrumbs)) {
 			echo "Sending GET CATALOG ".$entry->getDirname().$entry->getName()."/".PHP_EOL;
@@ -96,9 +115,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		$protocol->sendCommand("GET PATH ".$this->breadcrumbs[0]);
 	}
 	
-	private function restoreDirectory(\CatalogEntry $entry): void {
-		# We have to filter again.
-		$version = $entry->getVersions()->filterToTimestamp($this->timestamp)->getLatest();
+	private function restoreDirectory(\CatalogEntry $entry, \VersionEntry $version): void {
 		$catalogDirname = $entry->getDirname();
 		if($catalogDirname === "/") {
 			$catalogDirname = "";
@@ -115,8 +132,30 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	
 	private function onCatalogEntries(\Net\ProtocolAsync $protocol, \CatalogEntries $entries): void {
 		$files = \Files::fromDirectory($this->restoreTarget.$entries->getDirname());
+		/*
+		 * We need to get all directories first to add directories for recursion.
+		 */
+		for($i=0;$i<$entries->getCount();$i++) {
+			$entry = $entries->getEntry($i);
+			$versions = $entry->getVersions()->filterToTimestamp($this->timestamp);
+			if($versions->getCount() === 0) {
+				continue;
+			}
+			$version = $versions->getLatest();
+			/**
+			 * We restore every directory here, method checks for existence.
+			 */
+			if($version->getType() === \Catalog::TYPE_DIR) {
+				$this->restoreDirectory($entry, $version);
+				$this->queue[] = $entry;
+			}
+		}
+		/**
+		 * Then we get all files missing on the server so we know what to restore.
+		 */
 		$diff = $entries->getDiff($files);
 		$missing = $diff->getServerOnly();
+		$differentFiles = $diff->getDifferentFiles();
 		//$different = $diff->getChanged();
 		for($i=0;$i<$missing->getCount();$i++) {
 			$entry = $missing->getEntry($i);
@@ -125,14 +164,17 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 				continue;
 			}
 			$latest = $versions->getLatest();
+			/**
+			 * We restored earlier, so we don't have to do it again.
+			 */
 			if($latest->getType() === \Catalog::TYPE_DIR) {
-				$this->restoreDirectory($entry);
-				// Put directories to a queue
-				$this->queue[] = $entry;
-			continue;
+				continue;
 			}
 			//echo "Requesting ".$entry->getDirnameTrailed().$entry->getName()." with version id ".$latest->getId().PHP_EOL;
 			$protocol->sendCommand("GET VERSION ".$latest->getId());
+		}
+		for($i=0;$i<$differentFiles->getCount();$i++) {
+			echo "Should restore ".$differentFiles->getEntry($i)->getPath().PHP_EOL;
 		}
 		/*
 		 * call continue to send a query for the next catalog; this approach
@@ -152,7 +194,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		}
 		$next = $this->getNext();
 		$query = $next->getDirname()."/".$next->getName();
-		echo "Querying server for catalog of ".$query." (Queue: ".count($this->queue).")".PHP_EOL;
+		//echo "Querying server for catalog of ".$query." (Queue: ".count($this->queue).")".PHP_EOL;
 		$protocol->sendCommand("GET CATALOG ".$query);
 	}
 		
