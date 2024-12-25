@@ -18,14 +18,14 @@ class FileSender implements StreamSender {
 	private mixed $handle;
 	private int $size;
 	private int $left;
-	private int $type;
 	private int $offset;
-	private bool $started = FALSE;
 	public function __construct(\File $file, int $offset = 0) {
 		$this->file = $file;
 		$this->size = $file->getSize()-$offset;
 		$this->left = $this->size;
-		$this->type = $file->getType();
+		if($file->getType() !== \Catalog::TYPE_FILE) {
+			throw new \RuntimeException("invalid type ".$file->getType().", only files are allowed.");
+		}
 		$this->offset = $offset;
 	}
 	
@@ -77,7 +77,6 @@ class FileSender implements StreamSender {
 			throw new \RuntimeException("unable to open ".$this->file->getPath()." for read.");
 		}
 		fseek($this->handle, $this->offset);
-		$this->started = true;
 	}
 
 }

@@ -20,8 +20,10 @@ class FileReceiverNew implements StreamReceiver {
 	private \File $meta;
 	private string $relativePath;
 	private string $link = "";
+	private bool $replace = false;
 	function __construct(string $relativePath, bool $replace = false) {
 		$this->relativePath = $relativePath;
+		$this->replace = $replace;
 	}
 	
 	public function receiveData(string $data): void {
@@ -31,13 +33,18 @@ class FileReceiverNew implements StreamReceiver {
 			if($this->blockCount === 8) {
 				$this->meta = \File::fromBinary($this->header);
 				$this->filename = $this->relativePath."".$this->meta->getPath();
-				if($this->meta->getType() === \Catalog::TYPE_FILE) {
-					$this->handle = fopen($this->filename, "w");
-				}
-				if($this->meta->getType() === \Catalog::TYPE_LINK) {
-					$this->link = "";
+				if($this->meta->getType() !== \Catalog::TYPE_FILE) {
+					// should not happen.
+					throw new \RuntimeException("invalid file type received");
 				}
 				
+				if(file_exists($this->filename) && $this->replace === false) {
+					throw new \RuntimeException("file already exists on target");
+				}
+				/**
+				 * @todo Error handling.
+				 */
+				$this->handle = fopen($this->filename, "w");
 			}
 			$this->left -= strlen($data);
 		return;
