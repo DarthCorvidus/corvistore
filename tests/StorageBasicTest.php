@@ -69,7 +69,7 @@ class StorageBasicTest extends TestCase {
 	function testFromIdBogus(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Storage with id '37' not available");
-		$storage = Storage::fromId(TestHelper::getEPDO(), 37);
+		Storage::fromId(TestHelper::getEPDO(), 37);
 	}
 	
 	
@@ -83,10 +83,10 @@ class StorageBasicTest extends TestCase {
 	}
 	
 	function testGetId(): void {
-		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
-		StorageBasic::define(TestHelper::getEPDO(), $command);
-		$command = new CommandParser("define storage backup-main02 type=basic location=".__DIR__."/storage/basic02");
-		StorageBasic::define(TestHelper::getEPDO(), $command);
+		$command01 = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
+		StorageBasic::define(TestHelper::getEPDO(), $command01);
+		$command02 = new CommandParser("define storage backup-main02 type=basic location=".__DIR__."/storage/basic02");
+		StorageBasic::define(TestHelper::getEPDO(), $command02);
 
 		$storage = Storage::fromName(TestHelper::getEPDO(), "backup-main02");
 		$this->assertEquals("2", $storage->getId());
@@ -102,7 +102,6 @@ class StorageBasicTest extends TestCase {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 
-		$pdo = TestHelper::getEPDO();
 		$storage = StorageBasic::fromName(TestHelper::getEPDO(), "backup-main01");
 		$target = __DIR__."/storage/basic01/00/00/21/d0/10/14/16/a8.cp";
 		/**
@@ -116,7 +115,6 @@ class StorageBasicTest extends TestCase {
 		$command = new CommandParser("define storage backup-main01 type=basic location=".__DIR__."/storage/basic01");
 		StorageBasic::define(TestHelper::getEPDO(), $command);
 
-		$pdo = TestHelper::getEPDO();
 		$storage = StorageBasic::fromName(TestHelper::getEPDO(), "backup-main01");
 		$target = __DIR__."/storage/basic01/00/00/21/d0/10/14/16/";
 		/**

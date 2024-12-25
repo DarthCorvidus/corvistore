@@ -20,7 +20,6 @@ class CatalogEntryTest extends TestCase {
 	}
 
 	function testFromArray(): void {
-		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$array = array();
 		$array["dc_id"] = 1;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test03")->getId();
@@ -64,7 +63,6 @@ class CatalogEntryTest extends TestCase {
 	}
 	
 	function testHasParentId(): void {
-		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$array = array();
 		$array["dc_id"] = 2;
 		$array["dnd_id"] = Node::fromName(TestHelper::getEPDO(), "test01")->getId();

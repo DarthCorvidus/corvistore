@@ -27,7 +27,8 @@ class StreamFakeTest extends TestCase {
 		$expect = random_bytes(1024*10);
 		$stream = new StreamFake("");
 		for($i=0;$i<10;$i++) {
-			$stream->write(substr($expect, 1024*$i, 1024));
+			$written = $stream->write(substr($expect, 1024*$i, 1024));
+			$this->assertEquals(1024, $written);
 		}
 		$this->assertEquals($expect, $stream->getData());
 	}

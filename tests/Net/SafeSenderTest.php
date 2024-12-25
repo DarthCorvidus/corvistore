@@ -102,7 +102,7 @@ class SafeSenderTest extends TestCase {
 		$ms = new MockSender($expected);
 		$ms->setExceptionAfter(0);
 		$sender = new SafeSender($ms, 1024);
-		$first = $sender->getSendData(1024);
+		$sender->getSendData(1024);
 		$this->assertEquals(TRUE, $ms->hasStarted());
 		$this->assertEquals(2048, $sender->getSendSize());
 		$this->assertEquals(1024, $sender->getSendLeft());

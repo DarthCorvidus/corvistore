@@ -69,7 +69,6 @@ class FileSenderTest extends TestCase {
 		$sender = new FileSender(File::fromPath(__DIR__."/example/FileReader.bin"));
 		$sender->onSendStart();
 		$rest = 27389;
-		$total = 27389;
 		$i=0;
 		$contents = "";
 		while($rest>4096) {
@@ -79,9 +78,17 @@ class FileSenderTest extends TestCase {
 			$rest -= 4096;
 			$i++;
 		}
-		$load = file_get_contents(__DIR__."/example/FileReader.bin", FALSE, NULL, $i*4096, $rest);
-		$this->assertEquals($load, $sender->getSendData($rest));
-		
+		/**
+		 * Get last chunk of data.
+		 */
+		$last = file_get_contents(__DIR__."/example/FileReader.bin", FALSE, NULL, $i*4096, $rest);
+		$load = $sender->getSendData($rest);
+		// test if last chunk is the same as if taken from file
+		$this->assertEquals($load, $last);
+		// Add to contents and compare with whole file
+		$contents .= $load;
+		$this->assertEquals($contents, file_get_contents(__DIR__."/example/FileReader.bin"));
+		$this->assertSame(self::FILESIZE, strlen($contents));
 		$sender->onSendEnd();
 	}
 
@@ -99,9 +106,13 @@ class FileSenderTest extends TestCase {
 			$rest -= 4096;
 			$i++;
 		}
-		$load = file_get_contents(__DIR__."/example/FileReader.bin", FALSE, NULL, ($i*4096)+1024, $rest);
-		$this->assertEquals($load, $sender->getSendData($rest));
-		
+		$last = file_get_contents(__DIR__."/example/FileReader.bin", FALSE, NULL, ($i*4096)+1024, $rest);
+		$load = $sender->getSendData($rest);
+		$this->assertEquals($last, $load);
+		$contents .= $load;
+		$this->assertEquals($load, $last);
+		$this->assertEquals($contents, file_get_contents(__DIR__."/example/FileReader.bin", FALSE, NULL, 1024));
+		$this->assertSame($total, strlen($contents));
 		$sender->onSendEnd();
 	}
 	

@@ -13,18 +13,18 @@ class PartitionTest extends TestCase {
 	}
 	
 	function testDefine(): void {
-		$command = new CommandParser("define storage primary type=basic location=".__DIR__."/storage/basic01/");
-		Storage::define(TestHelper::getEPDO(), $command);
+		$command01 = new CommandParser("define storage primary type=basic location=".__DIR__."/storage/basic01/");
+		Storage::define(TestHelper::getEPDO(), $command01);
 
-		$command = new CommandParser("define storage secondary type=basic location=".__DIR__."/storage/basic02/");
-		Storage::define(TestHelper::getEPDO(), $command);
+		$command02 = new CommandParser("define storage secondary type=basic location=".__DIR__."/storage/basic02/");
+		Storage::define(TestHelper::getEPDO(), $command02);
 		
 		//"wrong" order on purpose
-		$command = new CommandParser("define partition backup-secondary storage=secondary type=common");
-		Partition::define(TestHelper::getEPDO(), $command);
+		$command03 = new CommandParser("define partition backup-secondary storage=secondary type=common");
+		Partition::define(TestHelper::getEPDO(), $command03);
 
-		$command = new CommandParser("define partition backup-primary storage=primary type=common");
-		Partition::define(TestHelper::getEPDO(), $command);
+		$command04 = new CommandParser("define partition backup-primary storage=primary type=common");
+		Partition::define(TestHelper::getEPDO(), $command04);
 		
 		$target = array();
 		$target[0] = array("dpt_id" => 1, "dst_id" => 2, "dpt_name"=>"backup-secondary", "dpt_type"=>"common", "dpt_copy" => NULL, "dpt_nextpt" => NULL);
@@ -55,7 +55,7 @@ class PartitionTest extends TestCase {
 	function testFromNameBogus(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Partition 'squid' does not exist.");
-		$partition = Partition::fromName(TestHelper::getEPDO(), "squid");
+		Partition::fromName(TestHelper::getEPDO(), "squid");
 	}
 	
 	function testFromId(): void {
@@ -69,7 +69,7 @@ class PartitionTest extends TestCase {
 	function testFromIdBogus(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Partition with id '25' does not exist.");
-		$partition = Partition::fromId(TestHelper::getEPDO(), 25);
+		Partition::fromId(TestHelper::getEPDO(), 25);
 	}
 	
 }

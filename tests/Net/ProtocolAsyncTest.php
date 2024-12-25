@@ -105,14 +105,17 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$expected = serialize($_SERVER);
-		$steps = ceil(strlen($expected)/$sender->getPacketLength());
+		$steps = (int)ceil(strlen($expected)/$sender->getPacketLength());
 
 		$sender->sendMessage($expected);
+		$i = 0;
 		while($sender->hasWrite()) {
 			$data = $sender->onWrite();
 			$sender->onWritten();
 			$receiver->onRead($data);
+			$i++;
 		}
+		$this->assertSame($steps, $i);
 		$this->assertEquals($expected, $this->lastString);
 	}
 	
@@ -120,14 +123,17 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$sender = new ProtocolAsync($this);
 		$receiver = new ProtocolAsync($this);
 		$expected = serialize($_SERVER);
-		$steps = ceil(strlen($expected)/$sender->getPacketLength());
+		$steps = (int)ceil(strlen($expected)/$sender->getPacketLength());
 
 		$sender->sendMessage($expected);
+		$i = 0;
 		while($sender->hasWrite()) {
 			$data = $sender->onWrite();
 			$sender->onWritten();
 			$receiver->onRead($data);
+			$i++;
 		}
+		$this->assertSame($steps, $i);
 		$this->assertEquals($expected, $this->lastString);
 	}
 	

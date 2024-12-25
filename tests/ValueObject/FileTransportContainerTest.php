@@ -80,7 +80,7 @@ class FileTransportContainerTest extends TestCase {
 		 */
 		unlink("/tmp/corviprotect/file3.bin");
 		$this->expectExceptionMessage("File '/tmp/corviprotect/file3.bin' vanished before transfer");
-		$fc = FileTransportContainer::fromFile($file);
+		FileTransportContainer::fromFile($file);
 	}
 
 	function testFromPathChangedSize(): void {
@@ -88,6 +88,6 @@ class FileTransportContainerTest extends TestCase {
 		$this->expectException(\FileChangedException::class);
 		file_put_contents("/tmp/corviprotect/file3.bin", "The cat is on the mat and the dog is on the log");
 		$this->expectExceptionMessage("File '/tmp/corviprotect/file3.bin' changed size during transfer");
-		$fc = FileTransportContainer::fromFile($file);
+		FileTransportContainer::fromFile($file);
 	}
 }

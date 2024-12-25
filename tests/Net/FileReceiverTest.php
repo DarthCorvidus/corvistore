@@ -60,11 +60,9 @@ class FileReceiverTest extends TestCase {
 		$receiver = new FileReceiver(self::getTarget());
 		$receiver->setRecvSize(filesize(self::getSource()));
 		$receiver->onRecvStart();
-		$pos = 0;
 		$i=0;
 		while($receiver->getRecvLeft()>1024) {
 			$receiver->receiveData(substr($source, $i*1024, 1024));
-			$pos = $pos + 1024;
 			$i++;
 		}
 		if($receiver->getRecvLeft()!=0) {
@@ -90,14 +88,14 @@ class FileReceiverTest extends TestCase {
 		file_put_contents(self::getTarget(), "Test");
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage("file ".self::getTarget()." already exists.");
-		$receiver = new FileReceiver(self::getTarget());
+		new FileReceiver(self::getTarget());
 	}
 	
 	function testNoTarget(): void {
 		file_put_contents(self::getTarget(), "Test");
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessage("target directory ".__DIR__."/example02 does not exist.");
-		$receiver = new FileReceiver(__DIR__."/example02/test.bin");
+		new FileReceiver(__DIR__."/example02/test.bin");
 	}
 
 }

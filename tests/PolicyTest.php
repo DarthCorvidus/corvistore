@@ -18,17 +18,17 @@ class PolicyTest extends TestCase {
 		Partition::define(TestHelper::getEPDO(), new CommandParser("define partition backup-main01 type=common storage=basic01"));
 		Partition::define(TestHelper::getEPDO(), new CommandParser("define partition backup-main02 type=common storage=basic02"));
 				
-		$command = new CommandParser("define policy partition=backup-main02 forever");
-		Policy::define(TestHelper::getEPDO(), $command);
+		$command01 = new CommandParser("define policy partition=backup-main02 forever");
+		Policy::define(TestHelper::getEPDO(), $command01);
 
-		$command = new CommandParser("define policy month partition=backup-main01 retexists=31 retdeleted=15");
-		Policy::define(TestHelper::getEPDO(), $command);
+		$command02 = new CommandParser("define policy month partition=backup-main01 retexists=31 retdeleted=15");
+		Policy::define(TestHelper::getEPDO(), $command02);
 
-		$command = new CommandParser("define policy keepv10d5 partition=backup-main01 verexists=10 verdeleted=5");
-		Policy::define(TestHelper::getEPDO(), $command);
+		$command03 = new CommandParser("define policy keepv10d5 partition=backup-main01 verexists=10 verdeleted=5");
+		Policy::define(TestHelper::getEPDO(), $command03);
 
-		$command = new CommandParser("define policy keepv10d5month partition=backup-main02 verexists=10 verdeleted=5 retexists=31 retdeleted=15");
-		Policy::define(TestHelper::getEPDO(), $command);
+		$command04 = new CommandParser("define policy keepv10d5month partition=backup-main02 verexists=10 verdeleted=5 retexists=31 retdeleted=15");
+		Policy::define(TestHelper::getEPDO(), $command04);
 		
 		$target = array();
 		$target[0] = array("dpo_id" => "1", "dpo_name"=>"forever", "dpo_version_exists" => "0", "dpo_version_deleted"=>"0", "dpo_retention_exists" => "0", "dpo_retention_deleted"=>"0", "dpt_id"=>"2");
@@ -75,7 +75,7 @@ class PolicyTest extends TestCase {
 	function testFromNameBogus(): void {
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionMessage("Policy with name 'squid' does not exist.");
-		$policy = Policy::fromName(TestHelper::getEPDO(), "squid");
+		Policy::fromName(TestHelper::getEPDO(), "squid");
 	}
 	
 	function testFromId(): void {
@@ -93,6 +93,6 @@ class PolicyTest extends TestCase {
 	function testFromIdBogus(): void {
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage("Policy with id '25' does not exist.");
-		$policy = Policy::fromId(TestHelper::getEPDO(), 25);
+		Policy::fromId(TestHelper::getEPDO(), 25);
 	}
 }

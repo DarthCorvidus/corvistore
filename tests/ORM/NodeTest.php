@@ -88,13 +88,13 @@ class NodeTest extends TestCase {
 	function testAuthenticateNoPass(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Unable to read password for node test01");
-		$node = Node::authenticate(TestHelper::getEPDO(), "test01");
+		Node::authenticate(TestHelper::getEPDO(), "test01");
 	}
 
 	function testAuthenticateWrongPass(): void {
 		$this->expectException(Exception::class);
 		$this->expectExceptionMessage("Unable to authenticate");
-		$node = Node::authenticate(TestHelper::getEPDO(), "test01:letmein");
+		Node::authenticate(TestHelper::getEPDO(), "test01:letmein");
 	}
 	
 	

@@ -68,7 +68,7 @@ class VersionEntryTest extends TestCase {
 		$example["dvs_created_epoch"] = $time;
 		$example["dvs_created_local"] = $datetime;
 		$example["dc_id"] = "12";
-		$id = TestHelper::getEPDO()->create("d_version", $example);
+		TestHelper::getEPDO()->create("d_version", $example);
 		$this->assertInstanceOf(VersionEntry::class, VersionEntry::fromId(TestHelper::getEPDO(), 25));
 	}
 	
