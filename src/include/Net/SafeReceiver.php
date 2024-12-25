@@ -1,7 +1,12 @@
 <?php
 namespace Net;
 /**
- * Description of FileReceiver
+ * SafeReceiver
+ * 
+ * SafeReceiver is the counterpart of SafeSender, which evaluates control blocks
+ * as send by the SafeSender and forwards it to an inner stream receiver.
+ * If it receives a cancel block, it can act accordingly it by calling
+ * onCancel on the inner receiver.
  *
  * @author hm
  */
@@ -10,19 +15,21 @@ class SafeReceiver implements StreamReceiver {
 	private int $increment = 0;
 	private int $left;
 	private int $size;
-	private int $bitsize;
 	private int $blocksize;
 	function __construct(\Net\StreamReceiver $receiver, int $blocksize) {
 		$this->receiver = $receiver;
 		// Length is at least blocksize * 2: the first and the last control block.
 		$this->size = $blocksize*2;
 		$this->left = $blocksize*2;
-		$this->bitsize = (int)log($blocksize, 2);
 		$this->blocksize = $blocksize;
 	}
 	public function receiveData(string $data): void {
-		if($this->increment==0) {
+		if($this->increment === 0) {
 			$type = ord($data[0]);
+			// This should not happen, as SafeReceiver should only be called when $type is Protocol::FILE.
+			if($type !== Protocol::FILE) {
+				throw new \RuntimeException("first block shows invalid type, ".Protocol::FILE." expected, got ".$type);
+			}
 			$this->size = \IntVal::uint64LE()->getValue(substr($data, 1, 8));
 			$this->left = $this->size - $this->blocksize;
 			$this->receiver->setRecvSize(\IntVal::uint64LE()->getValue(substr($data, 9, 8)));
@@ -65,14 +72,6 @@ class SafeReceiver implements StreamReceiver {
 
 	public function setRecvSize(int $size): void {
 		throw new \RuntimeException("Size is determined from the first data block, do not set manually.");
-		/**
-		 * As the receiver is reused in ProtocolAsync, we need to reset the
-		 * increment here.
-		 * Glad I had a unit test for this one, otherwise I would have noticed
-		 * it by having a corrupted backup.
-		 */
-		$this->increment = 1;
-		$this->receiver->setRecvSize($size);
 	}
 	
 	public function getRecvSize(): int {

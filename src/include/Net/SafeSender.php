@@ -1,21 +1,17 @@
 <?php
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace Net;
 
 /**
- * Description of FileSender
- *
- * @author hm
+ * SafeSender
+ * 
+ * SafeSender serves as an 'outer shell' for a specific sender; apart from
+ * sending data in reads from another StreamSender, it adds control blocks,
+ * for instance, cancel, if the inner StreamSender has failed for any reason.
+ * This way, the inner Sender can remain blissfully untroubled about error
+ * handling and just get and send data.
  */
 class SafeSender implements StreamSender {
 	private \Net\StreamSender $sender;
-	private int $payloadSize;
 	private int$increment = 0;
 	private int $size;
 	private int $blocksize;
@@ -34,7 +30,6 @@ class SafeSender implements StreamSender {
 		 */
 		$exponent = (int)log(1024, 2);
 		$this->size = \Net\Protocol::ceilBlock($sender->getSendSize(), $exponent)+($blocksize*2);
-		$this->payloadSize = $sender->getSendSize();
 		$this->payloadLeft = $sender->getSendLeft();
 		$this->left = $this->size;
 		$this->blocksize = $blocksize;
