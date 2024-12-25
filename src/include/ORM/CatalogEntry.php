@@ -24,7 +24,7 @@ class CatalogEntry {
 			$this->parentId = (int)$array["dc_parent"];
 		}
 	}
-	static function fromArray(EPDO $pdo, array $array): CatalogEntry {
+	static function fromArray(array $array): CatalogEntry {
 		$ce = new CatalogEntry($array);
 	return $ce;
 	}
@@ -34,7 +34,7 @@ class CatalogEntry {
 		if(empty($row)) {
 			throw new RuntimeException(sprintf("No catalog entry with id '%d'", $id));
 		}
-	return CatalogEntry::fromArray($pdo, $row);
+	return CatalogEntry::fromArray($row);
 	}
 	/*
 	static function fromName(EPDO $pdo, Node $node, string $name, CatalogEntry $parent = NULL): CatalogEntry {
