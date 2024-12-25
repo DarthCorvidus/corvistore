@@ -31,7 +31,7 @@ class MockupFiles {
 	}
 	
 	private function deleteRecurse(string $path): void {
-		foreach(glob($path."/*") as $key => $value) {
+		foreach(glob($path."/*") as $value) {
 			if(is_dir($value)) {
 				$this->deleteRecurse($value);
 			}

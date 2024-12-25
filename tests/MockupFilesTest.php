@@ -21,12 +21,12 @@ class MockupFilesTest extends TestCase {
 	}
 
 	function testConstruct(): void {
-		$mockup = new MockupFiles("/tmp/crow-protect");
+		new MockupFiles("/tmp/crow-protect");
 		$this->assertFileExists("/tmp/crow-protect");
 	}
 	
 	function testConstructExisting(): void {
-		$mockup = new MockupFiles("/tmp/crow-protect");
+		new MockupFiles("/tmp/crow-protect");
 		$this->assertFileExists("/tmp/crow-protect");
 	}
 	
