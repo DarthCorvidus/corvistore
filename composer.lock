@@ -1966,12 +1966,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-profiler",
-                "reference": "83a67b6568c9fb21602375f44ba2b22893162fe8"
+                "reference": "9daa21cbfd24e6e5df647fb79fe20e677fced03e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-profiler/zipball/83a67b6568c9fb21602375f44ba2b22893162fe8",
-                "reference": "83a67b6568c9fb21602375f44ba2b22893162fe8",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-profiler/zipball/9daa21cbfd24e6e5df647fb79fe20e677fced03e",
+                "reference": "9daa21cbfd24e6e5df647fb79fe20e677fced03e",
                 "shasum": ""
             },
             "require": {
@@ -2003,7 +2003,7 @@
                     "./vendor/bin/phpunit --bootstrap vendor/autoload.php tests/"
                 ]
             },
-            "time": "2024-12-22T15:03:41+00:00"
+            "time": "2024-12-24T18:30:58+00:00"
         },
         {
             "name": "plibv4/terminaltable",
@@ -3774,15 +3774,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "6c1cb6eb3827aac159ca7a43d3cc39ccc066a3eb"
+                "reference": "6d857f4d76bd4b343eac26d6b539585d2bc56493"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/6c1cb6eb3827aac159ca7a43d3cc39ccc066a3eb",
-                "reference": "6c1cb6eb3827aac159ca7a43d3cc39ccc066a3eb",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/6d857f4d76bd4b343eac26d6b539585d2bc56493",
+                "reference": "6d857f4d76bd4b343eac26d6b539585d2bc56493",
                 "shasum": ""
             },
             "require": {
+                "ext-iconv": "*",
                 "php": ">=7.2"
             },
             "provide": {
@@ -3847,7 +3848,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-11-04T09:32:35+00:00"
+            "time": "2024-12-23T08:48:59+00:00"
         },
         {
             "name": "symfony/polyfill-php73",
