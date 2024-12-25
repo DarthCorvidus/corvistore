@@ -34,7 +34,7 @@ class CatalogTest extends TestCase {
 		$node = Node::fromName(TestHelper::getEPDO(), "test01");
 		$file = File::fromPath("/tmp/");
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
-		$catalogEntry = $catalog->newEntry($file);
+		$catalog->newEntry($file);
 		
 		$catTarget = array();
 		$catTarget[0] = array("dc_id" => 1, "dc_name" => "tmp", "dc_dirname" => "/", "dnd_id" => 1, "dc_parent" => NULL);
@@ -115,7 +115,7 @@ class CatalogTest extends TestCase {
 		$this->mockup->createDir("/Pictures/vacations/2023_thailand");
 		$catalog = new Catalog(TestHelper::getEPDO(), $node);
 		$catalogEntry = $catalog->newEntry(File::fromPath("/tmp/"));
-		$catalogEntry = $catalog->newEntry(File::fromPath("/tmp/crow-protect"), $catalogEntry->getId());
+		$catalog->newEntry(File::fromPath("/tmp/crow-protect"), $catalogEntry->getId());
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/"), $catalogEntry);
 		#$catalogEntry = $catalog->loadcreateParented(new SourceObject($node, "/tmp/crow-protect/Pictures/vacations/"), $catalogEntry);
@@ -153,7 +153,7 @@ class CatalogTest extends TestCase {
 		$tmp = $catalog->newEntry(File::fromPath("/tmp"));
 		$cp = $catalog->newEntry(File::fromPath("/tmp/crow-protect"), $tmp->getId());
 		$file = File::fromPath("/tmp/crow-protect/beach.bin");
-		$entry = $catalog->newEntry($file, $cp->getId());
+		$catalog->newEntry($file, $cp->getId());
 		
 		$catTarget = array();
 		$catTarget[0] = array("dc_id" => 1, "dc_dirname" => "/", "dc_name" => "tmp", "dnd_id" => 1, "dc_parent" => NULL);

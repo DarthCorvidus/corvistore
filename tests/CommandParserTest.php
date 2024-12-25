@@ -47,7 +47,7 @@ class CommandParserTest extends TestCase {
 
 	public function testSplitOpenQuote(): void {
 		$this->expectException(Exception::class);
-		$split = CommandParser::split('define    storage backup-main type=directory description="main backup device class location=/storage/backup-main/');
+		CommandParser::split('define    storage backup-main type=directory description="main backup device class location=/storage/backup-main/');
 	}
 	
 	public function testGetCommand(): void {
