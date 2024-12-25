@@ -7,7 +7,6 @@
 class InEx {
 	private array $exclude = array();
 	private array $include = array();
-	private int $depth = 0;
 	private \ConvertTrailingSlash $convert;
 	function __construct() {
 		$this->convert = new ConvertTrailingSlash(ConvertTrailingSlash::REMOVE);;

@@ -8,7 +8,6 @@
 
 namespace Net;
 class StringReceiver implements StreamReceiver {
-	private int $pos = 0;
 	private string $string = "";
 	private int $size = 0;
 	private int $left = 0;
@@ -24,7 +23,6 @@ class StringReceiver implements StreamReceiver {
 	}
 
 	public function onRecvCancel(): void {
-		$this->pos = 0;
 		$this->string = "";
 	}
 
@@ -33,7 +31,6 @@ class StringReceiver implements StreamReceiver {
 	}
 
 	public function onRecvStart(): void {
-		$this->pos = 0;
 		$this->string = "";
 	}
 

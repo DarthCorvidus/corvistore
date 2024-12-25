@@ -77,7 +77,7 @@ class NodeList implements TerminalTableLayout, TerminalTableModel {
 		$this->values = array();
 		$stmt = $this->pdo->prepare("select * from d_node LEFT JOIN d_policy USING (dpo_id)");
 		$stmt->execute();
-		foreach($stmt as $key => $value) {
+		foreach($stmt as $value) {
 			$entry = array_fill(0, self::MAX, "");
 			$entry[self::NAME] = $value["dnd_name"];
 			$entry[self::FILES] = number_format($this->getFiles($value["dnd_id"]));

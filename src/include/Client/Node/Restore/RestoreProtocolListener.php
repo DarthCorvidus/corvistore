@@ -3,27 +3,29 @@ namespace Node;
 use Net\ProtocolAsyncListener;
 class RestoreProtocolListener implements ProtocolAsyncListener {
 	private \ArgvRestore $argvRestore;
-	private string $restoreSource;
 	private string $restoreTarget;
 	private array $breadcrumbs = array();
 	private int $timestamp;
 	/** @var list<\CatalogEntry> */
 	private array $queue = array();
+	/* Prepared, but not yet implemented
 	private ReplaceQuery $replaceNewer;
 	private ReplaceQuery $replaceOlder;
 	private ReplaceQuery $replaceSmaller;
 	private ReplaceQuery $replaceLarger;
+	 */
 	public function __construct(\ArgvRestore $argvRestore) {
+		/*
 		$this->replaceNewer = new ReplaceQuery("%s exists but is newer than backup. Action:");
 		$this->replaceOlder = new ReplaceQuery("%s exists, but is older than backup. Action:");
 		
 		$this->replaceSmaller = new ReplaceQuery("%s exists but is smaller than backup. Action:");
 		$this->replaceLarger = new ReplaceQuery("%s exists, but is larger than backup. Action:");
-
-		$this->restoreSource = $argvRestore->getRestorePath();
+		*/
+		$restoreSource = $argvRestore->getRestorePath();
 		$this->restoreTarget = $argvRestore->getTargetPath();
-		if($this->restoreSource != "/") {
-			$this->breadcrumbs = \Shared::getBreadcrumbs($this->restoreSource);
+		if($restoreSource !== "/") {
+			$this->breadcrumbs = \Shared::getBreadcrumbs($restoreSource);
 		}
 		$this->argvRestore = $argvRestore;
 		$this->timestamp = strtotime($this->argvRestore->getTimestamp());
@@ -94,7 +96,6 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	}
 	
 	private function restoreBreadcrumb(\Net\ProtocolAsync $protocol, \CatalogEntry $entry): void {
-		$path = $entry->getDirname();
 		$versions = $entry->getVersions()->filterToTimestamp($this->timestamp);
 		/**
 		 * If no version does exist at point in time, we can just return doing

@@ -14,7 +14,6 @@ class FileGroup implements BinaryPersistable {
 	}
 	
 	function addFile(\FileTransportContainer $container): void {
-		$filedata = "";
 		$size = $container->getFile()->getSize();
 		$this->container[] = $container;
 		$this->size += $size;
@@ -39,7 +38,7 @@ class FileGroup implements BinaryPersistable {
 	function toBinary(): string {
 		$writer = new StringWriter(StringWriter::LE);
 		$writer->addUInt8(count($this->container));
-		foreach($this->container as $key => $value) {
+		foreach($this->container as $value) {
 			$writer->addIndexedString(32, $value->toBinary());
 		}
 	return $writer->getBinary();

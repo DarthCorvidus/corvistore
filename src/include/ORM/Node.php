@@ -27,7 +27,12 @@ class Node {
 		$node->create();
 	return $node;
 	}
-	
+	/**
+	 * @psalm-suppress PossiblyUnusedReturnValue
+	 * @param EPDO $pdo
+	 * @param CommandParser $command
+	 * @return string
+	 */
 	static function update(EPDO $pdo, CommandParser $command): string {
 		$update = array();
 		$command->import(new CPModelNode($pdo, CPModelNode::MODE_UPDATE));

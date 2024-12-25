@@ -37,6 +37,8 @@ class Idle implements Task {
 		/**
 		 * @psalm-var positive-int $this->delaySeconds
 		 * @psalm-var positive-int $this->delayMilliseconds
+		 * This has a return value?
+		 * @psalm-suppress UnusedFunctionCall
 		 */
 		time_nanosleep($this->delaySeconds, $this->delayMilliseconds);
 		return true;

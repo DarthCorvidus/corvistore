@@ -24,8 +24,8 @@ class StreamClient implements Stream {
 
 	public function read(int $amount): string {
 		while(true) {
-			$write = array();
-			$read = array($this->socket);
+			#$write = array();
+			#$read = array($this->socket);
 			/*
 			 * stream_select should/must not be used with blocking streams.
 			 */
@@ -52,8 +52,8 @@ class StreamClient implements Stream {
 
 	public function write(string $data): int {
 		while(true) {
-			$write = array($this->socket);
-			$read = array();
+			#$write = array($this->socket);
+			#$read = array();
 			#if(@stream_select($read, $write, $except, $tv_sec = 1) < 1) {
 			#	echo "Stream not ready to write.".PHP_EOL;
 			#	continue;

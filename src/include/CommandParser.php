@@ -14,7 +14,6 @@ declare(strict_types=1);
  * @author Claus-Christoph Küthe
  */
 class CommandParser {
-	private array $raw = array();
 	private string $command;
 	private string $object;
 	private array $positional;
@@ -24,15 +23,15 @@ class CommandParser {
 	private array $paramsSanitized = array();
 	private bool $imported = false;
 	function __construct(string $command) {
-		$this->raw = self::split($command);
-		$this->command = $this->raw[0];
+		$raw = self::split($command);
+		$this->command = $raw[0];
 		$this->object = "";
-		if(isset($this->raw[1])) {
-			$this->object = $this->raw[1];
+		if(isset($raw[1])) {
+			$this->object = $raw[1];
 		}
 		$this->positional = array();
 		$this->params = array();
-		foreach(array_slice($this->raw, 2) as $value) {
+		foreach(array_slice($raw, 2) as $value) {
 			$split = explode("=", $value, 2);
 			if(!isset($split[1])) {
 				$this->positional[] = $value;
@@ -53,7 +52,7 @@ class CommandParser {
 		if(!empty($diff_theirs)) {
 			throw new InvalidArgumentException(sprintf("Parameter '%s' not valid for '%s %s'", $diff_theirs[0], $this->command, $this->object));
 		}
-		$diff_ours = array_diff($allowed, $user);
+
 		foreach($model->getParameters() as $value) {
 			$uservalue = $model->getParamUserValue($value);
 			
