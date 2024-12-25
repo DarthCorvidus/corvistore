@@ -158,19 +158,6 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 	return $data;
 	}
 	
-	private function onWriteFirstFile(StreamSender $sender): string {
-		$data = chr($sender->getSendType());
-		$data .= \IntVal::uint64LE()->putValue($sender->getSendSize());
-		$packetLength = $this->getPacketLength();
-		if($sender->getSendLeft()<=$packetLength-9) {
-			$data .= parent::padRandom($sender->getSendData($sender->getSendLeft()), $packetLength-9);
-			#array_shift($this->sendStream);
-		return $data;
-		}
-		$data .= $sender->getSendData($packetLength-9);
-	return $data;
-	}
-	
 	private function onWriteString(StreamSender $sender): string {
 		$packetLength = $this->getPacketLength();
 		if($sender->getSendLeft()<=$packetLength) {
