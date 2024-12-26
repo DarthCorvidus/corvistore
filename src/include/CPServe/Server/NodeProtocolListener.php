@@ -290,4 +290,12 @@ class NodeProtocolListener implements \Net\ProtocolAsyncListener, \Net\ProtocolS
 
 	throw new \RuntimeException("unexpected class ".$classname);
 	}
+
+	public function onStreamEnd(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
+		
+	}
+
+	public function onStreamStart(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
+		
+	}
 }

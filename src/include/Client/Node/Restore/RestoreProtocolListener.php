@@ -198,5 +198,12 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		//echo "Querying server for catalog of ".$query." (Queue: ".count($this->queue).")".PHP_EOL;
 		$protocol->sendCommand("GET CATALOG ".$query);
 	}
+
+	public function onStreamEnd(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
 		
+	}
+
+	public function onStreamStart(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
+		echo "Starting to receive file stream with ".$streamReceiver->getRecvSize()." bytes.".PHP_EOL;
+	}
 }

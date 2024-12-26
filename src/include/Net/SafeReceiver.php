@@ -89,5 +89,9 @@ class SafeReceiver implements StreamReceiver {
 	public function onRecvStart(): void {
 		$this->receiver->onRecvStart();
 	}
+	
+	public function getInnerReceiver(): StreamReceiver {
+		return $this->receiver;
+	}
 
 }

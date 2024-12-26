@@ -258,4 +258,12 @@ class ProtocolNode implements ProtocolAsyncListener, DirectoryWalkObserver {
 	public function onBinaryClass(ProtocolAsync $protocol, string $classname, string $classdata): void {
 		throw new \RuntimeException("not implemented");
 	}
+
+	public function onStreamEnd(ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
+		throw new \RuntimeException("no file stream expected in ".self::class);
+	}
+
+	public function onStreamStart(ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
+		throw new \RuntimeException("no file stream expected in ".self::class);
+	}
 }

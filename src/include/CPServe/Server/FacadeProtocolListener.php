@@ -48,4 +48,12 @@ class FacadeProtocolListener implements ProtocolAsyncListener {
 	public function onBinaryClass(\Net\ProtocolAsync $protocol, string $classname, string $classdata): void {
 		$this->current->onBinaryClass($protocol, $classname, $classdata);
 	}
+
+	public function onStreamEnd(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
+		$this->current->onStreamEnd($protocol, $streamReceiver);
+	}
+
+	public function onStreamStart(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
+		$this->current->onStreamStart($protocol, $streamReceiver);
+	}
 }

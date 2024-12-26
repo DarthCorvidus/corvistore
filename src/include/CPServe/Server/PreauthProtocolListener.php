@@ -153,4 +153,12 @@ class PreauthProtocolListener implements \Net\ProtocolAsyncListener {
 	public function onBinaryClass(\Net\ProtocolAsync $protocol, string $classname, string $classdata): void {
 		throw new \RuntimeException("not implemented");
 	}
+
+	public function onStreamEnd(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
+		throw new \RuntimeException("no file stream expected in ".self::class);
+	}
+
+	public function onStreamStart(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
+		throw new \RuntimeException("no file stream expected in ".self::class);
+	}
 }

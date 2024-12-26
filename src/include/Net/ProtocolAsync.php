@@ -31,6 +31,19 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		$this->streamReceiver = new StringReceiver();
 	}
 	
+	/**
+	 * Pseudocasts StreamReceiver to SafeReceiver.
+	 * @param StreamReceiver $streamReceiver
+	 * @return SafeReceiver
+	 * @throws \RuntimeException
+	 */
+	static private function castToSafeReceiver(StreamReceiver $streamReceiver): SafeReceiver {
+		if($streamReceiver::class !== SafeReceiver::class) {
+			throw new \RuntimeException("invalid pseudo type cast, need ".SafeReceiver::class);
+		}
+		return $streamReceiver;
+	}
+	
 	function setFileReceiver(StreamReceiver $receiver): void {
 		$this->fileReceiver = $receiver;
 	}
@@ -97,6 +110,7 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 					throw new \InvalidArgumentException("received file, but no file receiver was defined.");
 				}
 				$this->streamReceiver = new \Net\SafeReceiver($this->fileReceiver, $this->getPacketLength());
+				$this->listener->onStreamStart($this, $this->fileReceiver);
 				$this->streamReceiver->receiveData($data);
 				#$this->streamReceiver->setRecvSize(\IntVal::uint64LE()->getValue(substr($data, 1, 8)));
 				#$this->streamReceiver->onRecvStart();
@@ -120,7 +134,12 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		
 		if($this->currentRecvType==self::FILE) {
 			$this->streamReceiver->receiveData($data);
-			if($this->streamReceiver->getRecvLeft()==0) {
+			if($this->streamReceiver->getRecvLeft()<=0) {
+				/**
+				 * Pseudocast to SafeReceiver.
+				 */
+				$fileReceiver = self::castToSafeReceiver($this->streamReceiver);
+				$this->listener->onStreamEnd($this, $fileReceiver->getInnerReceiver());
 				$this->currentRecvType = NULL;
 			}
 		return;

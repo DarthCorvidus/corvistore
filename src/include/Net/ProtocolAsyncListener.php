@@ -19,4 +19,6 @@ interface ProtocolAsyncListener {
 	function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void;
 	function onOk(\Net\ProtocolAsync $protocol): void;
 	function onBinaryClass(ProtocolAsync $protocol, string $classname, string $classdata): void;
+	function onStreamStart(ProtocolAsync $protocol, StreamReceiver $streamReceiver): void;
+	function onStreamEnd(ProtocolAsync $protocol, StreamReceiver $streamReceiver): void;
 }

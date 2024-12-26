@@ -2,6 +2,8 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Net\Protocol;
+use Net\ProtocolAsync;
+use Net\StreamReceiver;
 class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 	const FILE_SIZE = 17201;
 	private ?string $lastString = null;
@@ -196,6 +198,14 @@ class ProtocolTest extends TestCase implements \Net\ProtocolAsyncListener {
 	}
 
 	public function onBinaryClass(Net\ProtocolAsync $protocol, string $classname, string $classdata): void {
+		
+	}
+
+	public function onStreamEnd(ProtocolAsync $protocol, StreamReceiver $streamReceiver): void {
+		
+	}
+
+	public function onStreamStart(ProtocolAsync $protocol, StreamReceiver $streamReceiver): void {
 		
 	}
 }
