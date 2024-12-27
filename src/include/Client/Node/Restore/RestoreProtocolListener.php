@@ -4,10 +4,14 @@ use Net\ProtocolAsyncListener;
 class RestoreProtocolListener implements ProtocolAsyncListener {
 	private \ArgvRestore $argvRestore;
 	private string $restoreTarget;
-	private array $breadcrumbs = array();
+	public array $breadcrumbs = array();
 	private int $timestamp;
 	/** @var list<\CatalogEntry> */
 	private array $queue = array();
+	public array $dirQueue = array();
+	public array $fileQueue = array();
+	public int $expectedFiles = 0;
+	public int $expectedDirs = 0;
 	/* Prepared, but not yet implemented
 	private ReplaceQuery $replaceNewer;
 	private ReplaceQuery $replaceOlder;
@@ -61,6 +65,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 			#echo "Restoring FTC link to ".$restorePath.PHP_EOL;
 			symlink($ftc->getData(), $restorePath);
 		}
+		$this->expectedFiles--;
 	}
 	
 
@@ -80,7 +85,8 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	}
 
 	public function onOk(\Net\ProtocolAsync $protocol): void {
-		throw new \RuntimeException("not implemented onOk");
+		$protocol->sendCommand("QUIT");
+		//throw new \RuntimeException("not implemented onOk");
 	}
 
 	public function onSerialized(\Net\ProtocolAsync $protocol, mixed $unserialized): void {
@@ -109,6 +115,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		array_shift($this->breadcrumbs);
 		if(empty($this->breadcrumbs)) {
 			echo "Sending GET CATALOG ".$entry->getDirname().$entry->getName()."/".PHP_EOL;
+			$this->expectedDirs++;
 			$protocol->sendCommand("GET CATALOG ".$entry->getDirname().$entry->getName());
 		return;
 		}
@@ -133,6 +140,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	
 	private function onCatalogEntries(\Net\ProtocolAsync $protocol, \CatalogEntries $entries): void {
 		$files = \Files::fromDirectory($this->restoreTarget.$entries->getDirname());
+		
 		/*
 		 * We need to get all directories first to add directories for recursion.
 		 */
@@ -148,7 +156,9 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 			 */
 			if($version->getType() === \Catalog::TYPE_DIR) {
 				$this->restoreDirectory($entry, $version);
-				$this->queue[] = $entry;
+				//$this->queue[] = $entry;
+				$this->expectedDirs++;
+				$this->dirQueue[] = $entry->getDirname()."/".$entry->getName();
 			}
 		}
 		/**
@@ -171,36 +181,25 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 			if($latest->getType() === \Catalog::TYPE_DIR) {
 				continue;
 			}
+			$this->fileQueue[] = $latest->getId();
 			//echo "Requesting ".$entry->getDirnameTrailed().$entry->getName()." with version id ".$latest->getId().PHP_EOL;
-			$protocol->sendCommand("GET VERSION ".$latest->getId());
+			//$protocol->sendCommand("GET VERSION ".$latest->getId());
 		}
 		for($i=0;$i<$differentFiles->getCount();$i++) {
 			echo "Should restore ".$differentFiles->getEntry($i)->getPath().PHP_EOL;
 		}
+		#echo "Decrementing expected dirs.".PHP_EOL;
+		$this->expectedDirs--;
 		/*
 		 * call continue to send a query for the next catalog; this approach
 		 * allows for a kind of rate limiting.
 		 */
-		$this->continue($protocol);
+		//$this->continue($protocol);
 	}
 	
-	private function getNext(): \CatalogEntry {
-		return array_shift($this->queue);
-	}
-	
-	private function continue(\Net\ProtocolAsync $protocol): void {
-		if(empty($this->queue)) {
-			$protocol->sendCommand("QUIT");
-		return;
-		}
-		$next = $this->getNext();
-		$query = $next->getDirname()."/".$next->getName();
-		//echo "Querying server for catalog of ".$query." (Queue: ".count($this->queue).")".PHP_EOL;
-		$protocol->sendCommand("GET CATALOG ".$query);
-	}
-
 	public function onStreamEnd(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
-		
+		$this->expectedFiles--;
+		echo "Ending stream after ".$streamReceiver->getRecvSize()." bytes".PHP_EOL;
 	}
 
 	public function onStreamStart(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
