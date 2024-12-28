@@ -14,6 +14,7 @@ class ProtocolAsync extends Protocol {
 	private StreamReceiver $streamReceiver;
 	private ?StreamReceiver $fileReceiver = NULL;
 	private ?int $currentRecvType = NULL;
+	private bool $expectEOF = false;
 	public function __construct(ProtocolAsyncListener $listener) {
 		$this->listener = $listener;
 		/**
@@ -26,6 +27,20 @@ class ProtocolAsync extends Protocol {
 
 	public function getListener(): ProtocolAsyncListener {
 		return $this->listener;
+	}
+	
+	/**
+	 * Allows the listener to tell the protocol that feof is to be expected so
+	 * feof does not result in an error.
+	 * @param bool $expectEOF
+	 * @return void
+	 */
+	public function setExpectEOF(bool $expectEOF = true): void {
+		$this->expectEOF = $expectEOF;
+	}
+	
+	public function getExpectEOF(): bool {
+		return $this->expectEOF;
 	}
 	
 	/**

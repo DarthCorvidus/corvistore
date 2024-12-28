@@ -95,6 +95,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	}
 
 	public function onOk(\Net\ProtocolAsync $protocol): void {
+		$protocol->setExpectEOF();
 		$protocol->sendCommand("QUIT");
 		//throw new \RuntimeException("not implemented onOk");
 	}

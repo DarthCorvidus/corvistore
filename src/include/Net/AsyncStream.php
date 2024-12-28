@@ -78,9 +78,14 @@ class AsyncStream implements Task {
 		#}
 		$data = fread($this->socket, $this->protocol->getPacketLength());
 		/**
-		 * I need to look into feof again. feof is not necessarily an error if
-		 * the other side was expected to close the connection.
+		 * One side will always get a hard disconnect, as far as I know it is
+		 * proven that this problem can't be solved. But usually, the protocol
+		 * knows when a disconnect can be expected, and it will be queried here
+		 * if feof triggers; if feof was to be expected, no error is thrown.
 		 */
+		if(feof($this->socket) && $this->protocol->getExpectEOF()) {
+			return false;
+		}
 		if(feof($this->socket)) {
 			throw new \Exception("Connection closed.");
 		}
@@ -108,7 +113,7 @@ class AsyncStream implements Task {
 
 	public function __tsTerminate(Scheduler $sched): bool {
 		/*
-		 * Do not terminate as long Protocol has data left in buffer.
+		 * Do not terminate as long as Protocol has data left in buffer.
 		 */
 		if($this->protocol->hasWrite()) {
 			return false;
