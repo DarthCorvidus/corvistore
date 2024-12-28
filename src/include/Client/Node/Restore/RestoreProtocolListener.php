@@ -9,9 +9,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	/** @var list<\CatalogEntry> */
 	private array $queue = array();
 	public array $dirQueue = array();
-	public array $fileQueue = array();
-	public int $expectedFiles = 0;
-	public int $expectedDirs = 0;
+	private RestoreQueue $restoreQueue;
 	/* Prepared, but not yet implemented
 	private ReplaceQuery $replaceNewer;
 	private ReplaceQuery $replaceOlder;
@@ -26,6 +24,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		$this->replaceSmaller = new ReplaceQuery("%s exists but is smaller than backup. Action:");
 		$this->replaceLarger = new ReplaceQuery("%s exists, but is larger than backup. Action:");
 		*/
+		$this->restoreQueue = new RestoreQueue();
 		$restoreSource = $argvRestore->getRestorePath();
 		$this->restoreTarget = $argvRestore->getTargetPath();
 		if($restoreSource !== "/") {
@@ -33,6 +32,10 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		}
 		$this->argvRestore = $argvRestore;
 		$this->timestamp = strtotime($this->argvRestore->getTimestamp());
+	}
+	
+	public function getRestoreQueue(): RestoreQueue {
+		return $this->restoreQueue;
 	}
 	
 	public function start(\Net\ProtocolAsync $protocol): void {
@@ -65,7 +68,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 			#echo "Restoring FTC link to ".$restorePath.PHP_EOL;
 			symlink($ftc->getData(), $restorePath);
 		}
-		$this->expectedFiles--;
+		$this->restoreQueue->expectedFiles--;
 	}
 	
 
@@ -115,7 +118,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		array_shift($this->breadcrumbs);
 		if(empty($this->breadcrumbs)) {
 			echo "Sending GET CATALOG ".$entry->getDirname().$entry->getName()."/".PHP_EOL;
-			$this->expectedDirs++;
+			$this->restoreQueue->expectedDirs++;
 			$protocol->sendCommand("GET CATALOG ".$entry->getDirname().$entry->getName());
 		return;
 		}
@@ -157,8 +160,8 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 			if($version->getType() === \Catalog::TYPE_DIR) {
 				$this->restoreDirectory($entry, $version);
 				//$this->queue[] = $entry;
-				$this->expectedDirs++;
-				$this->dirQueue[] = $entry->getDirname()."/".$entry->getName();
+				$this->restoreQueue->expectedDirs++;
+				$this->restoreQueue->directories[] = $entry->getDirname()."/".$entry->getName();
 			}
 		}
 		/**
@@ -181,7 +184,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 			if($latest->getType() === \Catalog::TYPE_DIR) {
 				continue;
 			}
-			$this->fileQueue[] = $latest->getId();
+			$this->restoreQueue->versions[] = $latest->getId();
 			//echo "Requesting ".$entry->getDirnameTrailed().$entry->getName()." with version id ".$latest->getId().PHP_EOL;
 			//$protocol->sendCommand("GET VERSION ".$latest->getId());
 		}
@@ -189,7 +192,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 			echo "Should restore ".$differentFiles->getEntry($i)->getPath().PHP_EOL;
 		}
 		#echo "Decrementing expected dirs.".PHP_EOL;
-		$this->expectedDirs--;
+		$this->restoreQueue->expectedDirs--;
 		/*
 		 * call continue to send a query for the next catalog; this approach
 		 * allows for a kind of rate limiting.
@@ -198,7 +201,7 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 	}
 	
 	public function onStreamEnd(\Net\ProtocolAsync $protocol, \Net\StreamReceiver $streamReceiver): void {
-		$this->expectedFiles--;
+		$this->restoreQueue->expectedFiles--;
 		echo "Ending stream after ".$streamReceiver->getRecvSize()." bytes".PHP_EOL;
 	}
 

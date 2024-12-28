@@ -8,12 +8,14 @@ class RestoreTask implements Task {
 	private ProtocolAsync $protocol;
 	private array $breadcrumbs = array();
 	private string $restoreSource;
+	private RestoreQueue $restoreQueue;
 	function __construct(\ArgvRestore $argv, ProtocolAsync $protocol, RestoreProtocolListener $listener) {
 		$this->restoreSource = $argv->getRestorePath();
 		if($this->restoreSource !== "/") {
 			$this->breadcrumbs = \Shared::getBreadcrumbs($this->restoreSource);
 		}
 		$this->protocol = $protocol;
+		$this->restoreQueue = $listener->getRestoreQueue();
 		$this->listener = $listener;
 	}
 	public function __tsError(Scheduler $sched, \Exception $e, int $step): void {
@@ -43,20 +45,20 @@ class RestoreTask implements Task {
 			#}
 		return true;
 		}
-		if($this->listener->expectedFiles>10) {
+		if($this->restoreQueue->expectedFiles>10) {
 			//echo "Doing nothing with ".$this->listener->expectedFiles." expected files.".PHP_EOL;
 		return true;
 		}
 		
-		if(!empty($this->listener->fileQueue)) {
-			$next = array_shift($this->listener->fileQueue);
-			$this->listener->expectedFiles++;
+		if(!empty($this->restoreQueue->versions)) {
+			$next = array_shift($this->restoreQueue->versions);
+			$this->restoreQueue->expectedFiles++;
 			$this->protocol->sendCommand("GET VERSION ".$next);
 		return true;
 		}
 		
-		if(!empty($this->listener->dirQueue)) {
-			$next = array_shift($this->listener->dirQueue);
+		if(!empty($this->restoreQueue->directories)) {
+			$next = array_shift($this->restoreQueue->directories);
 			$this->protocol->sendCommand("GET CATALOG ".$next);
 			#echo "File count: ".count($this->listener->fileQueue).PHP_EOL;
 		return true;
@@ -68,9 +70,10 @@ class RestoreTask implements Task {
 		 * public properties of RestoreProtocolListener.
 		 * This will be refactored soon, I just want to commit a working version
 		 * before making improvements.
-		 * @psalm-suppress RedundantCondition
+		 * @xpsalm-suppress RedundantCondition
 		 */
-		if(empty($this->listener->dirQueue) && empty($this->listener->fileQueue) && $this->listener->expectedDirs === 0 && $this->listener->expectedFiles === 0) {
+		#if(empty($this->restoreQueue->directories) && empty($this->restoreQueue->versions) && $this->restoreQueue->expectedDirs === 0 && $this->restoreQueue->expectedFiles === 0) {
+		if($this->restoreQueue->isEmpty()) {
 			echo "No more directories and files left.".PHP_EOL;
 			echo "Done".PHP_EOL;
 			$this->protocol->sendCommand("DONE");
