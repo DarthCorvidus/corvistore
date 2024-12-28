@@ -79,7 +79,7 @@ class Restore {
 		$this->asyncStream = new \Net\AsyncStream($socket);
 		$this->asyncStream->setProtocol($this->protocolNew);
 		
-		$this->restoreTask = new RestoreTask($this->argv, $this->protocolNew, $this->restoreProtocolListener);
+		$this->restoreTask = new RestoreTask($this->argv, $this->protocolNew);
 		$this->scheduler = new \plibv4\process\Timeshare();
 		$this->scheduler->addTask($this->asyncStream);
 		$this->scheduler->addTask($this->restoreTask);

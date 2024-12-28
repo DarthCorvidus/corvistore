@@ -9,14 +9,14 @@ class RestoreTask implements Task {
 	private array $breadcrumbs = array();
 	private string $restoreSource;
 	private RestoreQueue $restoreQueue;
-	function __construct(\ArgvRestore $argv, ProtocolAsync $protocol, RestoreProtocolListener $listener) {
+	function __construct(\ArgvRestore $argv, ProtocolAsync $protocol) {
 		$this->restoreSource = $argv->getRestorePath();
 		if($this->restoreSource !== "/") {
 			$this->breadcrumbs = \Shared::getBreadcrumbs($this->restoreSource);
 		}
 		$this->protocol = $protocol;
-		$this->restoreQueue = $listener->getRestoreQueue();
-		$this->listener = $listener;
+		$this->listener = RestoreProtocolListener::getAsRestoreProtocolListener($this->protocol->getListener());
+		$this->restoreQueue = $this->listener->getRestoreQueue();
 	}
 	public function __tsError(Scheduler $sched, \Exception $e, int $step): void {
 		
@@ -37,12 +37,6 @@ class RestoreTask implements Task {
 		#echo "Dir Queue count: ".count($this->listener->dirQueue).PHP_EOL;
 		#echo PHP_EOL;
 		if(!empty($this->listener->breadcrumbs)) {
-			#$bc = array_pop($this->breadcrumbs);
-			#$this->protocol->sendCommand("GET PATH ".$bc);
-			#if(empty($this->breadcrumbs)) {
-			#	$this->listener->expectedDirs++;
-			#	$this->protocol->sendCommand("GET CATALOG ".$this->restoreSource);
-			#}
 		return true;
 		}
 		if($this->restoreQueue->expectedFiles>10) {

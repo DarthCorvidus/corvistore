@@ -34,6 +34,13 @@ class RestoreProtocolListener implements ProtocolAsyncListener {
 		$this->timestamp = strtotime($this->argvRestore->getTimestamp());
 	}
 	
+	public static function getAsRestoreProtocolListener(ProtocolAsyncListener $protocolAsyncListener): RestoreProtocolListener {
+		if($protocolAsyncListener::class !== RestoreProtocolListener::class) {
+			throw new \ValueError("invalid pseudocast ".$protocolAsyncListener::class." to ".RestoreProtocolListener::class);
+		}
+		return $protocolAsyncListener;
+	}
+	
 	public function getRestoreQueue(): RestoreQueue {
 		return $this->restoreQueue;
 	}

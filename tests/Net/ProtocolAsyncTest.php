@@ -79,6 +79,11 @@ class ProtocolAsyncTest extends TestCase implements Net\ProtocolAsyncListener, \
 		$this->assertInstanceOf(ProtocolAsync::class, $protocol);
 	}
 	
+	function testGetListener(): void {
+		$protocol = new ProtocolAsync($this);
+		$this->assertSame($this, $protocol->getListener());
+	}
+	
 	function testGetDefaultSize(): void {
 		$protocol = new ProtocolAsync($this);
 		$this->assertEquals(1024, $protocol->getPacketLength());

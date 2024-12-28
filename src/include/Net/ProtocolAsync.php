@@ -1,11 +1,4 @@
 <?php
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace Net;
 
 /**
@@ -13,7 +6,7 @@ namespace Net;
  *
  * @author hm
  */
-class ProtocolAsync extends Protocol implements HubClientListener {
+class ProtocolAsync extends Protocol {
 	private ProtocolAsyncListener $listener;
 	private array $expected = array();
 	private array $sendStream = array();
@@ -29,6 +22,10 @@ class ProtocolAsync extends Protocol implements HubClientListener {
 		 * will be switched to $this->fileReceiver once a file comes in.
 		 */
 		$this->streamReceiver = new StringReceiver();
+	}
+
+	public function getListener(): ProtocolAsyncListener {
+		return $this->listener;
 	}
 	
 	/**
