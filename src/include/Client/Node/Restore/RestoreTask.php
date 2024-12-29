@@ -39,7 +39,7 @@ class RestoreTask implements Task {
 		if(!empty($this->listener->breadcrumbs)) {
 		return true;
 		}
-		if($this->restoreQueue->expectedFiles>10) {
+		if($this->restoreQueue->expectedFiles>50) {
 			//echo "Doing nothing with ".$this->listener->expectedFiles." expected files.".PHP_EOL;
 		return true;
 		}
@@ -59,14 +59,6 @@ class RestoreTask implements Task {
 		}
 		
 		
-		/**
-		 * Psalm lists this as RedundantCondition, possibly because of using
-		 * public properties of RestoreProtocolListener.
-		 * This will be refactored soon, I just want to commit a working version
-		 * before making improvements.
-		 * @xpsalm-suppress RedundantCondition
-		 */
-		#if(empty($this->restoreQueue->directories) && empty($this->restoreQueue->versions) && $this->restoreQueue->expectedDirs === 0 && $this->restoreQueue->expectedFiles === 0) {
 		if($this->restoreQueue->isEmpty()) {
 			echo "No more directories and files left.".PHP_EOL;
 			echo "Done".PHP_EOL;
