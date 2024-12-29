@@ -22,6 +22,9 @@ class CatalogEntries {
 	}
 	
 	function addEntry(CatalogEntry $entry): void {
+		if(isset($this->names[$entry->getName()])) {
+			throw new \RuntimeException("duplicate entry ".$entry->getName()." added");
+		}
 		$this->array[] = $entry;
 		$this->names[$entry->getName()] = $this->getCount()-1;
 	}
@@ -31,6 +34,9 @@ class CatalogEntries {
 	}
 	
 	function getEntry(int $id): CatalogEntry {
+		if(!isset($this->array[$id])) {
+			throw new \OutOfBoundsException("no entry with id ".$id);
+		}
 		return $this->array[$id];
 	}
 	
@@ -39,6 +45,9 @@ class CatalogEntries {
 	}
 	
 	function getByName(string $name): CatalogEntry {
+		if(!$this->hasName($name)) {
+			throw new \InvalidArgumentException("CatalogEntry with name '".$name."' does not exist");
+		}
 		return $this->array[$this->names[$name]];
 	}
 	
