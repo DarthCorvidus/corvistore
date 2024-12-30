@@ -1733,12 +1733,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DarthCorvidus/plibv4-binary",
-                "reference": "f391a1be2c50a3acd42ba6aed22541b4524c73b4"
+                "reference": "21b04d50c80e329065a7290ffd8f457e7938704f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-binary/zipball/f391a1be2c50a3acd42ba6aed22541b4524c73b4",
-                "reference": "f391a1be2c50a3acd42ba6aed22541b4524c73b4",
+                "url": "https://api.github.com/repos/DarthCorvidus/plibv4-binary/zipball/21b04d50c80e329065a7290ffd8f457e7938704f",
+                "reference": "21b04d50c80e329065a7290ffd8f457e7938704f",
                 "shasum": ""
             },
             "require-dev": {
@@ -1761,9 +1761,13 @@
                 ],
                 "psalm": [
                     "./vendor/bin/psalm --show-info=true --no-cache"
+                ],
+                "psatest": [
+                    "./vendor/bin/psalm --show-info=true --no-cache",
+                    "./vendor/bin/phpunit --bootstrap vendor/autoload.php tests/"
                 ]
             },
-            "time": "2024-12-07T18:02:54+00:00"
+            "time": "2024-12-30T17:29:55+00:00"
         },
         {
             "name": "plibv4/convert",
@@ -3412,12 +3416,12 @@
             },
             "type": "library",
             "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/contracts",
+                    "name": "symfony/contracts"
+                },
                 "branch-alias": {
                     "dev-main": "2.5-dev"
-                },
-                "thanks": {
-                    "name": "symfony/contracts",
-                    "url": "https://github.com/symfony/contracts"
                 }
             },
             "autoload": {
@@ -4035,12 +4039,12 @@
             },
             "type": "library",
             "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/contracts",
+                    "name": "symfony/contracts"
+                },
                 "branch-alias": {
                     "dev-main": "2.5-dev"
-                },
-                "thanks": {
-                    "name": "symfony/contracts",
-                    "url": "https://github.com/symfony/contracts"
                 }
             },
             "autoload": {

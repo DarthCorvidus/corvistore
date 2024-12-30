@@ -44,7 +44,7 @@ class File implements BinaryPersistable {
 		$file = new File();
 		$file->version = $reader->getUInt8();
 		
-		$file->srvNodeName = $reader->getIndexedString(8, 64);
+		$file->srvNodeName = $reader->getString8(64);
 		$file->srvCreated = $reader->getUInt64();
 		$file->srvVersionId = $reader->getUInt64();
 		$file->srvAction = $reader->getUInt8();
@@ -57,10 +57,10 @@ class File implements BinaryPersistable {
 		$file->permissions = $reader->getUInt16();
 		$file->type = $reader->getUInt8();
 		$file->uid = $reader->getUInt32();
-		$file->owner = $reader->getIndexedString(8);
+		$file->owner = $reader->getString8();
 		$file->gid = $reader->getUInt32();
-		$file->group = $reader->getIndexedString(8);
-		$file->path = $reader->getIndexedString(16);
+		$file->group = $reader->getString8();
+		$file->path = $reader->getString16();
 	return $file;
 	}
 	
@@ -68,7 +68,7 @@ class File implements BinaryPersistable {
 		$writer = new \plibv4\Binary\StringWriter(\plibv4\Binary\StringWriter::LE);
 		$writer->addUInt8($this->version);
 		
-		$writer->addIndexedString(8, $this->srvNodeName, 64);
+		$writer->addString8($this->srvNodeName, 64);
 		$writer->addUInt64($this->srvCreated);
 		$writer->addUInt64($this->srvVersionId);
 		$writer->addUInt8($this->srvAction);
@@ -81,10 +81,10 @@ class File implements BinaryPersistable {
 		$writer->addUInt16($this->permissions);
 		$writer->addUInt8($this->type);
 		$writer->addUint32($this->uid);
-		$writer->addIndexedString(8, $this->owner);
+		$writer->addString8($this->owner);
 		$writer->addUint32($this->gid);
-		$writer->addIndexedString(8, $this->group);
-		$writer->addIndexedString(16, $this->path);
+		$writer->addString8($this->group);
+		$writer->addString16($this->path);
 	return $writer->getBinary();
 	}
 	

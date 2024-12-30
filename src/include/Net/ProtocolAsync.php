@@ -271,8 +271,8 @@ class ProtocolAsync extends Protocol {
 		
 		if($type==self::BINARY_CLASS) {
 			$br = new \plibv4\Binary\StringReader($string, \plibv4\Binary\StringReader::LE);
-			$classname = $br->getIndexedString(16);
-			$classdata = $br->getIndexedString(32);
+			$classname = $br->getString16();
+			$classdata = $br->getString32();
 			/*
 			 * This actually works.
 			 */
@@ -304,8 +304,8 @@ class ProtocolAsync extends Protocol {
 		$binaryClass = $instance->toBinary();
 		$classname = $instance::class;
 		$bw = new \plibv4\Binary\StringWriter(\plibv4\Binary\StringWriter::LE);
-		$bw->addIndexedString(16, $classname);
-		$bw->addIndexedString(32, $binaryClass);
+		$bw->addString16($classname);
+		$bw->addString32($binaryClass);
 		$this->sendString(self::BINARY_CLASS, $bw->getBinary(), $listener);
 	}
 	

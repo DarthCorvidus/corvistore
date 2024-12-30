@@ -52,7 +52,7 @@ class FileGroupTest extends TestCase {
 		$count = $reader->getUInt8();
 		$this->assertEquals($count, 10);
 		for($i = 0; $i<$count; $i++) {
-			$tc = FileTransportContainer::fromBinary($reader->getIndexedString(32));
+			$tc = FileTransportContainer::fromBinary($reader->getString32());
 			$loadedFiles[] = $tc->getFile();
 			$loadedData[] = $tc->getData();
 		}

@@ -59,16 +59,16 @@ class FileTransportContainer implements \BinaryPersistable {
 
 	public function toBinary(): string {
 		$bw = new StringWriter(StringWriter::LE);
-		$bw->addIndexedString(16, $this->meta->toBinary());
-		$bw->addIndexedString(32, $this->data);
+		$bw->addString16($this->meta->toBinary());
+		$bw->addString32($this->data);
 	return $bw->getBinary();
 	}
 
 	public static function fromBinary(string $binary): FileTransportContainer {
 		$new = new FileTransportContainer();
 		$br = new StringReader($binary, StringReader::LE);
-		$meta = \File::fromBinary($br->getIndexedString(16));
-		$data = $br->getIndexedString(32);
+		$meta = \File::fromBinary($br->getString16());
+		$data = $br->getString32();
 		$new->meta = $meta;
 		$new->data = $data;
 	return $new;

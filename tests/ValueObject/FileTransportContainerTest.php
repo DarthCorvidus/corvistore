@@ -48,8 +48,8 @@ class FileTransportContainerTest extends TestCase {
 		$fc = FileTransportContainer::fromFile($file);
 		$binary = $fc->toBinary();
 		$reader = new StringReader($binary, StringReader::LE);
-		$meta = File::fromBinary($reader->getIndexedString(16));
-		$data = $reader->getIndexedString(32);
+		$meta = File::fromBinary($reader->getString16());
+		$data = $reader->getString32();
 		$this->assertEquals($file, $meta);
 		$this->assertSame("The cat is on the mat", $data);
 	}

@@ -39,7 +39,7 @@ class FileGroup implements BinaryPersistable {
 		$writer = new StringWriter(StringWriter::LE);
 		$writer->addUInt8(count($this->container));
 		foreach($this->container as $value) {
-			$writer->addIndexedString(32, $value->toBinary());
+			$writer->addString32($value->toBinary());
 		}
 	return $writer->getBinary();
 	}
@@ -49,7 +49,7 @@ class FileGroup implements BinaryPersistable {
 		$reader = new StringReader($binary, StringReader::LE);
 		$count = $reader->getUInt8();
 		for($i = 0; $i<$count; $i++) {
-			$container = FileTransportContainer::fromBinary($reader->getIndexedString(32));
+			$container = FileTransportContainer::fromBinary($reader->getString32());
 			$fg->container[] = $container;
 			$fg->size += $container->getFile()->getSize();
 		}
